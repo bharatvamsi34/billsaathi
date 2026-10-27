@@ -16,10 +16,14 @@ from app.schemas import BillFields, ExtractionOutput, Label, Verdict
 
 INPUTS = Path(__file__).parent / "inputs"
 LABELS = INPUTS / "labels.jsonl"
+LOCAL_LABELS = INPUTS / "labels.local.jsonl"  # gitignored: labels for real recordings
 
 
 def load_labels() -> dict[str, Label]:
-    lines = LABELS.read_text(encoding="utf-8").splitlines()
+    lines: list[str] = []
+    for path in (LABELS, LOCAL_LABELS):
+        if path.exists():
+            lines += path.read_text(encoding="utf-8").splitlines()
     labels = [Label.model_validate_json(line) for line in lines if line.strip()]
     return {lbl.id: lbl for lbl in labels}
 
@@ -75,6 +79,14 @@ def _norm_dest(kind: str, value: str) -> tuple[str, str]:
     return kind, v
 
 
+def languages_ok(pred: list[str], exp: list[str]) -> bool:
+    """Main language must be found; extra languages must be real ones; a missed secondary is OK."""
+    p = {code.strip().lower() for code in pred}
+    if not exp:
+        return not p
+    return exp[0] in p and p <= set(exp)
+
+
 def score_fields(pred: BillFields, exp: BillFields) -> dict[str, Any]:
     def name_ok() -> bool:
         if exp.biller_name is None or pred.biller_name is None:
@@ -99,7 +111,7 @@ def score_fields(pred: BillFields, exp: BillFields) -> dict[str, Any]:
         "due_date": pred.due_date == exp.due_date,
         "bill_date": pred.bill_date == exp.bill_date,
         "payment_destinations": want <= got,
-        "language": pred.language == exp.language,
+        "languages": languages_ok(pred.languages, exp.languages),
         "urgency_language": pred.urgency_language == exp.urgency_language,
     }
     return {"field_correct": fields, "field_accuracy": sum(fields.values()) / len(fields)}

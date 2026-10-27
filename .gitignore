@@ -1,3 +1,9 @@
+# BillSaathi: real voice recordings and their labels stay local (public repo, synthetic data only)
+api/spike/inputs/voice_te.*
+api/spike/inputs/labels.local.jsonl
+# BillSaathi: runtime state of the spike's upload cleanup
+api/spike/results/uploaded_files.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

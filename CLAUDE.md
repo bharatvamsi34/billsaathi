@@ -36,20 +36,30 @@ Judges score four things equally: **Impact · Use of Meta AI tooling · Technica
 
 ## 4. Meta models — who does what
 
-> Day-1 spike (§8) verifies each model ID, input type, latency and output quality before we commit. Update this table with real findings.
+> Day-1 spike (2026-10-27) results below; raw data and report in `api/spike/results/`.
 
-| Model | Access | Job in BillSaathi |
-|---|---|---|
-| **Muse Spark** (Meta Model API) | `META_API_*` | Primary agent brain: vision extraction from bill images/screenshots → structured JSON; tool-calling verification agent; verdict reasoning |
-| **Muse Wonder** (`muse-wonder-1.0`, seen in playground) | `META_API_*` | Compare vs Spark in spike; use whichever is better for extraction or for multilingual explanations |
-| **SAM 3.1** (Meta Model API, "Segment") | `META_API_*` | Isolate the bill/document from a cluttered phone photo before extraction; also highlight suspicious regions (e.g. payment link, QR) on the image in the UI |
-| **Muse Voice Transcribe** (Meta Model API, "Audio") | `META_API_*` | Voice input: user asks "kya ye bill sahi hai?" or forwards a voice note |
-| **Muse Image** (Meta Model API) | `META_API_*` | Optional / low priority: generate an explainer visual of the scam pattern for the share card. Only if time allows. |
-| **Muse Spark Open** (open weights via Baseten, `meta-models/muse-spark-open-1026`) | `BASETEN_API_KEY` | **Privacy Mode**: full pipeline on the open-weight model (supports vision + audio, always reasons). Targets *Best Build on Open-Weight Models* ($10k). |
-| Modal (if credits granted) | `MODAL_*` | Run the evaluation harness at scale in Sandboxes; optional self-hosted open-weight endpoint |
+| Model | Access | Job in BillSaathi | Day-1 spike result |
+|---|---|---|---|
+| **Muse Spark 1.3** (`muse-spark-1.3`) | `META_API_*` | **Primary**: verdicts, tool-calling agent, explanations, bill reading | Verdicts 4/4 at `low` effort (~3 s); native tool calling PASS; key bill fields 100%; te/hi/ta explanations complete at 4096 tokens, `low` (~3–4 s); BV ratings Telugu 4/5, Hindi ≈4/5. $1.25 in / $4.25 out per 1M tokens |
+| Muse Spark 1.1 (`muse-spark-1.1`) | `META_API_*` | Fallback for bill reading | Key fields 100%, fastest at reading (~4.6 s); tool calling PASS |
+| Muse Wonder (`muse-wonder-1.0`) | `META_API_*` | Not used in the product (comparison only) | Correct, but 2–4× slower and ~4× the cost; Indian-language explanations ~15 s |
+| SAM 3.1 (`sam-3.1`) | `META_API_*`, file upload | Crop the bill out of a phone photo with concept "document" | "document" box IoU 0.98 vs true bill area; "bill" and "link" find nothing; QR negative control correct. **Not usable for link highlighting.** Output is text tokens `<\|box;x1..y2;w;h\|><\|mask;…\|>`; mask decoding still to do. $2.50 per 1,000 images |
+| Muse Voice Transcribe (`muse-voice-transcribe-1.0`) | `POST /v1/asr/transcribe`, multipart | Voice input | English exact; Telugu-English exact **with** `languageBias`, one word wrong and English letters without it. ~3 s, $0.18 per hour of audio |
+| Muse Image (`muse-image-1.0`) | `META_API_*` | Optional / low priority. If used: `enable_shell`, `enable_web_search`, `enable_image_search` all false | Not tested |
+| **Muse Spark Open** (open weights via Baseten, `meta-models/muse-spark-open-1026`) | `BASETEN_API_KEY` | **Privacy Mode**. Targets *Best Build on Open-Weight Models* ($10k). | Verdicts 4/4; tool calling PASS (3 steps); key fields 100% (data URL); Telugu audio near-exact; reasoning returned separately. Explanations use less native script (Ta 0.81, Hi 0.88) — needs rating. Price not known yet |
+| `*-contributor` variants | — | **Never used** — they train on inputs. The spike runner refuses them | — |
+| Muse Glimmer (open-weight 30B, Apache-2.0) | Modal (later) | Possible second open-weight option, not before Day 6 | — |
+| Modal (if credits granted) | `MODAL_*` | Run the evaluation harness at scale in Sandboxes; optional self-hosted open-weight endpoint | — |
 
 Baseten: OpenAI-compatible, `base_url="https://inference.baseten.co/v1"`, model **exactly** `meta-models/muse-spark-open-1026`. Output includes reasoning — parse the final answer separately from reasoning content.
-Meta Model API: copy base URL + request format from dev.meta.ai → Chat → **Get code**. Do not guess endpoints.
+
+Integration rules (from the spike):
+- Meta Model API uses the OpenAI Responses format at `https://api.meta.ai/v1`. Use the official `openai` SDK (non-streaming) for agent steps; raw httpx only for `/files`, SAM and ASR. `GET /v1/models` lists available model IDs.
+- Send images as inline data URLs, so no file is stored on Meta's servers (the image is still sent to Meta for processing). `/v1/files` + `file_id` also works; if used, delete with `DELETE /v1/files/{id}` (returns 200).
+- Reasoning is 60–85% of output tokens: use `low` effort for verdicts and explanations, and `max_output_tokens` ≥ 4096 for Indian-language explanations.
+- Model self-reported confidence is not reliable (0.9+ on wrong fields). Hard rules verify amount and destination with tools; low confidence can only push towards CAUTION.
+- Facts shown to users (e.g. helpline numbers) come from a vetted list in code, never from model output.
+- Speech-to-text always sends the user's chosen language as `languageBias`.
 
 ## 5. Product scope
 
@@ -68,7 +78,7 @@ Meta Model API: copy base URL + request format from dev.meta.ai → Chat → **G
    - **Hard rules (deterministic, cannot be overridden by the LLM):** unknown biller, payment destination not official, amount mismatch vs biller fetch, known scam domain/VPA → minimum verdict CAUTION or SCAM.
    - **LLM reasoning layer** adds context and soft signals; may raise risk, may **never lower** a hard-rule verdict.
    - Verdict: **SAFE / CAUTION / SCAM**, with evidence list (each reason cites the tool result it came from).
-6. **Explain** — plain-language verdict in the user's language (English, Hindi, Marathi at minimum; add Telugu/Tamil if spike shows quality). Browser speech synthesis reads it aloud.
+6. **Explain** — plain-language verdict in the user's language. Launch languages: **English, Telugu, Hindi** (Telugu verified by BV, a native speaker). **Marathi and Tamil are "beta"** (shown with a beta label) until BV-rated quality is clearly good. Browser speech synthesis reads it aloud.
 7. **Act** — SAFE bills: "Pay via BBPS (sandbox)" with explicit confirmation, idempotency key, mock receipt, audit-log entry. SCAM: "Report & block" + shareable warning card to forward to family.
 
 ### 5.2 Differentiators (SHOULD ship, in this order)
@@ -186,6 +196,10 @@ Record every decision and spike result here with a date, so the README and demo 
 - 2026-10-27 — Day 1 plan approved. Python 3.14 locally and in the container (fall back to 3.12 only if a dependency actually fails). Order: repo hygiene → api/ setup → model spike → Azure deploy (Azure capped at 2 h; if blocked, moves to Day 2 morning). Keys live in `api/.env` (gitignored). No local Docker → images built with `az acr build`.
 - 2026-10-27 — Spike rules: native function/tool calling is an explicit PASS/FAIL for Muse Spark, Muse Wonder and Muse Spark Open (FAIL ⇒ design a JSON-based tool loop). Keep a running approximate API cost; stop and report if spike spend exceeds $5. Hindi voice clip recorded by BV (no personal details).
 - 2026-10-27 — Azure: resource group `rg-billsaathi-cin` (Central India) and Basic container registry (~$5/month) approved.
+- 2026-10-27 — Model spike complete: 90+ calls, ~$1.00 estimated; results in `api/spike/results/`. Decisions: Muse Spark 1.3 primary, Spark 1.1 fallback for bill reading, Wonder not used; native tool calling (no JSON tool loop); openai SDK for Meta calls; images as data URLs; `low` effort and 4096 output tokens for explanations; speech-to-text always with `languageBias`; SAM with concept "document" for cropping only; Contributor models never used.
+- 2026-10-27 — Launch languages EN/TE/HI; MR/TA beta. BV ratings of Spark 1.3 explanations: Telugu 4/5, Hindi ≈4/5.
+- 2026-10-27 — Labels: `languages` is a list, main language first. Real voice recordings and their labels stay out of git (`labels.local.jsonl`).
+- 2026-10-27 — Open items: decode the SAM mask format; Baseten pricing; a Hindi voice clip (optional); check whether Zero Data Retention (ZDR) mode is available for our Meta account — the speech-to-text pricing page says ZDR costs the same as standard. If yes, enable it for all production calls and mention it in the README.
 
 ## 12. How to work with BV (the builder)
 

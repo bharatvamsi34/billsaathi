@@ -79,6 +79,8 @@ SMS_GENUINE_EN = (
     "demopower.example/pay. Ignore if already paid. -DEMOPW"
 )
 VOICE_EN = "Is this electricity bill safe to pay?"
+# BV's own recording (Telugu-English mix); converted from voice_te.m4a with ffmpeg.
+VOICE_TE = "ఈ కరెంట్ బిల్లు సరైనదేనా? నేను దీన్ని కట్టొచ్చా?"
 
 
 def render(template: str, values: dict[str, str], size: tuple[int, int], out: Path) -> dict:
@@ -201,7 +203,7 @@ def main() -> None:
             PaymentDestination(kind=DestinationKind.UPI, value=BILL["vpa"]),
             PaymentDestination(kind=DestinationKind.URL, value=BILL["site"]),
         ],
-        language="en",
+        languages=["en", "hi"],  # English body with Hindi headings
         urgency_language=False,
     )
     genuine_evidence = [
@@ -222,7 +224,7 @@ def main() -> None:
     scam_fields = BillFields(
         biller_category=BillerCategory.ELECTRICITY,
         payment_destinations=scam_dest,
-        language="en",
+        languages=["en"],
         urgency_language=True,
     )
     labels: list[Label] = []
@@ -326,7 +328,7 @@ def main() -> None:
             "disconnection_scam",
             Channel.SMS,
             SMS_SCAM_HI,
-            scam_fields.model_copy(update={"language": "hi"}),
+            scam_fields.model_copy(update={"languages": ["hi"]}),
             Verdict.SCAM,
             disconnection_evidence,
         ),
@@ -338,7 +340,7 @@ def main() -> None:
             scam_fields.model_copy(
                 update={
                     "biller_name": "Demo Power",
-                    "language": "hi",
+                    "languages": ["hi", "en"],
                     "payment_destinations": [
                         PaymentDestination(
                             kind=DestinationKind.URL,
@@ -370,6 +372,7 @@ def main() -> None:
                 update={
                     "biller_name": "Demo Power",
                     "bill_date": None,
+                    "languages": ["en"],
                     "payment_destinations": [
                         PaymentDestination(kind=DestinationKind.URL, value=BILL["site"])
                     ],
@@ -398,16 +401,29 @@ def main() -> None:
             scenario="voice_question",
             input=LabelInput(kind=InputKind.AUDIO, channel=Channel.VOICE, path="voice_en.wav"),
             expected=Expected(
-                extracted=BillFields(language="en"), verdict=None, transcript=VOICE_EN
+                extracted=BillFields(languages=["en"]), verdict=None, transcript=VOICE_EN
             ),
         )
     )
-    # voice_hi is BV's own recording; its label is added once the exact words are known.
+    # Real recordings (BV's voice) stay out of git: their labels go to labels.local.jsonl.
+    local: list[Label] = []
+    if (OUT / "voice_te.wav").exists():
+        local.append(
+            Label(
+                id="voice_te",
+                scenario="voice_question",
+                input=LabelInput(kind=InputKind.AUDIO, channel=Channel.VOICE, path="voice_te.wav"),
+                expected=Expected(
+                    extracted=BillFields(languages=["te", "en"]), verdict=None, transcript=VOICE_TE
+                ),
+            )
+        )
 
-    with (OUT / "labels.jsonl").open("w", encoding="utf-8", newline="\n") as f:
-        for lbl in labels:
-            f.write(lbl.model_dump_json() + "\n")
-    print(f"wrote {len(labels)} labels and inputs to {OUT}")
+    for name, items in (("labels.jsonl", labels), ("labels.local.jsonl", local)):
+        with (OUT / name).open("w", encoding="utf-8", newline="\n") as f:
+            for lbl in items:
+                f.write(lbl.model_dump_json() + "\n")
+    print(f"wrote {len(labels)} labels (+{len(local)} local) and inputs to {OUT}")
 
 
 if __name__ == "__main__":

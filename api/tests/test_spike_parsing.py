@@ -132,6 +132,13 @@ def test_score_fields_perfect_and_amount_mismatch():
     assert s["field_correct"]["consumer_number"] is True
 
 
+def test_languages_main_required_secondary_optional():
+    assert cases.languages_ok(["en", "hi"], ["en", "hi"])
+    assert cases.languages_ok(["EN"], ["en", "hi"])  # missed secondary is fine
+    assert not cases.languages_ok(["hi"], ["en", "hi"])  # main language missing
+    assert not cases.languages_ok(["en", "mr"], ["en", "hi"])  # invented language
+
+
 def test_score_verdict():
     label = cases.load_labels()["sms_scam_en_txt"]
     out = cases.VerdictOutput(verdict=Verdict.CAUTION, reasons=[], urgency_language=True)

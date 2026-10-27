@@ -50,6 +50,8 @@ SAM_JOBS = [
     ("sms_scam_en_img", "link"),
 ]
 
+LANG_NAMES = {"en": "English", "hi": "Hindi", "te": "Telugu", "mr": "Marathi", "ta": "Tamil"}
+
 MODELS = {
     "wonder": ("meta", lambda s: s.meta_model_wonder or "muse-wonder-1.0"),
     "spark": ("meta", lambda s: s.meta_model_spark or "muse-spark-1.3"),
@@ -75,6 +77,11 @@ class Runner:
         self.file_ids: dict[Path, str] = {}
         self.sam_done = False
         self.asr_done = False
+        # optional filters / overrides, set from the command line
+        self.inputs: set[str] = set()
+        self.langs: set[str] = set()
+        self.max_out = MAX_OUT
+        self.explain_effort = "medium"
 
     # --- plumbing ---
 
@@ -109,7 +116,7 @@ class Runner:
         effort: str = "medium",
     ) -> tuple[CallResult, dict[str, Any]]:
         model = self.model_id(key)
-        self.meter.check(model, est_in, MAX_OUT)
+        self.meter.check(model, est_in, self.max_out)
         if MODELS[key][0] == "meta":
             fn = meta_httpx if transport.startswith("httpx") else meta_sdk
             res = fn(
@@ -118,11 +125,11 @@ class Runner:
                 items,
                 stream=transport.endswith("stream"),
                 tools=tools,
-                max_output_tokens=MAX_OUT,
+                max_output_tokens=self.max_out,
                 effort=effort,
             )
         else:
-            res = baseten_chat(self.settings, items, tools=tools, max_tokens=MAX_OUT)
+            res = baseten_chat(self.settings, items, tools=tools, max_tokens=self.max_out)
         reported = res.input_tokens is not None and res.output_tokens is not None
         tin = res.input_tokens if reported else est_in
         tout = res.output_tokens if reported else (len(res.text) + len(res.reasoning)) // 3
@@ -350,16 +357,21 @@ class Runner:
 
     def t4(self, key: str) -> None:
         for lang in cases.EXPLAIN_LANGS:
+            if self.langs and lang not in self.langs:
+                continue
             system, user = cases.explain_prompt(lang)
             items, est = self.prompt_items(key, Prompt(system, user))
-            res, cost = self.call(key, self.transports_for(key)[0], items, est)
+            res, cost = self.call(
+                key, self.transports_for(key)[0], items, est, effort=self.explain_effort
+            )
             scores = {
                 "lang": lang,
                 "script_ratio": round(cases.script_ratio(res.text, lang), 3),
                 "chars": len(res.text),
                 "human_rating_1_5": None,
             }
-            self.record("T4", f"explain_{lang}", key, 1, res, cost, scores)
+            extra = {"effort": self.explain_effort, "max_output_tokens": self.max_out}
+            self.record("T4", f"explain_{lang}", key, 1, res, cost, scores, extra)
 
     def t7(self, key: str) -> None:
         if MODELS[key][0] != "meta":
@@ -404,13 +416,17 @@ class Runner:
     def asr_scores(label: Label, text: str) -> dict[str, Any]:
         ref = label.expected.transcript or ""
         scores = {"cer": round(cases.cer(ref.lower(), text.lower().strip()), 3)}
-        if label.expected.extracted.language == "en":
+        if label.expected.extracted.languages[:1] == ["en"]:
             scores["wer"] = round(cases.wer(ref, text), 3)
         return scores
 
     def t6(self, key: str) -> None:
         """Speech to text: Muse Voice Transcribe once per invocation; Spark Open via audio input."""
-        voices = [lbl for lbl in self.labels.values() if lbl.input.kind == "audio"]
+        voices = [
+            lbl
+            for lbl in self.labels.values()
+            if lbl.input.kind == "audio" and (not self.inputs or lbl.id in self.inputs)
+        ]
         if MODELS[key][0] == "baseten":
             for label in voices:
                 prompt = Prompt(
@@ -431,7 +447,9 @@ class Runner:
             wav = cases.INPUTS / label.input.path
             with wave.open(str(wav)) as w:
                 seconds = w.getnframes() / w.getframerate()
-            for bias in (None, ["Hindi", "English"]):
+            hint = [LANG_NAMES[c] for c in label.expected.extracted.languages]
+            hint += [] if "English" in hint else ["English"]
+            for bias in (None, hint):
                 self.meter.check_flat(seconds * TRANSCRIBE_PER_SECOND)
                 res, duration_ms = meta_transcribe(self.settings, model, wav, language_bias=bias)
                 billed_s = duration_ms / 1000 if duration_ms else seconds
@@ -558,11 +576,19 @@ def main() -> None:
     ap.add_argument("--budget", type=float, default=5.0, help="USD cap for all spike runs combined")
     ap.add_argument("--report", action="store_true", help="only write the markdown summary")
     ap.add_argument("--cleanup", action="store_true", help="only delete files uploaded to Meta")
+    ap.add_argument("--inputs", default="", help="T6: comma list of audio label ids (default all)")
+    ap.add_argument("--langs", default="", help="T4: comma list of language codes (default all)")
+    ap.add_argument("--max-out", type=int, default=MAX_OUT, help="max output tokens per call")
+    ap.add_argument("--explain-effort", default="medium", help="T4 reasoning effort")
     args = ap.parse_args()
     if args.report:
         report()
         return
     runner = Runner(args.budget, args.runs, args.transports.split(","), args.efforts.split(","))
+    runner.inputs = set(filter(None, args.inputs.split(",")))
+    runner.langs = set(filter(None, args.langs.split(",")))
+    runner.max_out = args.max_out
+    runner.explain_effort = args.explain_effort
     try:
         if not args.cleanup:
             for key in args.models.split(","):

@@ -82,7 +82,7 @@ class BillFields(BaseModel):
     due_date: date | None = None
     bill_date: date | None = None
     payment_destinations: list[PaymentDestination] = Field(default_factory=list)
-    language: str | None = None  # ISO 639-1 code of the main language
+    languages: list[str] = Field(default_factory=list)  # ISO 639-1 codes, main language first
     urgency_language: bool = False
 
 
@@ -101,7 +101,7 @@ class ExtractionOutput(BaseModel):
     due_date: Scored[date | None]
     bill_date: Scored[date | None]
     payment_destinations: Scored[list[PaymentDestination]]
-    language: Scored[str | None]
+    languages: Scored[list[str]]
     urgency_language: Scored[bool]
 
     def to_fields(self) -> BillFields:
