@@ -14,3 +14,5 @@ ignore = ["E501"]  # ruff format owns line length; long string literals are allo
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+markers = ["live: calls real model APIs (costs money); run with -m live"]
+addopts = "-m 'not live'"
