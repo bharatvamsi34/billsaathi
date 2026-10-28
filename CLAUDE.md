@@ -153,19 +153,23 @@ billsaathi/
 Live sessions (9:30–10:30 PM IST): Oct 27 Agents 101 · Oct 28 Agents 102 · Oct 30 Fireworks inference & training.
 Office hours: weekdays 7:30–8:30 PM IST (from Nov 2: 8:30–9:30 PM IST) in #office-hours.
 
+Re-planned 2026-10-28: Day 1 ran into the morning of Oct 28, so the lost day is absorbed by
+turning the separate "harden" day into a full demo-video day and folding hardening into Nov 2.
+Feature freeze stays **Mon Nov 2, midnight**.
+
 | Day | Date | Goal | Done when |
 |---|---|---|---|
-| 1 | Tue Oct 27 | Repo + **model spike** + skeleton deploy | Public repo created; each Meta model called from Python with a sample bill/voice clip; findings recorded in §4; FastAPI "hello" deployed to Azure Central India |
-| 2 | Wed Oct 28 | **Data + mock BBPS + extraction** | 60–80 labelled synthetic items (genuine bills, scam SMS/WhatsApp, tampered bills) across 6–8 billers & 3 languages; mock BBPS endpoints live; extraction returns validated JSON with confidences |
-| 3 | Thu Oct 29 | **Agent + risk engine** | Agent calls tools autonomously; hard rules + LLM layer merged; safety invariants tested; CLI run over full dataset |
-| 4 | Fri Oct 30 | **Web app core flow** | Capture → progress steps (show agent's tool calls live) → verdict card with evidence → explanation, on a phone |
-| 5 | Sat Oct 31 | **Languages, voice, act** | Hindi/Marathi/English explanations; voice question via Muse Voice Transcribe; sandbox pay with confirmation + audit; SAM 3.1 crop + highlight |
-| 6 | Sun Nov 1 | **Prod deploy + eval + privacy mode** | Full stack live on Azure; eval harness produces metrics page; Privacy Mode on Baseten end-to-end |
-| 7 | Mon Nov 2 | **WhatsApp bot (stretch) + polish** | Forward → verdict reply works on test number. **Feature freeze at midnight.** |
-| 8 | Tue Nov 3 | **Harden + story** | Edge cases, error states, README with architecture + metrics, demo script rehearsed, draft video recorded |
-| 9 | Wed Nov 4 | **Ship** | Final 3-min video, submission done by 9 PM IST, X post for Most Viral, all links verified in an incognito window |
+| 1 | Tue Oct 27 – Wed Oct 28 AM | Repo + **model spike** + skeleton deploy | **Done.** Public repo; every Meta model called from Python; findings in §4; FastAPI app live on Azure Central India; CI green |
+| 2 | Wed Oct 28 | **Mock BBPS + tools + data + extraction** | **Done.** 8 mock billers with endpoints; 5 verification tools with stable evidence ids; 60 labelled synthetic items (EN/TE/HI) whose evidence the tools reproduce; extraction on Spark 1.3 returns validated JSON (5/5 live); FEEDBACK.md and docs/AGENT_DESIGN.md started |
+| 3 | Thu Oct 29 | **Agent + risk engine** | Agent loop per docs/AGENT_DESIGN.md: tools, `ask_user`, `submit_verdict` checks, 3-refusal → CAUTION; risk engine reproduces the dataset's verdicts; safety rules tested with a scripted model; CLI run over the dataset |
+| 4 | Fri Oct 30 | **Web app core flow** | Capture → live agent steps from the evidence record → verdict card with evidence → explanation, on a phone |
+| 5 | Sat Oct 31 | **Languages, voice, act + user testing round 1** | EN/TE/HI explanations (MR/TA beta); voice question via Muse Voice Transcribe; sandbox pay with confirmation + audit; SAM 3.1 crop. **3–5 real people try the deployed app**; findings logged in §11 |
+| 6 | Sun Nov 1 | **Prod deploy + eval + Privacy Mode + user testing round 2** | Full stack live on Azure; eval harness metrics page (test split); Privacy Mode on Baseten end to end; **second round with 3–5 people**, fixes from round 1 verified |
+| 7 | Mon Nov 2 | **Fixes from testing + harden + README** | Edge cases and error states; README with architecture and metrics; WhatsApp bot only if everything else is green. **Feature freeze at midnight.** |
+| 8 | Tue Nov 3 | **Demo video (full day)** | Script rehearsed, 3-minute video recorded, edited and uploaded; links tested |
+| 9 | Wed Nov 4 | **Ship** | Submission done by 9 PM IST, X post for Most Viral, all links verified in an incognito window |
 
-**Rule:** if a day slips, cut from §5.2 bottom-up (Family protect → WhatsApp → Privacy Mode). Never cut deployment, tests on safety invariants, or demo quality.
+**Rule:** if a day slips, cut from §5.2 bottom-up (Family protect → WhatsApp → Privacy Mode). Never cut deployment, tests on safety invariants, user testing, or demo quality.
 
 ## 9. Demo video plan (3:00)
 
@@ -200,6 +204,12 @@ Record every decision and spike result here with a date, so the README and demo 
 - 2026-10-27 — Launch languages EN/TE/HI; MR/TA beta. BV ratings of Spark 1.3 explanations: Telugu 4/5, Hindi ≈4/5.
 - 2026-10-27 — Labels: `languages` is a list, main language first. Real voice recordings and their labels stay out of git (`labels.local.jsonl`).
 - 2026-10-27 — Open items: decode the SAM mask format; Baseten pricing; a Hindi voice clip (optional); check whether Zero Data Retention (ZDR) mode is available for our Meta account — the speech-to-text pricing page says ZDR costs the same as standard. If yes, enable it for all production calls and mention it in the README.
+- 2026-10-28 — Azure live: `ca-billsaathi-api` in `rg-billsaathi-cin` (Central India), image built with `az acr build`, pulled by managed identity (AcrPull only), scales 0–1; budget ₹1,000/month with 80% email alert. Deploy with `infra/deploy.ps1 -Step 5` then `-Step 8`. Raise min replicas to 1 before the demo.
+- 2026-10-28 — Day 2 built: mock BBPS (8 fictional billers, 40 consumers, 6-month history, `/api/v1/bbps-mock`), 5 tools returning `ToolResult` with stable `evidence_id`s, append-only `EvidenceRecord`, facts 1930 and cybercrime.gov.in verified by BV.
+- 2026-10-28 — Dataset: 60 items in `data/synthetic` (24 SAFE / 25 SCAM / 11 CAUTION; 39 dev / 21 test, stratified by scenario). Labels written from intent; a test requires the real tools to reproduce every label. Verdict policy written in `data/synthetic/README.md`; polite "avoid disconnection" reminders stay SAFE (BV). Tune on dev only; report on test.
+- 2026-10-28 — Extraction: Spark 1.3, `low` effort, inline images, validated JSON with up to 2 retries; 5/5 dev images correct live (~$0.006 each, 4–7 s).
+- 2026-10-28 — Agent design agreed (`docs/AGENT_DESIGN.md`): verification inside `submit_verdict`, citations must exist in this run, LLM can never lower the risk-engine floor, 3 refusals → CAUTION, one `ask_user` per run, scripted fake model for tests.
+- 2026-10-28 — Schedule re-planned (§8): Nov 3 is a full demo-video day; user testing with 3–5 real people on Oct 31 and Nov 1.
 
 ## 12. How to work with BV (the builder)
 
