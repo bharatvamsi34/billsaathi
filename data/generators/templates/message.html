@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; }
+  body { width: 420px; height: 760px; font-family: "Segoe UI", "Nirmala UI", Arial, sans-serif; }
+  .sms { background: #f4f4f6; }
+  .sms .bar { background: #fff; color: #111; border-bottom: 1px solid #ddd; }
+  .whatsapp { background: #ece5dd; }
+  .whatsapp .bar { background: #075e54; color: #fff; }
+  .bar { padding: 14px 16px; }
+  .sender { font-size: 18px; font-weight: 600; }
+  .sub { font-size: 12px; opacity: 0.75; }
+  .day { text-align: center; font-size: 12px; color: #888; margin: 18px 0 8px; }
+  .bubble { margin: 0 56px 0 14px; background: #fff; border-radius: 14px; padding: 12px 14px; font-size: 15px; line-height: 1.5; box-shadow: 0 1px 1px rgba(0,0,0,.08); }
+  .bubble a { color: #1a62d6; text-decoration: underline; }
+  .time { font-size: 11px; color: #999; margin: 4px 0 0 18px; }
+</style>
+</head>
+<body class="$theme">
+  <div class="bar"><div class="sender">$sender</div><div class="sub">$sub</div></div>
+  <div class="day">Today</div>
+  <div class="bubble">$body_html</div>
+  <div class="time">$time</div>
+<script>
+  const regions = {};
+  for (const el of document.querySelectorAll("[data-region]")) {
+    const r = el.getBoundingClientRect();
+    regions[el.dataset.region] = [r.left, r.top, r.right, r.bottom];
+  }
+  document.body.setAttribute("data-regions", JSON.stringify(regions));
+</script>
+</body>
+</html>

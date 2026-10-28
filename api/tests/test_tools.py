@@ -210,6 +210,14 @@ def test_match_scam_patterns(text, codes):
     assert r.codes == codes
 
 
+def test_words_inside_links_and_upi_ids_are_not_phrasing():
+    text = "Pay at https://kyc-update-portal.example/refund or to billupdate.refund@okdemo. Thanks."
+    assert match_scam_patterns(text=text).codes == set()
+    assert match_scam_patterns(text="Claim your refund at bijli-refund.example").codes == {
+        C.REFUND_LURE
+    }
+
+
 # --- shared contract ---
 
 

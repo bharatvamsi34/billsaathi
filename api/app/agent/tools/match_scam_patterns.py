@@ -1,4 +1,10 @@
-"""match_scam_patterns: find known bill-scam phrasings in the message text."""
+"""match_scam_patterns: find known bill-scam phrasings in the message text.
+
+Links and UPI IDs are masked first: words inside them ("kyc-update.example",
+"bill.refund@bank") are judged by check_payment_destination, not as message wording.
+"""
+
+import re
 
 from pydantic import BaseModel, Field
 
@@ -14,6 +20,12 @@ _SUMMARY = {
 }
 
 
+_DESTINATIONS = re.compile(
+    r"[A-Za-z0-9._-]+@[A-Za-z0-9]+"  # UPI ID
+    r"|(?:https?://)?[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}(?:/\S*)?"  # link / domain
+)
+
+
 class Args(BaseModel):
     text: str = Field(description="Full text of the message or bill")
 
@@ -25,9 +37,10 @@ class Args(BaseModel):
     Args,
 )
 def match_scam_patterns(args: Args) -> Outcome:
+    wording = _DESTINATIONS.sub(" ", args.text)
     by_code: dict[str, list[dict[str, str]]] = {}
     for p in PATTERNS:
-        m = p.regex.search(args.text)
+        m = p.regex.search(wording)
         if m:
             by_code.setdefault(p.code.value, []).append(
                 {"pattern_id": p.id, "match": m.group(0)[:80]}

@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; background: #fff; }
+  body { width: 800px; height: 1000px; font-family: "Segoe UI", "Nirmala UI", Arial, sans-serif; color: #111; }
+  .bill { padding: 32px 40px; }
+  header { display: flex; justify-content: space-between; border-bottom: 3px solid $color; padding-bottom: 12px; }
+  .logo { font-size: 25px; font-weight: 700; color: $color; }
+  .local { font-family: "Nirmala UI", sans-serif; font-size: 18px; color: $color; margin-top: 4px; }
+  .meta { text-align: right; font-size: 14px; line-height: 1.5; }
+  .k { color: #333; }
+  .amount { font-size: 28px; font-weight: 700; }
+  /* layout a: bordered table */
+  .layout-a table { width: 100%; border-collapse: collapse; margin-top: 18px; font-size: 15px; }
+  .layout-a td { border: 1px solid #bbb; padding: 7px 10px; }
+  .layout-a td.k { background: #f2f5fb; width: 46%; }
+  /* layout b: two-column cards */
+  .layout-b table { width: 100%; border-collapse: separate; border-spacing: 0 6px; margin-top: 18px; font-size: 15px; }
+  .layout-b td { padding: 8px 12px; background: #f7f7f7; }
+  .layout-b td.k { width: 46%; border-left: 4px solid $color; }
+  .pay { margin-top: 20px; padding: 12px 14px; border: 2px dashed $color; font-size: 15px; line-height: 1.6; }
+  footer { margin-top: 18px; font-size: 11px; color: #777; }
+</style>
+</head>
+<body>
+<div class="bill $layout">
+  <header>
+    <div>
+      <div class="logo">$biller_name</div>
+      <div class="local">$local_line</div>
+    </div>
+    <div class="meta">$doc_title<br>Bill No: $bill_no</div>
+  </header>
+  <table>$rows</table>
+  <div class="pay">$pay_html</div>
+  <footer>Synthetic test document generated for the BillSaathi hackathon. Not a real bill.</footer>
+</div>
+<script>
+  const regions = {};
+  for (const el of document.querySelectorAll("[data-region]")) {
+    const r = el.getBoundingClientRect();
+    regions[el.dataset.region] = [r.left, r.top, r.right, r.bottom];
+  }
+  document.body.setAttribute("data-regions", JSON.stringify(regions));
+</script>
+</body>
+</html>
