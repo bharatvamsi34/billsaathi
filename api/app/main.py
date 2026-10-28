@@ -4,11 +4,13 @@ import os
 
 from fastapi import FastAPI
 
+from app.bbps_mock.router import router as bbps_mock_router
 from app.config import get_settings
 
 VERSION = "0.1.0"
 
 app = FastAPI(title="BillSaathi API", version=VERSION)
+app.include_router(bbps_mock_router)
 
 
 @app.get("/")

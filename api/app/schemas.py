@@ -52,6 +52,11 @@ class EvidenceCode(StrEnum):
     DISCONNECTION_THREAT = "DISCONNECTION_THREAT"
     KYC_UPDATE_LURE = "KYC_UPDATE_LURE"
     AMOUNT_SPIKE = "AMOUNT_SPIKE"
+    CONSUMER_NOT_FOUND = "CONSUMER_NOT_FOUND"
+    AMOUNT_WITHIN_HISTORY = "AMOUNT_WITHIN_HISTORY"
+    LOOKALIKE_VPA = "LOOKALIKE_VPA"
+    REFUND_LURE = "REFUND_LURE"
+    URGENCY_PRESSURE = "URGENCY_PRESSURE"
 
 
 class InputKind(StrEnum):
@@ -140,4 +145,5 @@ class Label(BaseModel):
     scenario: str  # e.g. genuine_bill, tampered_amount, disconnection_scam, kyc_apk_scam
     input: LabelInput
     expected: Expected
+    split: Literal["dev", "test"] | None = None  # prompts are tuned on dev only
     synthetic: Literal[True] = True
