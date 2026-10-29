@@ -1,0 +1,68 @@
+[
+  {
+    "id": "scam_te_known_vpa",
+    "title": {
+      "en": "Telugu SMS: “pay now or power cut”",
+      "te": "తెలుగు SMS: “ఇప్పుడే చెల్లించండి, లేకపోతే కరెంట్ కట్”",
+      "hi": "तेलुगु SMS: “अभी भुगतान करें, वरना बिजली कटेगी”"
+    },
+    "language": "te",
+    "kind": "text",
+    "text": "విద్యుత్ కార్యాలయం: మీ బకాయి ₹2,750. వెంటనే electricityofficer@okdemo కు చెల్లించండి, లేకపోతే ఈ రాత్రి కరెంట్ కట్ అవుతుంది."
+  },
+  {
+    "id": "scam_hi_kyc_apk",
+    "title": {
+      "en": "Hindi WhatsApp: “update KYC, install app”",
+      "te": "హిందీ WhatsApp: “KYC అప్‌డేట్ చేయండి, యాప్ ఇన్‌స్టాల్ చేయండి”",
+      "hi": "हिंदी WhatsApp: “KYC अपडेट करें, ऐप डाउनलोड करें”"
+    },
+    "language": "hi",
+    "kind": "text",
+    "text": "Demo Power: आपका KYC अपडेट नहीं हुआ है। तुरंत ऐप डाउनलोड करें वरना बिजली सप्लाई बंद हो जाएगी: demopower-kyc.example/DemoPower_KYC.apk"
+  },
+  {
+    "id": "bill_tampered_demo",
+    "title": {
+      "en": "Electricity bill with a changed amount",
+      "te": "మొత్తం మార్చిన కరెంట్ బిల్లు",
+      "hi": "बदली हुई राशि वाला बिजली बिल"
+    },
+    "language": "en",
+    "kind": "image",
+    "src": "/samples/bill_tampered_demo.png"
+  },
+  {
+    "id": "bill_swapped_vpa_dgas",
+    "title": {
+      "en": "Gas bill with a different UPI ID",
+      "te": "వేరే UPI ID ఉన్న గ్యాస్ బిల్లు",
+      "hi": "अलग UPI ID वाला गैस बिल"
+    },
+    "language": "en",
+    "kind": "image",
+    "src": "/samples/bill_swapped_vpa_dgas.png"
+  },
+  {
+    "id": "photo_genuine_demo",
+    "title": {
+      "en": "Phone photo of a real-looking bill",
+      "te": "ఫోన్‌తో తీసిన బిల్లు ఫోటో",
+      "hi": "फ़ोन से खींची बिल की फ़ोटो"
+    },
+    "language": "en",
+    "kind": "image",
+    "src": "/samples/photo_genuine_demo.jpg"
+  },
+  {
+    "id": "reminder_en_dmob_polite_disconnect",
+    "title": {
+      "en": "Polite reminder from the biller",
+      "te": "బిల్లర్ నుండి మర్యాదపూర్వక గుర్తుచేత",
+      "hi": "बिलर की ओर से विनम्र याद-दिहानी"
+    },
+    "language": "en",
+    "kind": "text",
+    "text": "Demo Mobile: Bill Rs 448.00 for account DM952392098 is due on 31-Oct-2026. Please pay by the due date to avoid disconnection. Pay at demomobile.example"
+  }
+]
