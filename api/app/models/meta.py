@@ -12,7 +12,18 @@ import openai
 from openai import OpenAI
 
 from app.config import Settings
-from app.models.base import Effort, LLMError, LLMResponse, Message, Usage
+from app.models.base import (
+    AssistantTurn,
+    ConvItem,
+    Effort,
+    LLMError,
+    LLMResponse,
+    Message,
+    ModelTurn,
+    ToolCall,
+    Usage,
+    UserText,
+)
 from app.models.pricing import cost_usd
 
 log = logging.getLogger("billsaathi.llm")
@@ -62,23 +73,11 @@ class MetaClient:
             items.append({"role": "user", "content": content})
         return items
 
-    def respond(
-        self,
-        *,
-        system: str,
-        messages: list[Message],
-        model: str,
-        effort: Effort = "low",
-        max_output_tokens: int = 4096,
-    ) -> LLMResponse:
+    def _create(self, kwargs: dict) -> tuple[object, Usage, float, int]:
+        """One Responses API call with retries. Returns (response, usage, latency_ms, attempts)."""
+        model = kwargs["model"]
         if "contributor" in model.lower():
             raise LLMError(f"refusing {model!r}: Contributor models train on inputs")
-        kwargs = {
-            "model": model,
-            "input": self._input(system, messages),
-            "reasoning": {"effort": effort},
-            "max_output_tokens": max_output_tokens,
-        }
         t0 = time.perf_counter()
         for attempt in range(1, self.max_attempts + 1):
             try:
@@ -111,11 +110,80 @@ class MetaClient:
             model, latency_ms, usage.input_tokens, usage.output_tokens, usage.reasoning_tokens,
             usage.cost_usd, attempt,
         )  # fmt: skip
+        return resp, usage, latency_ms, attempt
+
+    def respond(
+        self,
+        *,
+        system: str,
+        messages: list[Message],
+        model: str,
+        effort: Effort = "low",
+        max_output_tokens: int = 4096,
+    ) -> LLMResponse:
+        resp, usage, latency_ms, attempts = self._create(
+            {
+                "model": model,
+                "input": self._input(system, messages),
+                "reasoning": {"effort": effort},
+                "max_output_tokens": max_output_tokens,
+            }
+        )
         return LLMResponse(
             text=resp.output_text,
             model=model,
             provider=self.provider,
             latency_ms=latency_ms,
             usage=usage,
-            transport_attempts=attempt,
+            transport_attempts=attempts,
+        )
+
+    @staticmethod
+    def _conversation(system: str, conversation: list[ConvItem]) -> list[dict]:
+        items: list[dict] = [{"role": "system", "content": system}]
+        for item in conversation:
+            if isinstance(item, UserText):
+                items.append(
+                    {"role": "user", "content": [{"type": "input_text", "text": item.text}]}
+                )
+            elif isinstance(item, AssistantTurn):
+                items.extend(item.turn.provider_items)  # the model's own items, incl. reasoning
+            else:
+                items.extend(
+                    {"type": "function_call_output", "call_id": o.call_id, "output": o.output}
+                    for o in item.outputs
+                )
+        return items
+
+    def step(
+        self,
+        *,
+        system: str,
+        conversation: list[ConvItem],
+        tools: list[dict],
+        model: str,
+        effort: Effort = "low",
+        max_output_tokens: int = 4096,
+    ) -> ModelTurn:
+        resp, usage, latency_ms, _ = self._create(
+            {
+                "model": model,
+                "input": self._conversation(system, conversation),
+                "tools": tools,
+                "reasoning": {"effort": effort},
+                "max_output_tokens": max_output_tokens,
+            }
+        )
+        items = [item.model_dump(exclude_none=True) for item in resp.output]
+        calls = [
+            ToolCall(call_id=i["call_id"], name=i["name"], arguments=i.get("arguments", ""))
+            for i in items
+            if i.get("type") == "function_call"
+        ]
+        return ModelTurn(
+            text=resp.output_text,
+            tool_calls=calls,
+            provider_items=items,
+            latency_ms=latency_ms,
+            usage=usage,
         )
