@@ -13,7 +13,10 @@ cannot skip.
 ```
 capture -> isolate (SAM 3.1) -> extract (Spark 1.3, validated JSON + visible text)
         -> MILESTONE CHECK: every link / UPI ID / mobile number in the text must be a destination
-        -> AGENT LOOP: model calls tools (several per turn, run in parallel); every result is recorded
+        -> MANDATORY CHECKS (code, fixed points, parallel): biller, every destination, scam wording,
+           then bill fetch + history once the biller is known
+        -> AGENT LOOP: model reviews that evidence, may call more tools (several per turn, in
+           parallel) or ask_user; every result is recorded
         -> submit_verdict (deterministic checks, then an LLM claims judge; may be refused)
         -> explain in the user's language (facts from app/facts.py only)
         -> USER SIGN-OFF: nothing is paid without the user's explicit confirmation
@@ -27,6 +30,13 @@ text (or the text extraction saw in the image), the destinations to check, and t
 
 Each layer can only make the outcome stricter; none can turn a risky request into SAFE.
 
+0. **Mandatory checks at fixed points** (code, Meta Agents 102 guidance): before the agent's
+   first turn, code runs `lookup_biller`, `check_payment_destination` for every destination
+   (including any the milestone check added) and `match_scam_patterns` in parallel, then
+   `fetch_bill` and `get_bill_history` once the biller is verified. They are recorded with
+   origin `mandatory`, so the UI and audit log show them as fixed-point checks, and the agent
+   cannot skip them. **The agent investigates further and decides**: it reviews this evidence,
+   may call any tool again or `ask_user`, and must `submit_verdict` with citations.
 1. **Deterministic checks** (code, no model): citations exist, every destination checked, never
    below the risk-engine floor, SAFE only if every hard check passed, facts only from the
    constants file.
@@ -70,10 +80,13 @@ Day 3 adds `AgentRun`, `SubmitVerdictArgs`, `Refusal`, `FinalVerdict`, the risk 
 Every tool result, including failures, is appended to the evidence record before the model sees it.
 
 - **Parallel calls:** the model may request several tools in one turn; verification tools are pure
-  functions, so they run in parallel and are recorded in the order the model requested them. The
-  system prompt asks for all independent checks in the first turn (`lookup_biller`,
-  `check_payment_destination` for every destination, `match_scam_patterns`), then `fetch_bill` and
-  `get_bill_history` once the biller is known, then `submit_verdict`.
+  functions, so they run in parallel and are recorded in the order the model requested them.
+  Because the mandatory checks are already done, the system prompt asks the agent to submit in its
+  first turn when the evidence is complete, and to call more tools only when something is missing
+  or failed (for example after `ask_user`).
+- **Reasons say only what the evidence says:** the agent may not add details from the raw text
+  (times, amounts, names, intent) that the cited evidence does not contain; the claims judge
+  refuses such reasons.
 - **Tool allowlist:** a call to any name outside the registry is refused, recorded
   (`kind="refusal"`, rule `unknown_tool`) and sent back to the model as feedback. It counts toward
   the tool-call limit.
@@ -198,6 +211,7 @@ A `ScriptedModel` implements the same client interface and returns a fixed seque
 | `ask_user` then reply | pauses, resumes, verdict uses the new value |
 | Second `ask_user` | refused |
 | More than 8 tool calls | run ends as CAUTION |
+| Agent calls no tools and submits at once | every mandatory check is already in the record, before its first turn |
 | Several tools in one turn | all run; recorded in requested order |
 | Call to a tool not in the registry | refused (`unknown_tool`), recorded, fed back |
 | Judge says a reason is unsupported | refused (`claims_check`) with the judge's feedback |

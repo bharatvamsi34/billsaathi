@@ -115,10 +115,68 @@ def start(
         },
     )
     if missed is not None:
-        record.add_tool_result(missed)
-    session.conversation.append(UserText(text=user_message(agent_input, destinations)))
+        record.add_tool_result(missed, origin="mandatory")
+    t0 = time.perf_counter()
+    mandatory = _mandatory_checks(session)
+    session.metrics.latency_ms += (time.perf_counter() - t0) * 1000
+    briefing = "\n\n".join(
+        [
+            user_message(agent_input, destinations),
+            "Mandatory checks already run at fixed points (cite these evidence_id values):",
+            *(
+                f"{r.tool} {json.dumps(r.args, ensure_ascii=False, default=str)}\n-> {_tool_output(r)}"
+                for r in mandatory
+            ),
+        ]
+    )
+    session.conversation.append(UserText(text=briefing))
     _run(session)
     return session
+
+
+def _mandatory_checks(session: AgentSession) -> list[ToolResult]:
+    """Fixed-point checks run by code before the agent's first turn; the agent cannot skip them.
+
+    Wave 1 (parallel): lookup_biller, check_payment_destination for every destination
+    (including any the milestone check added), match_scam_patterns on the raw text.
+    Wave 2 (parallel, once the biller is verified): fetch_bill and get_bill_history.
+    """
+    e = session.input.extraction
+    wave1: list[tuple[str, dict]] = [
+        ("lookup_biller", {"name": e.biller_name.value, "category": e.biller_category.value}),
+        *(
+            ("check_payment_destination", {"kind": d.kind, "value": d.value})
+            for d in session.destinations
+        ),
+    ]
+    if session.input.raw_text:
+        wave1.append(("match_scam_patterns", {"text": session.input.raw_text}))
+    results = _run_waves(session, wave1)
+    biller_id = (
+        results[0].data.get("biller_id")
+        if EvidenceCode.BILLER_VERIFIED in results[0].codes
+        else None
+    )
+    consumer, amount = e.consumer_number.value, e.amount.value
+    if biller_id and consumer and amount is not None:
+        common = {"biller_id": biller_id, "consumer_number": consumer}
+        results += _run_waves(
+            session,
+            [
+                ("fetch_bill", common | {"claimed_amount": amount}),
+                ("get_bill_history", common | {"current_amount": amount}),
+            ],
+        )
+    return results
+
+
+def _run_waves(session: AgentSession, calls: list[tuple[str, dict]]) -> list[ToolResult]:
+    with ThreadPoolExecutor(max_workers=len(calls)) as pool:  # pure functions
+        results = list(pool.map(lambda c: TOOLS[c[0]](**c[1]), calls))
+    for result in results:  # recorded in a fixed order
+        session.record.add_tool_result(result, origin="mandatory")
+    session.metrics.mandatory_calls += len(results)
+    return results
 
 
 def resume(session: AgentSession, reply: str | None) -> AgentSession:
@@ -318,10 +376,14 @@ def _submit(session: AgentSession, call: ToolCall) -> str:
     )
     refusal = run_deterministic(ctx)
     if refusal is None:  # the judge runs only after every deterministic check passed
-        refusal, judge_resp = claims_check(ctx, session.judge, session.config.judge_model)
+        refusal, judge_resp, feedback = claims_check(ctx, session.judge, session.config.judge_model)
         session.metrics.judge_calls += 1
         if judge_resp is not None:
             _add_usage(session, judge_resp.usage)
+        session.record.append(
+            "judge",
+            {"verdict": args.verdict.value, "accepted": refusal is None, "reasons": feedback},
+        )
     if refusal is not None:
         return _refused_submit(session, refusal)
     final = FinalVerdict(

@@ -48,7 +48,9 @@ class ToolResult(BaseModel):
         return {e.code for e in self.evidence}
 
 
-EntryKind = Literal["tool_result", "refusal", "ask_user", "user_reply", "verdict", "note"]
+EntryKind = Literal["tool_result", "refusal", "ask_user", "user_reply", "judge", "verdict", "note"]
+# "mandatory": run by code at a fixed point before the agent's first turn; "agent": requested by the model.
+Origin = Literal["mandatory", "agent"]
 
 
 class RecordEntry(BaseModel):
@@ -72,6 +74,7 @@ class EvidenceRecord:
         self._entries: list[RecordEntry] = []
         self._evidence: dict[str, ToolEvidence] = {}
         self._results: list[ToolResult] = []
+        self._origins: list[Origin] = []
 
     def append(self, kind: EntryKind, payload: dict[str, Any]) -> RecordEntry:
         entry = RecordEntry(
@@ -80,16 +83,20 @@ class EvidenceRecord:
         self._entries.append(entry)
         return entry
 
-    def add_tool_result(self, result: ToolResult) -> RecordEntry:
+    def add_tool_result(self, result: ToolResult, origin: Origin = "agent") -> RecordEntry:
         for ev in result.evidence:
             self._evidence.setdefault(ev.evidence_id, ev)
         self._results.append(result)
-        return self.append("tool_result", result.model_dump(mode="json"))
+        self._origins.append(origin)
+        return self.append("tool_result", {**result.model_dump(mode="json"), "origin": origin})
 
     @property
     def tool_results(self) -> tuple[ToolResult, ...]:
         """Every tool result of this run, in the order it was recorded."""
         return tuple(self._results)
+
+    def tool_results_from(self, origin: Origin) -> tuple[ToolResult, ...]:
+        return tuple(r for r, o in zip(self._results, self._origins, strict=True) if o == origin)
 
     @property
     def entries(self) -> tuple[RecordEntry, ...]:

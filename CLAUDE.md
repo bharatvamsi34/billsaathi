@@ -68,7 +68,7 @@ Integration rules (from the spike):
 1. **Capture** — camera photo / upload of a bill, screenshot of SMS/WhatsApp, pasted text, or voice note.
 2. **Isolate** — SAM 3.1 crops the document from the photo (fallback: use original image).
 3. **Extract** — vision model → validated JSON: biller name, biller category, consumer/account no., amount, due date, bill date, payment destination (UPI VPA, URL, phone, QR text), language, urgency language, and **per-field confidence**.
-4. **Verify (agent with tools)** — the agent decides which tools to call:
+4. **Verify (agent with tools)** — mandatory checks run at fixed points (Meta Agents 102 guidance); the agent investigates further and decides. Code runs `lookup_biller`, `check_payment_destination` for every destination, `match_scam_patterns`, then `fetch_bill` and `get_bill_history` once the biller is known, before the agent's first turn (recorded with origin `mandatory`); the agent reviews that evidence, may call any tool again or `ask_user`, and must `submit_verdict` with citations. Tools:
    - `lookup_biller(name, category)` → mock BBPS biller registry (fuzzy match, official biller ID)
    - `fetch_bill(biller_id, consumer_no)` → mock BBPS bill fetch (amount/due date the biller actually has)
    - `check_payment_destination(vpa|url|phone)` → official-channel allowlist + known-scam list + lookalike-domain detection
@@ -216,6 +216,8 @@ Record every decision and spike result here with a date, so the README and demo 
 - 2026-10-29 — Speed: several tool calls per model turn, run in parallel; target ≤ 3 agent turns and ≤ 10 s per run on Spark 1.3 `low` (extraction excluded); turns, latency and cost recorded per run.
 - 2026-10-29 — Schedule re-planned again (§8), nothing cut: Oct 30 agent loop + claims check + live run + API; Oct 31 web core, then WhatsApp webhook; Nov 1 explanations/voice/pay/deploy/eval/user tests, then Muse Image share card; Nov 2 Privacy Mode/polish/user tests, then WhatsApp polish; freeze Nov 2 midnight. **Rule: extras never start until that day's core is committed, tested and deployed.**
 - 2026-10-29 — Working mode: commit and push each block when tests and lint pass; stop only for live runs over $1, design decisions not covered here or in AGENT_DESIGN.md, or failures not fixed in two attempts.
+- 2026-10-29 — First live agent run (agent chose all tools): 10/10 correct, no false SAFE, but median 14.0 s; 4/10 first submissions refused by the judge. BV chose to prefetch mandatory checks in code (fixed points) and to tune the agent's reason-writing; the judge prompt stays unchanged (its one remaining objection — "tonight" not in the cited evidence — was correct).
+- 2026-10-29 — Live run after prefetch + reason tuning, same 10 dev items, Spark 1.3 `low`: **10/10 correct, false SAFE 0, every run 1 agent turn + 1 judge call, 0 refusals, median 5.6 s, p90 8.1 s, $0.10 total** (`eval/results/agent_live_2026-10-29_2357.jsonl`). Earlier runs kept for comparison (`…_2344` before, `…_2355` the 4 refused items).
 
 ## 12. How to work with BV (the builder)
 

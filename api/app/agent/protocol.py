@@ -67,7 +67,8 @@ class Refusal(BaseModel):
 class Metrics(BaseModel):
     model_turns: int = 0  # agent turns (judge calls counted separately)
     judge_calls: int = 0
-    tool_calls: int = 0
+    mandatory_calls: int = 0  # fixed-point checks run by code before the first turn
+    tool_calls: int = 0  # extra calls requested by the agent (limit applies to these)
     refusals: int = 0
     latency_ms: float = 0.0  # model + tools + judge, excluding time paused for the user
     input_tokens: int = 0

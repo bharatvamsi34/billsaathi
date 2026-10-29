@@ -157,8 +157,9 @@ class JudgeReply(BaseModel):
 
 def claims_check(
     ctx: CheckContext, judge: LLMClient, model: str
-) -> tuple[Refusal | None, LLMResponse | None]:
-    """One judge call. Returns (refusal or None, the judge's response for metrics)."""
+) -> tuple[Refusal | None, LLMResponse | None, list[dict]]:
+    """One judge call. Returns (refusal or None, the judge's response for metrics,
+    per-reason feedback for the evidence record: reason text, supported, why)."""
     payload = {
         "reasons": [
             {
@@ -193,20 +194,32 @@ def claims_check(
             max_output_tokens=2048,
         )
     except LLMError:
-        return unavailable, None
+        return unavailable, None, []
     try:
         reply = JudgeReply.model_validate(parse_json(resp.text))
     except (ValueError, ValidationError):
-        return unavailable, resp
+        return unavailable, resp, []
     if sorted(item.index for item in reply.reasons) != list(range(len(ctx.args.reasons))):
-        return unavailable, resp
-    unsupported = [
-        item for item in sorted(reply.reasons, key=lambda x: x.index) if not item.supported
+        return unavailable, resp, []
+    items = sorted(reply.reasons, key=lambda x: x.index)
+    feedback = [
+        {
+            "reason": ctx.args.reasons[item.index].text,
+            "evidence_ids": ctx.args.reasons[item.index].evidence_ids,
+            "supported": item.supported,
+            "why": item.why,
+        }
+        for item in items
     ]
+    unsupported = [item for item in items if not item.supported]
     if unsupported:
         detail = " ".join(f"Reason {item.index + 1}: {item.why}" for item in unsupported)
-        return Refusal(
-            rule="claims_check",
-            message=f"Some reasons are not supported by the evidence they cite. {detail}",
-        ), resp
-    return None, resp
+        return (
+            Refusal(
+                rule="claims_check",
+                message=f"Some reasons are not supported by the evidence they cite. {detail}",
+            ),
+            resp,
+            feedback,
+        )
+    return None, resp, feedback

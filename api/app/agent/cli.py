@@ -11,6 +11,7 @@ extraction excluded). Stops before the next item once --budget (USD) is spent.
 
 import argparse
 import json
+import math
 import statistics
 import sys
 from datetime import datetime
@@ -92,8 +93,13 @@ def main() -> None:
             "forced_reason": final.forced_reason if final else None,
             "turns": m.model_turns,
             "judge_calls": m.judge_calls,
+            "mandatory_calls": m.mandatory_calls,
             "tool_calls": m.tool_calls,
             "refusals": [e.payload["rule"] for e in session.record.entries if e.kind == "refusal"],
+            "refusal_messages": [
+                e.payload["message"] for e in session.record.entries if e.kind == "refusal"
+            ],
+            "judge": [e.payload for e in session.record.entries if e.kind == "judge"],
             "latency_s": round(m.latency_ms / 1000, 2),
             "cost_usd": round(m.cost_usd, 5),
             "input_tokens": m.input_tokens,
@@ -106,7 +112,8 @@ def main() -> None:
         ok = "✓" if row["got"] == row["expected"] else "✗"
         print(
             f"{ok} {row['id']:<38} {row['lang']}  exp {row['expected']:<7} got {row['got']:<7} "
-            f"turns {row['turns']} judge {row['judge_calls']} tools {row['tool_calls']} "
+            f"turns {row['turns']} judge {row['judge_calls']} "
+            f"tools {row['mandatory_calls']}+{row['tool_calls']} "
             f"refusals {len(row['refusals'])}  {row['latency_s']:>5.1f}s  ${row['cost_usd']:.4f}"
             + ("  FORCED: " + row["forced_reason"] if row["forced"] else "")
         )
@@ -115,10 +122,12 @@ def main() -> None:
     correct = sum(r["got"] == r["expected"] for r in rows)
     false_safe = sum(r["got"] == "SAFE" and r["expected"] != "SAFE" for r in rows)
     on_target = sum(r["turns"] <= TARGET_TURNS and r["latency_s"] <= TARGET_SECONDS for r in rows)
+    times = sorted(r["latency_s"] for r in rows)
+    p90 = times[min(len(times) - 1, math.ceil(0.9 * len(times)) - 1)]  # nearest-rank
     print(
         f"\n{correct}/{len(rows)} correct · false SAFE {false_safe} · "
         f"median turns {statistics.median(r['turns'] for r in rows)} · "
-        f"median latency {statistics.median(r['latency_s'] for r in rows):.1f}s · "
+        f"median latency {statistics.median(times):.1f}s · p90 {p90:.1f}s · "
         f"on target (≤{TARGET_TURNS} turns, ≤{TARGET_SECONDS:.0f}s) {on_target}/{len(rows)} · "
         f"total ${spent:.4f}\nresults: {out_path}"
     )

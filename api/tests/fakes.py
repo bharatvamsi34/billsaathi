@@ -10,6 +10,7 @@ from app.models.base import (
     ToolCall,
     ToolOutputs,
     Usage,
+    UserText,
 )
 
 _ids = itertools.count(1)
@@ -48,13 +49,17 @@ def submit(verdict: str, *reasons: tuple[str, list[str]], facts=()) -> ModelTurn
 
 
 def tool_outputs(conversation: list) -> list[dict]:
-    """Every tool output the model has seen so far, parsed."""
-    return [
-        json.loads(o.output)
-        for item in conversation
-        if isinstance(item, ToolOutputs)
-        for o in item.outputs
-    ]
+    """Every tool output the model has seen so far, parsed: the mandatory results in the
+    first message ("-> {json}" lines) and the outputs of its own tool calls."""
+    seen = []
+    for item in conversation:
+        if isinstance(item, UserText):
+            seen += [
+                json.loads(line[3:]) for line in item.text.splitlines() if line.startswith("-> ")
+            ]
+        elif isinstance(item, ToolOutputs):
+            seen += [json.loads(o.output) for o in item.outputs]
+    return seen
 
 
 def evidence(conversation: list, code: str | None = None) -> list[str]:

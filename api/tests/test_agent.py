@@ -6,11 +6,13 @@ import pytest
 from dataset_utils import LABELS, first_wave, second_wave
 from fakes import ScriptedModel, evidence, last_outputs, submit, tool_outputs, turn
 
+from app.agent.checks import CheckContext, destinations_checked
+from app.agent.evidence import EvidenceRecord
 from app.agent.loop import AgentConfig, resume, start
-from app.agent.protocol import AgentInput
+from app.agent.protocol import AgentInput, SubmitVerdictArgs
 from app.agent.tools import TOOLS
 from app.models.base import LLMError
-from app.schemas import BillFields, PaymentDestination
+from app.schemas import BillFields, EvidenceCode, PaymentDestination
 
 BY_ID = {lbl.id: lbl for lbl in LABELS}
 GENUINE = BY_ID["reminder_en_demo"]  # SAFE: verified biller, matching amount, official link + UPI
@@ -77,10 +79,47 @@ def test_genuine_safe_in_three_turns_with_parallel_calls():
     assert len(model.judge_inputs) == 1
 
 
+def test_mandatory_checks_cannot_be_skipped():
+    """An agent that calls no tools at all still gets every fixed-point check, before its first turn."""
+    session, model = run(GENUINE, [cite_all("SAFE")])
+    assert session.final.verdict == "SAFE" and not session.final.forced
+    m = session.metrics
+    assert (m.model_turns, m.mandatory_calls, m.tool_calls, m.judge_calls) == (1, 6, 0, 1)
+    mandatory = session.record.tool_results_from("mandatory")
+    f = GENUINE.expected.extracted
+    assert [r.tool for r in mandatory] == [
+        "lookup_biller",
+        *["check_payment_destination"] * len(f.payment_destinations),
+        "match_scam_patterns",
+        "fetch_bill",
+        "get_bill_history",
+    ]
+    assert {r.args["value"] for r in mandatory if r.tool == "check_payment_destination"} == {
+        d.value for d in f.payment_destinations
+    }
+    # all recorded before anything the model did, and all shown to it in its first turn
+    entries = session.record.entries
+    last_mandatory = max(e.seq for e in entries if e.payload.get("origin") == "mandatory")
+    first_model_effect = min(e.seq for e in entries if e.kind in ("judge", "refusal", "verdict"))
+    assert last_mandatory < first_model_effect
+    briefing = model.conversations[0][0].text
+    assert all(e.evidence_id in briefing for r in mandatory for e in r.evidence)
+
+
+def test_mandatory_checks_without_a_known_biller_skip_bill_fetch():
+    unknown = BY_ID["edge_en_unknown_biller"]
+    session, _ = run(unknown, [cite_all("CAUTION")])
+    assert [r.tool for r in session.record.tool_results_from("mandatory")] == [
+        "lookup_biller",
+        "match_scam_patterns",
+    ]
+    assert session.final.verdict == "CAUTION"
+
+
 def test_parallel_calls_are_recorded_in_the_requested_order():
     calls = first_wave(SCAM)
     session, _ = run(SCAM, [turn(*calls), cite_all("SCAM")])
-    recorded = [r for r in session.record.tool_results if r.tool != "milestone_check"]
+    recorded = session.record.tool_results_from("agent")
     assert [(r.tool, r.args.get("value") or r.args.get("name") or "text") for r in recorded] == [
         (name, args.get("value") or args.get("name") or "text") for name, args in calls
     ]
@@ -112,13 +151,23 @@ def test_safe_after_amount_mismatch_is_refused():
     assert session.final.verdict == "CAUTION"
 
 
-def test_safe_with_an_unchecked_destination_is_refused():
-    only_lookup = turn(("lookup_biller", {"name": "Demo Power", "category": "electricity"}))
-    session, _ = run(
-        GENUINE, [only_lookup, wave2(GENUINE), cite_all("SAFE"), wave1(GENUINE), cite_all("SAFE")]
+def test_destinations_checked_is_still_enforced_as_a_safety_net():
+    """Mandatory checks cover every destination, but submit_verdict still verifies it."""
+    record = EvidenceRecord("r")
+    lookup = TOOLS["lookup_biller"](name="Demo Power", category="electricity")
+    record.add_tool_result(lookup)
+    args = SubmitVerdictArgs(
+        verdict="CAUTION",
+        reasons=[{"text": "Biller found.", "evidence_ids": [lookup.evidence[0].evidence_id]}],
     )
-    assert refusal_rules(session) == ["destinations_checked"]
-    assert session.final.verdict == "SAFE"
+    ctx = CheckContext(
+        args=args,
+        record=record,
+        destinations=[PaymentDestination(kind="url", value="demopower.example")],
+        low_confidence=[],
+    )
+    refusal = destinations_checked(ctx)
+    assert refusal.rule == "destinations_checked" and "demopower.example" in refusal.message
 
 
 def test_caution_when_evidence_says_scam_is_refused():
@@ -321,29 +370,48 @@ def test_stopping_without_a_verdict_is_nudged_once_then_forced():
 # --- milestone check inside a run ---
 
 
-def test_link_forgotten_by_extraction_must_be_checked():
+def test_link_forgotten_by_extraction_is_checked_before_the_agent_starts():
     forgot = agent_input(
         SCAM, payment_destinations=[PaymentDestination(kind="phone", value="9000000001")]
     )
+    session, model = run(SCAM, [cite_all("SCAM")], agent_input=forgot)
+    mandatory = session.record.tool_results_from("mandatory")
+    assert mandatory[0].tool == "milestone_check"
+    assert mandatory[0].codes == {EvidenceCode.MISSED_BY_EXTRACTION}
+    link = next(r for r in mandatory if r.args.get("value") == "demopower-bill.example/pay")
+    assert EvidenceCode.LOOKALIKE_DOMAIN in link.codes
+    assert "demopower-bill.example/pay" in model.conversations[0][0].text
+    assert session.final.verdict == "SCAM" and session.metrics.model_turns == 1
 
-    def partial(conv):  # agent checks only what extraction gave it
-        return turn(("lookup_biller", {"name": "Demo Power"}), ("check_payment_destination", {"kind": "phone", "value": "9000000001"}), ("match_scam_patterns", {"text": SCAM.input.text}))  # fmt: skip
 
-    link = turn(
-        ("check_payment_destination", {"kind": "url", "value": "demopower-bill.example/pay"})
-    )
-    session, _ = run(SCAM, [partial, cite_all("SCAM"), link, cite_all("SCAM")], agent_input=forgot)
-    assert "MISSED_BY_EXTRACTION" in {e.code for e in session.record.all_evidence}
-    assert refusal_rules(session) == ["destinations_checked"]
-    assert session.final.verdict == "SCAM"
-    assert "LOOKALIKE_DOMAIN" in {e.code for e in session.record.all_evidence}
+def test_judge_feedback_is_saved_in_the_record():
+    def first_reason_unsupported(payload):
+        return json.dumps(
+            {"reasons": [{"index": r["index"], "supported": r["index"] != 0, "why": f"why {r['index']}"} for r in payload["reasons"]]}
+        )  # fmt: skip
+
+    session, _ = run(SCAM, [cite_all("SCAM"), cite_all("SCAM")], judge=[first_reason_unsupported])
+    judged = [e.payload for e in session.record.entries if e.kind == "judge"]
+    assert [j["accepted"] for j in judged] == [False, True]
+    first = judged[0]["reasons"][0]
+    assert first["supported"] is False and first["why"] == "why 0"
+    assert first["reason"].startswith("Finding 1") and first["evidence_ids"]
 
 
 # --- the whole dataset ---
 
 
 @pytest.mark.parametrize("label", LABELS, ids=[lbl.id for lbl in LABELS])
-def test_scripted_agent_reaches_every_label_verdict(label):
+def test_agent_reaches_every_label_verdict_in_one_turn(label):
+    """With mandatory checks prefetched, a correct agent can submit in its first turn."""
+    session, _ = run(label, [cite_all(label.expected.verdict.value)])
+    assert session.final.verdict == label.expected.verdict
+    assert not session.final.forced and session.metrics.refusals == 0
+    assert session.metrics.model_turns == 1 and session.metrics.tool_calls == 0
+
+
+@pytest.mark.parametrize("label", LABELS[:10], ids=[lbl.id for lbl in LABELS[:10]])
+def test_agent_may_repeat_checks_itself(label):
     biller_id = TOOLS["lookup_biller"](
         name=label.expected.extracted.biller_name, category=label.expected.extracted.biller_category
     ).data.get("biller_id")
@@ -352,9 +420,7 @@ def test_scripted_agent_reaches_every_label_verdict(label):
         steps.append(wave2(label))
     steps.append(cite_all(label.expected.verdict.value))
     session, _ = run(label, steps)
-    assert session.final.verdict == label.expected.verdict
-    assert not session.final.forced and session.metrics.refusals == 0
-    assert session.metrics.model_turns <= 3
+    assert session.final.verdict == label.expected.verdict and session.metrics.refusals == 0
 
 
 def test_agent_config_targets():
