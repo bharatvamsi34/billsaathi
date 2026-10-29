@@ -11,6 +11,7 @@ from PIL import Image
 
 from app import pipeline
 from app.config import Settings
+from app.extract.extract import TRANSCRIBE_PROMPT
 from app.main import app
 from app.models.base import LLMError, LLMResponse, Usage
 from app.pii import mask_id
@@ -29,17 +30,38 @@ class InlineExecutor:
 
 
 class FakeExtractor:
+    """Fields call -> JSON from the label (with overrides); transcription call -> plain text
+    (the label's text unless `transcript` is given; an Exception makes it fail)."""
+
     provider = "fake"
 
-    def __init__(self, label=None, *, error: Exception | None = None, **overrides):
-        self.label, self.error, self.overrides = label, error, overrides
+    def __init__(self, label=None, *, error: Exception | None = None, transcript=None, **overrides):
+        self.label, self.error, self.transcript, self.overrides = (
+            label,
+            error,
+            transcript,
+            overrides,
+        )
+        self.agent_visible: list[str] = []
 
     def respond(self, *, system, messages, model, effort="low", max_output_tokens=4096):
         if self.error:
             raise self.error
+        if system == TRANSCRIBE_PROMPT:
+            if isinstance(self.transcript, Exception):
+                raise self.transcript
+            # default: the message text, or for a bill image the text printed on it
+            printed = " ".join(d.value for d in self.label.expected.extracted.payment_destinations)
+            text = (
+                self.transcript
+                if self.transcript is not None
+                else (self.label.input.text or f"Pay via {printed}")
+            )
+            return LLMResponse(
+                text=text, model=model, provider="fake", latency_ms=5, usage=Usage(cost_usd=0.001)
+            )
         fields = self.label.expected.extracted.model_dump(mode="json") | self.overrides
         reply = {k: {"value": v, "confidence": 0.95} for k, v in fields.items()}
-        reply["visible_text"] = self.label.input.text or ""
         usage = Usage(input_tokens=2000, output_tokens=600, cost_usd=0.005)
         return LLMResponse(
             text=json.dumps(reply), model=model, provider="fake", latency_ms=5, usage=usage
@@ -281,6 +303,67 @@ def test_daily_spend_cap_returns_service_busy(api):
     assert post_text(client, GENUINE.input.text).status_code == 202
     busy = post_text(client, GENUINE.input.text)
     assert busy.status_code == 503 and busy.json()["error"] == "service_busy"
+
+
+# --- split extraction: fields + transcription in parallel ---
+
+SCREENSHOT = BY_ID["scam_en_disconnect_lookalike"]
+
+
+def test_milestone_catches_a_link_missing_from_fields_via_the_transcription(api):
+    client, install = api
+    agent = install(
+        SCREENSHOT,
+        [cite_all("SCAM")],
+        payment_destinations=[{"kind": "phone", "value": "9000000001"}],  # fields "forgot" the link
+    )
+    png = (DATA / SCREENSHOT.input.path).read_bytes()
+    check_id = client.post("/api/v1/checks", files={"image": ("sms.png", png, "image/png")}).json()[
+        "check_id"
+    ]
+    events = events_of(client, check_id)
+    assert next(e for e in events if e["type"] == "extracted")["transcription"] == "ok"
+    checks = [e for e in events if e["type"] == "check"]
+    assert checks[0]["tool"] == "milestone_check"
+    assert [ev["code"] for ev in checks[0]["evidence"]] == ["MISSED_BY_EXTRACTION"]
+    link = next(c for c in checks if c["args"].get("value") == "demopower-bill.example/pay")
+    assert link["origin"] == "mandatory" and "LOOKALIKE_DOMAIN" in [
+        ev["code"] for ev in link["evidence"]
+    ]
+    assert events[-2]["verdict"] == "SCAM"
+    first_message = agent.conversations[0][0].text
+    assert "disconnected tonight" not in first_message  # the transcription never reaches the agent
+
+
+def test_failed_transcription_is_recorded_and_blocks_safe(api):
+    client, install = api
+    install(BILL, [cite_all("SAFE"), cite_all("CAUTION")], transcript=LLMError("timeout"))
+    png = (DATA / BILL.input.path).read_bytes()
+    check_id = client.post(
+        "/api/v1/checks", files={"image": ("bill.png", png, "image/png")}
+    ).json()["check_id"]
+    events = events_of(client, check_id)
+    assert next(e for e in events if e["type"] == "extracted")["transcription"] == "failed"
+    failed = next(e for e in events if e["type"] == "check" and e["tool"] == "milestone_check")
+    assert failed["ok"] is False and "could not read the text" in failed["error"]
+    assert [e["rule"] for e in events if e["type"] == "refusal"] == ["hard_rule_floor"]
+    assert events[-2]["verdict"] == "CAUTION"
+
+
+def test_agent_first_message_has_only_masked_fields_and_evidence(api):
+    client, install = api
+    agent = install(
+        BILL,
+        [cite_all("SAFE")],
+        transcript="MARKER-TRANSCRIPT demopower.bill@demobank demopower.example/pay",
+    )
+    png = (DATA / BILL.input.path).read_bytes()
+    client.post("/api/v1/checks", files={"image": ("bill.png", png, "image/png")})
+    first = agent.conversations[0][0].text
+    consumer = BILL.expected.extracted.consumer_number
+    assert "MARKER-TRANSCRIPT" not in first
+    assert consumer not in first and mask_id(consumer) in first
+    assert "Mandatory checks already run" in first
 
 
 def test_extraction_failure_ends_as_caution(api):

@@ -41,27 +41,26 @@ SYSTEM_PROMPT = (
     "connection tonight, says 'immediately', sets a deadline of hours).\n"
     "- confidence: 0 to 1 for each field; give a low value when the text is blurred, cut off or "
     "ambiguous.\n"
-    "- visible_text: for an image, every piece of text you can see, copied verbatim (keep links, "
-    "UPI IDs and phone numbers exactly); for a text message, an empty string.\n"
-    "JSON Schema:\n"
+    "JSON Schema:\n" + json.dumps(ExtractionOutput.model_json_schema())
 )
 
-
-class ExtractionReply(ExtractionOutput):
-    """What the model returns: the shared fields plus a verbatim transcription for the
-    milestone check (kept out of ExtractionOutput so the label format is unchanged)."""
-
-    visible_text: str = ""
-
-
-SYSTEM_PROMPT += json.dumps(ExtractionReply.model_json_schema())
+TRANSCRIBE_PROMPT = (
+    "Copy every piece of text you can see in this image, exactly as written, in reading order. "
+    "Keep links, UPI IDs, phone numbers and amounts character for character. Do not translate, "
+    "summarise or explain. Reply with only the text."
+)
 
 
 class ExtractionResult(BaseModel):
     output: ExtractionOutput
-    visible_text: str = ""  # image transcription, scanned by the milestone check
     model: str
     attempts: int
+    latency_ms: float
+    usage: Usage
+
+
+class Transcription(BaseModel):
+    text: str
     latency_ms: float
     usage: Usage
 
@@ -70,6 +69,45 @@ class ExtractionFailed(Exception):
     def __init__(self, message: str, attempts: int):
         super().__init__(message)
         self.attempts = attempts
+
+
+class TranscriptionFailed(Exception):
+    pass
+
+
+def _image_message(image: bytes, image_mime: str | None, text: str) -> Message:
+    if image_mime not in IMAGE_MIMES:
+        raise ValueError(f"unsupported image type {image_mime!r}")
+    if len(image) > MAX_IMAGE_BYTES:
+        raise ValueError("image too large")
+    url = f"data:{image_mime};base64,{base64.b64encode(image).decode('ascii')}"
+    return Message(role="user", text=text, image_data_url=url)
+
+
+def transcribe(
+    client: LLMClient, *, image: bytes, image_mime: str | None, model: str = DEFAULT_MODEL
+) -> Transcription:
+    """Verbatim text of an image, used only by the milestone check (never shown to the agent).
+    Runs in parallel with extract(); one retry on an empty answer."""
+    message = _image_message(image, image_mime, "Transcribe this image.")
+    latency_ms, usage = 0.0, Usage()
+    for _ in range(2):
+        try:
+            resp = client.respond(
+                system=TRANSCRIBE_PROMPT,
+                messages=[message],
+                model=model,
+                effort="low",
+                max_output_tokens=2048,
+            )
+        except LLMError as e:
+            raise TranscriptionFailed(f"model unavailable: {e}") from e
+        latency_ms += resp.latency_ms
+        for field in ("input_tokens", "output_tokens", "reasoning_tokens", "cost_usd"):
+            setattr(usage, field, getattr(usage, field) + getattr(resp.usage, field))
+        if resp.text.strip():
+            return Transcription(text=resp.text.strip(), latency_ms=latency_ms, usage=usage)
+    raise TranscriptionFailed("empty transcription")
 
 
 def parse_json(text: str) -> object:
@@ -108,14 +146,7 @@ def extract(
     if (image is None) == (text is None):
         raise ValueError("give exactly one of image or text")
     if image is not None:
-        if image_mime not in IMAGE_MIMES:
-            raise ValueError(f"unsupported image type {image_mime!r}")
-        if len(image) > MAX_IMAGE_BYTES:
-            raise ValueError("image too large")
-        url = f"data:{image_mime};base64,{base64.b64encode(image).decode('ascii')}"
-        messages = [
-            Message(role="user", text="Extract the fields from this image.", image_data_url=url)
-        ]
+        messages = [_image_message(image, image_mime, "Extract the fields from this image.")]
     else:
         messages = [Message(role="user", text=f"Extract the fields from this message:\n\n{text}")]
 
@@ -136,7 +167,7 @@ def extract(
         for field in ("input_tokens", "output_tokens", "reasoning_tokens", "cost_usd"):
             setattr(usage, field, getattr(usage, field) + getattr(resp.usage, field))
         try:
-            reply = ExtractionReply.model_validate(parse_json(resp.text))
+            output = ExtractionOutput.model_validate(parse_json(resp.text))
         except (ValueError, ValidationError) as e:
             problem = _problem(e)
             log.warning(
@@ -155,7 +186,6 @@ def extract(
                 ),
             ]
             continue
-        output = ExtractionOutput.model_validate(reply.model_dump(exclude={"visible_text"}))
         log.info(
             "extraction ok attempts=%d model=%s biller=%s consumer=%s amount=%s destinations=%d",
             attempt,
@@ -167,7 +197,6 @@ def extract(
         )
         return ExtractionResult(
             output=output,
-            visible_text=reply.visible_text,
             model=model,
             attempts=attempt,
             latency_ms=latency_ms,

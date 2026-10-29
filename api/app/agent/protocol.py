@@ -12,8 +12,17 @@ LOW_CONFIDENCE = 0.8
 
 class AgentInput(BaseModel):
     extraction: ExtractionOutput
-    raw_text: str | None = None  # message text, or the text extraction saw in the image
+    raw_text: str | None = None  # text the user sent (SMS / WhatsApp paste)
+    # Transcription of an image: used only by code (milestone check, scam wording), never shown
+    # to the agent. text_unreadable means transcription failed, so links in the image could not
+    # be cross-checked: recorded as a failed check (fail closed, no SAFE).
+    visible_text: str | None = None
+    text_unreadable: bool = False
     language: str = "en"  # user's language for questions and (later) explanations
+
+    @property
+    def text_for_checks(self) -> str | None:
+        return self.raw_text or self.visible_text
 
     @classmethod
     def from_fields(cls, fields: BillFields, raw_text: str | None = None, language: str = "en"):

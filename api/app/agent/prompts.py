@@ -3,12 +3,13 @@
 import json
 
 from app.agent.protocol import AgentInput
+from app.pii import mask_destination, mask_id
 from app.schemas import PaymentDestination
 
 AGENT_SYSTEM = """\
 You are BillSaathi's verification agent for Indian bill payments. You receive the fields read \
-from a bill or message, the raw text, the payment destinations, and the results of the \
-mandatory checks, which code has already run at fixed points: lookup_biller, \
+from a bill or message (consumer and phone numbers masked), the payment destinations, and the \
+results of the mandatory checks, which code has already run at fixed points: lookup_biller, \
 check_payment_destination for every destination, match_scam_patterns, and (when the biller is \
 known) fetch_bill and get_bill_history.
 
@@ -51,18 +52,27 @@ with exactly one entry for every reason index you were given.
 
 
 def user_message(agent_input: AgentInput, destinations: list[PaymentDestination]) -> str:
+    """The agent's first message: extracted fields (masked) and destinations. The raw message
+    and any image transcription stay with code; their wording reaches the agent only as
+    match_scam_patterns evidence."""
     e = agent_input.extraction
     fields = {
         name: {"value": getattr(e, name).value, "confidence": getattr(e, name).confidence}
         for name in type(e).model_fields
         if name != "payment_destinations"
     }
+    if fields["consumer_number"]["value"]:
+        fields["consumer_number"]["value"] = mask_id(fields["consumer_number"]["value"])
     listed = (
-        "\n".join(f"{i}. {d.kind} {d.value}" for i, d in enumerate(destinations, 1)) or "(none)"
+        "\n".join(
+            f"{i}. {d.kind} {mask_destination(d.kind, d.value)}"
+            for i, d in enumerate(destinations, 1)
+        )
+        or "(none)"
     )
     return (
         f"User language: {agent_input.language}\n\n"
-        f"Fields read from the bill or message:\n{json.dumps(fields, ensure_ascii=False, default=str)}\n\n"
-        f"Raw text:\n<<<\n{agent_input.raw_text or '(no text; the input was an image)'}\n>>>\n\n"
-        f"Payment destinations to check (check every one):\n{listed}"
+        f"Fields read from the bill or message (consumer and phone numbers masked):\n"
+        f"{json.dumps(fields, ensure_ascii=False, default=str)}\n\n"
+        f"Payment destinations (all already checked by code):\n{listed}"
     )

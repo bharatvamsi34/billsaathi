@@ -7,7 +7,7 @@ import httpx
 import pytest
 
 from app.config import Settings
-from app.extract import ExtractionFailed, extract
+from app.extract import ExtractionFailed, TranscriptionFailed, extract, transcribe
 from app.extract.extract import SYSTEM_PROMPT, parse_json
 from app.models.base import LLMError, LLMResponse, Message, Usage
 from app.models.meta import MetaClient
@@ -62,12 +62,41 @@ def test_valid_first_try_from_image():
     assert sent.image_data_url.startswith("data:image/png;base64,")
 
 
-def test_visible_text_is_returned_separately_for_the_milestone_check():
-    reply = good_output() | {"visible_text": "Pay at demopower.example/pay"}
-    r = extract(FakeClient(json.dumps(reply)), image=b"img", image_mime="image/png")
-    assert r.visible_text == "Pay at demopower.example/pay"
-    assert "visible_text" not in r.output.model_dump()  # shared label format unchanged
-    assert "visible_text" in SYSTEM_PROMPT
+class FakeTranscriber:
+    provider = "fake"
+
+    def __init__(self, *replies):
+        self.replies = list(replies)
+        self.systems: list[str] = []
+
+    def respond(self, *, system, messages, model, effort="low", max_output_tokens=4096):
+        self.systems.append(system)
+        reply = self.replies.pop(0)
+        if isinstance(reply, Exception):
+            raise reply
+        return LLMResponse(
+            text=reply, model=model, provider="fake", latency_ms=7, usage=Usage(cost_usd=0.001)
+        )
+
+
+def test_fields_prompt_no_longer_asks_for_a_transcription():
+    assert "visible_text" not in SYSTEM_PROMPT
+
+
+def test_transcribe_returns_verbatim_text():
+    t = transcribe(
+        FakeTranscriber("  Pay at demopower.example/pay  "), image=b"img", image_mime="image/png"
+    )
+    assert t.text == "Pay at demopower.example/pay" and t.usage.cost_usd == 0.001
+
+
+def test_transcribe_retries_once_then_fails_closed():
+    t = transcribe(FakeTranscriber("", "text on the bill"), image=b"img", image_mime="image/png")
+    assert t.text == "text on the bill" and t.latency_ms == 14
+    with pytest.raises(TranscriptionFailed):
+        transcribe(FakeTranscriber("", "   "), image=b"img", image_mime="image/png")
+    with pytest.raises(TranscriptionFailed):
+        transcribe(FakeTranscriber(LLMError("timeout")), image=b"img", image_mime="image/png")
 
 
 def test_text_input_and_fenced_json_with_prose():

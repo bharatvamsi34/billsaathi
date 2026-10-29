@@ -4,45 +4,14 @@ Built from EvidenceRecord entries (and a few pipeline steps). Nothing here may c
 image, the raw message text, or a full consumer or phone number.
 """
 
-import re
 from typing import Any
 
 from app.agent.evidence import RecordEntry
 from app.facts import verified_fact
-from app.pii import mask_id, mask_phone
-from app.schemas import DestinationKind, ExtractionOutput
-
-_LONG_DIGITS = re.compile(r"(?<!\d)(\+?\d[\d\s-]{6,}\d)(?!\d)")
-
-
-def scrub(text: str | None, secrets: list[str] = ()) -> str | None:
-    """Mask phone-like digit runs and any known consumer numbers inside free text."""
-    if not text:
-        return text
-    for s in secrets:
-        if s and len(s) >= 4:
-            text = text.replace(s, mask_id(s))
-
-    def mask(m: re.Match) -> str:  # 9+ digits: phones, consumer numbers; dates (8) stay readable
-        run = m.group(1)
-        return mask_phone(run) if sum(ch.isdigit() for ch in run) >= 9 else run
-
-    return _LONG_DIGITS.sub(mask, text)
-
-
-def _destination(kind: str, value: str) -> str:
-    return mask_phone(value) if kind == DestinationKind.PHONE else value
-
-
-def _args(tool: str, args: dict[str, Any]) -> dict[str, Any]:
-    out = dict(args)
-    if "consumer_number" in out:
-        out["consumer_number"] = mask_id(out["consumer_number"])
-    if "text" in out:  # the raw message never leaves the server
-        out["text"] = f"<{len(out['text'] or '')} characters>"
-    if tool == "check_payment_destination" and "value" in out:
-        out["value"] = _destination(out.get("kind", ""), out["value"])
-    return out
+from app.pii import mask_args as _args
+from app.pii import mask_destination as _destination
+from app.pii import mask_id, scrub
+from app.schemas import ExtractionOutput
 
 
 def resolve_facts(keys: list[str]) -> list[dict[str, str]]:

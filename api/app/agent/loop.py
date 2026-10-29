@@ -17,6 +17,7 @@ from pydantic import ValidationError
 from app.agent import control_tools
 from app.agent.checks import CheckContext, claims_check, run_deterministic
 from app.agent.evidence import EvidenceRecord, RecordEntry, ToolResult, make_id
+from app.agent.milestones import SOURCE as MILESTONE_SOURCE
 from app.agent.milestones import reconcile
 from app.agent.prompts import AGENT_SYSTEM, user_message
 from app.agent.protocol import (
@@ -43,7 +44,7 @@ from app.models.base import (
     Usage,
     UserText,
 )
-from app.pii import mask_id
+from app.pii import mask_args, mask_id, scrub
 from app.risk.policy import floor_verdict, stricter
 from app.schemas import EvidenceCode, PaymentDestination, Verdict
 
@@ -97,7 +98,7 @@ def start(
     run_id = run_id or uuid.uuid4().hex[:12]
     record = EvidenceRecord(run_id, listener=listener)
     destinations, missed = reconcile(
-        agent_input.raw_text, agent_input.extraction.payment_destinations.value
+        agent_input.text_for_checks, agent_input.extraction.payment_destinations.value
     )
     session = AgentSession(
         run_id=run_id,
@@ -118,16 +119,30 @@ def start(
     )
     if missed is not None:
         record.add_tool_result(missed, origin="mandatory")
+    if agent_input.text_unreadable:  # fail closed: links in the image could not be cross-checked
+        record.add_tool_result(
+            ToolResult(
+                tool=MILESTONE_SOURCE,
+                call_id=make_id("call", MILESTONE_SOURCE, "unreadable"),
+                args={},
+                ok=False,
+                error="could not read the text in the image, so links and numbers in it were not cross-checked",
+            ),
+            origin="mandatory",
+        )
     t0 = time.perf_counter()
-    mandatory = _mandatory_checks(session)
+    _mandatory_checks(session)
     session.metrics.latency_ms += (time.perf_counter() - t0) * 1000
+    consumer = agent_input.extraction.consumer_number.value
+    secrets = [consumer] if consumer else []
     briefing = "\n\n".join(
         [
             user_message(agent_input, destinations),
             "Mandatory checks already run at fixed points (cite these evidence_id values):",
-            *(
-                f"{r.tool} {json.dumps(r.args, ensure_ascii=False, default=str)}\n-> {_tool_output(r)}"
-                for r in mandatory
+            *(  # masked: consumer and phone numbers, never the raw or transcribed text
+                f"{r.tool} {json.dumps(mask_args(r.tool, r.args), ensure_ascii=False, default=str)}\n"
+                f"-> {scrub(_tool_output(r), secrets)}"
+                for r in record.tool_results_from("mandatory")
             ),
         ]
     )
@@ -151,8 +166,8 @@ def _mandatory_checks(session: AgentSession) -> list[ToolResult]:
             for d in session.destinations
         ),
     ]
-    if session.input.raw_text:
-        wave1.append(("match_scam_patterns", {"text": session.input.raw_text}))
+    if session.input.text_for_checks:
+        wave1.append(("match_scam_patterns", {"text": session.input.text_for_checks}))
     results = _run_waves(session, wave1)
     biller_id = (
         results[0].data.get("biller_id")

@@ -7,13 +7,14 @@ Each step is published as a masked event on the CheckState, so callers can strea
 
 import logging
 import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 
 from app.agent.loop import AgentSession, resume, start
 from app.agent.protocol import AgentInput
 from app.api.events import extracted_event, public_event, verdict_view
 from app.api.store import CheckState, SpendMeter
-from app.extract import ExtractionFailed, extract
+from app.extract import ExtractionFailed, TranscriptionFailed, extract, transcribe
 from app.models.base import LLMClient
 
 log = logging.getLogger("billsaathi.pipeline")
@@ -60,24 +61,48 @@ def answer(state: CheckState, reply: str, spend: SpendMeter) -> None:
 def _run(state: CheckState, check: CheckInput, clients: Clients, spend: SpendMeter) -> None:
     state.emit({"type": "received", "input": state.input_kind, "language": check.language})
     state.status = "extracting"
+    t0 = time.perf_counter()
+    visible_text, unreadable, transcription_cost = None, False, 0.0
     try:
         if check.image is not None:
-            ext = extract(clients.extract, image=check.image, image_mime=check.image_mime)
+            # Fields and a verbatim transcription in parallel; time = the slower of the two.
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                fields = pool.submit(
+                    extract, clients.extract, image=check.image, image_mime=check.image_mime
+                )
+                text = pool.submit(
+                    transcribe, clients.extract, image=check.image, image_mime=check.image_mime
+                )
+                ext = fields.result()
+                try:
+                    transcription = text.result()
+                    visible_text, transcription_cost = (
+                        transcription.text,
+                        transcription.usage.cost_usd,
+                    )
+                except TranscriptionFailed:
+                    unreadable = True  # recorded as a failed milestone check: no SAFE
         else:
             ext = extract(clients.extract, text=check.text)
     except ExtractionFailed as e:
         _fail(state, f"could not read the input: {e}")
         return
-    spend.add(ext.usage.cost_usd)
-    state.extraction_ms, state.extraction_cost = ext.latency_ms, ext.usage.cost_usd
+    state.extraction_ms = (time.perf_counter() - t0) * 1000
+    state.extraction_cost = ext.usage.cost_usd + transcription_cost
+    spend.add(state.extraction_cost)
     if ext.output.consumer_number.value:
         state.secrets.append(ext.output.consumer_number.value)
-    state.emit(extracted_event(ext.output, ext.attempts, ext.latency_ms))
+    event = extracted_event(ext.output, ext.attempts, state.extraction_ms)
+    if check.image is not None:
+        event["transcription"] = "failed" if unreadable else "ok"
+    state.emit(event)
 
     state.status = "verifying"
     agent_input = AgentInput(
         extraction=ext.output,
-        raw_text=check.text if check.text is not None else (ext.visible_text or None),
+        raw_text=check.text,
+        visible_text=visible_text,
+        text_unreadable=unreadable,
         language=check.language,
     )
 

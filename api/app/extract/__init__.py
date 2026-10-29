@@ -1,3 +1,17 @@
-from app.extract.extract import ExtractionFailed, ExtractionResult, extract
+from app.extract.extract import (
+    ExtractionFailed,
+    ExtractionResult,
+    Transcription,
+    TranscriptionFailed,
+    extract,
+    transcribe,
+)
 
-__all__ = ["ExtractionFailed", "ExtractionResult", "extract"]
+__all__ = [
+    "ExtractionFailed",
+    "ExtractionResult",
+    "Transcription",
+    "TranscriptionFailed",
+    "extract",
+    "transcribe",
+]
