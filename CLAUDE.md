@@ -153,23 +153,24 @@ billsaathi/
 Live sessions (9:30–10:30 PM IST): Oct 27 Agents 101 · Oct 28 Agents 102 · Oct 30 Fireworks inference & training.
 Office hours: weekdays 7:30–8:30 PM IST (from Nov 2: 8:30–9:30 PM IST) in #office-hours.
 
-Re-planned 2026-10-28: Day 1 ran into the morning of Oct 28, so the lost day is absorbed by
-turning the separate "harden" day into a full demo-video day and folding hardening into Nov 2.
-Feature freeze stays **Mon Nov 2, midnight**.
+Re-planned 2026-10-29 after the Agents 102 session: nothing is cut. Each day has a **core**
+(listed first) and **extras** (after "then"). Feature freeze stays **Mon Nov 2, midnight**.
 
-| Day | Date | Goal | Done when |
+| Day | Date | Goal (core; then extras) | Done when |
 |---|---|---|---|
 | 1 | Tue Oct 27 – Wed Oct 28 AM | Repo + **model spike** + skeleton deploy | **Done.** Public repo; every Meta model called from Python; findings in §4; FastAPI app live on Azure Central India; CI green |
 | 2 | Wed Oct 28 | **Mock BBPS + tools + data + extraction** | **Done.** 8 mock billers with endpoints; 5 verification tools with stable evidence ids; 60 labelled synthetic items (EN/TE/HI) whose evidence the tools reproduce; extraction on Spark 1.3 returns validated JSON (5/5 live); FEEDBACK.md and docs/AGENT_DESIGN.md started |
-| 3 | Thu Oct 29 | **Agent + risk engine** | Agent loop per docs/AGENT_DESIGN.md: tools, `ask_user`, `submit_verdict` checks, 3-refusal → CAUTION; risk engine reproduces the dataset's verdicts; safety rules tested with a scripted model; CLI run over the dataset |
-| 4 | Fri Oct 30 | **Web app core flow** | Capture → live agent steps from the evidence record → verdict card with evidence → explanation, on a phone |
-| 5 | Sat Oct 31 | **Languages, voice, act + user testing round 1** | EN/TE/HI explanations (MR/TA beta); voice question via Muse Voice Transcribe; sandbox pay with confirmation + audit; SAM 3.1 crop. **3–5 real people try the deployed app**; findings logged in §11 |
-| 6 | Sun Nov 1 | **Prod deploy + eval + Privacy Mode + user testing round 2** | Full stack live on Azure; eval harness metrics page (test split); Privacy Mode on Baseten end to end; **second round with 3–5 people**, fixes from round 1 verified |
-| 7 | Mon Nov 2 | **Fixes from testing + harden + README** | Edge cases and error states; README with architecture and metrics; WhatsApp bot only if everything else is green. **Feature freeze at midnight.** |
+| 3 | Thu Oct 29 | **Risk engine + agent design update** | Risk engine reproduces all 60 dataset verdicts (**done**); AGENT_DESIGN.md updated with Agents 102 verification layers; agent loop build under way |
+| 4 | Fri Oct 30 | **Agent loop + claims check + live run + API endpoint** | Loop per docs/AGENT_DESIGN.md (parallel tool calls, allowlist, milestone check, `ask_user`, 3-refusal → forced CAUTION, LLM claims judge) tested with a scripted model; live sample on dev items within ≤ 3 turns / ≤ 10 s; agent exposed at `/api/v1`. *In parallel: BV sets up the WhatsApp Cloud API test app.* |
+| 5 | Sat Oct 31 | **Web app core flow**; then WhatsApp webhook | Capture → live agent steps from the evidence record → verdict card with evidence, on a phone; then the WhatsApp webhook using the same agent API |
+| 6 | Sun Nov 1 | **Telugu/Hindi explanations, voice, sandbox pay, deploy, eval page, first user tests**; then Muse Image share card | EN/TE/HI explanations (MR/TA beta); voice via Muse Voice Transcribe; sandbox pay with confirmation + audit; full stack deployed; eval metrics page (test split); **3–5 real people** try it, findings in §11; then the Muse Image scam-warning share card (`enable_shell`, `enable_web_search`, `enable_image_search` all false) |
+| 7 | Mon Nov 2 | **Privacy Mode (Baseten), polish, user tests**; then WhatsApp polish | Privacy Mode end to end; fixes from testing; **second round of user tests**; README with architecture and metrics. **Feature freeze at midnight.** |
 | 8 | Tue Nov 3 | **Demo video (full day)** | Script rehearsed, 3-minute video recorded, edited and uploaded; links tested |
 | 9 | Wed Nov 4 | **Ship** | Submission done by 9 PM IST, X post for Most Viral, all links verified in an incognito window |
 
-**Rule:** if a day slips, cut from §5.2 bottom-up (Family protect → WhatsApp → Privacy Mode). Never cut deployment, tests on safety invariants, user testing, or demo quality.
+**Rule:** extras never start on a day until that day's core is committed, tested and deployed.
+If a day still slips, cut from §5.2 bottom-up (Family protect → WhatsApp → Privacy Mode). Never cut
+deployment, tests on safety invariants, user testing, or demo quality.
 
 ## 9. Demo video plan (3:00)
 
@@ -210,6 +211,11 @@ Record every decision and spike result here with a date, so the README and demo 
 - 2026-10-28 — Extraction: Spark 1.3, `low` effort, inline images, validated JSON with up to 2 retries; 5/5 dev images correct live (~$0.006 each, 4–7 s).
 - 2026-10-28 — Agent design agreed (`docs/AGENT_DESIGN.md`): verification inside `submit_verdict`, citations must exist in this run, LLM can never lower the risk-engine floor, 3 refusals → CAUTION, one `ask_user` per run, scripted fake model for tests.
 - 2026-10-28 — Schedule re-planned (§8): Nov 3 is a full demo-video day; user testing with 3–5 real people on Oct 31 and Nov 1.
+- 2026-10-29 — Risk engine done: floor + SAFE checklist reproduce all 60 dataset verdicts. Low extraction confidence only blocks SAFE, never supports it (BV).
+- 2026-10-29 — Agents 102 (verification) applied to the design: LLM claims judge inside `submit_verdict` (runs after all deterministic checks, can only refuse, fails closed), milestone check after extraction (`MISSED_BY_EXTRACTION`), tool allowlist, forced verdict = CAUTION or the floor if stricter, user sign-off before any payment. Meta's guidance: finance needs a 100% threshold, so SAFE requires every check to pass.
+- 2026-10-29 — Speed: several tool calls per model turn, run in parallel; target ≤ 3 agent turns and ≤ 10 s per run on Spark 1.3 `low` (extraction excluded); turns, latency and cost recorded per run.
+- 2026-10-29 — Schedule re-planned again (§8), nothing cut: Oct 30 agent loop + claims check + live run + API; Oct 31 web core, then WhatsApp webhook; Nov 1 explanations/voice/pay/deploy/eval/user tests, then Muse Image share card; Nov 2 Privacy Mode/polish/user tests, then WhatsApp polish; freeze Nov 2 midnight. **Rule: extras never start until that day's core is committed, tested and deployed.**
+- 2026-10-29 — Working mode: commit and push each block when tests and lint pass; stop only for live runs over $1, design decisions not covered here or in AGENT_DESIGN.md, or failures not fixed in two attempts.
 
 ## 12. How to work with BV (the builder)
 

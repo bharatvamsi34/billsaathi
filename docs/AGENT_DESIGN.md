@@ -11,15 +11,39 @@ cannot skip.
 ## 1. Where the agent sits
 
 ```
-capture -> isolate (SAM 3.1) -> extract (Spark 1.3, validated JSON)
-        -> AGENT LOOP: model calls tools; every result goes into the evidence record
-        -> submit_verdict (checked by code; may be refused)
+capture -> isolate (SAM 3.1) -> extract (Spark 1.3, validated JSON + visible text)
+        -> MILESTONE CHECK: every link / UPI ID / mobile number in the text must be a destination
+        -> AGENT LOOP: model calls tools (several per turn, run in parallel); every result is recorded
+        -> submit_verdict (deterministic checks, then an LLM claims judge; may be refused)
         -> explain in the user's language (facts from app/facts.py only)
+        -> USER SIGN-OFF: nothing is paid without the user's explicit confirmation
         -> act (sandbox pay / report & share)
 ```
 
 Extraction (`app/extract`) only reads. The agent receives the extracted fields, the raw message
-text if there is one, and the user's language.
+text (or the text extraction saw in the image), the destinations to check, and the user's language.
+
+## Verification layers
+
+Each layer can only make the outcome stricter; none can turn a risky request into SAFE.
+
+1. **Deterministic checks** (code, no model): citations exist, every destination checked, never
+   below the risk-engine floor, SAFE only if every hard check passed, facts only from the
+   constants file.
+2. **LLM judge (claims check)**: one Spark 1.3 call checks that each reason is actually supported
+   by the evidence it cites. It can only refuse; it cannot change the verdict or the floor.
+3. **Milestone check** (code): after extraction, every link, UPI ID and mobile number found in the
+   text must be among the destinations, so a model that "forgets" a link cannot skip checking it.
+4. **Three tries**: a refused `submit_verdict` comes back to the agent with the reason; it may try
+   again up to 3 times.
+5. **Forced CAUTION**: after the third refusal, or any limit or outage, the verdict is CAUTION (or
+   the risk-engine floor if that is stricter, e.g. SCAM) — never SAFE.
+6. **User sign-off**: the final sign-off is the user. No payment ever happens without the user's
+   explicit confirmation, even on SAFE.
+
+Meta's guidance in the Agents 102 (verification) session is that finance needs a 100% threshold:
+a partial pass is a fail. That is why SAFE requires **every** check to pass, and why every
+uncertain path (failed tool, low confidence, judge unavailable, limit reached) ends in CAUTION.
 
 ## 2. Building blocks (types already built on Day 2)
 
@@ -44,6 +68,22 @@ Day 3 adds `AgentRun`, `SubmitVerdictArgs`, `Refusal`, `FinalVerdict`, the risk 
 - **`submit_verdict`** — the only way to finish a run (section 4).
 
 Every tool result, including failures, is appended to the evidence record before the model sees it.
+
+- **Parallel calls:** the model may request several tools in one turn; verification tools are pure
+  functions, so they run in parallel and are recorded in the order the model requested them. The
+  system prompt asks for all independent checks in the first turn (`lookup_biller`,
+  `check_payment_destination` for every destination, `match_scam_patterns`), then `fetch_bill` and
+  `get_bill_history` once the biller is known, then `submit_verdict`.
+- **Tool allowlist:** a call to any name outside the registry is refused, recorded
+  (`kind="refusal"`, rule `unknown_tool`) and sent back to the model as feedback. It counts toward
+  the tool-call limit.
+
+## 3b. Milestone check after extraction
+
+Deterministic, no model. The raw text (or extraction's transcription of the image) is scanned with
+regular expressions for every URL, UPI ID and Indian mobile number. Any one that is not among the
+extracted destinations is added to the destinations and recorded as a `MISSED_BY_EXTRACTION`
+evidence item (source `milestone_check`), so check 2 forces the agent to check it.
 
 ## 4. `submit_verdict`: verification at a fixed point
 
@@ -75,6 +115,13 @@ The code runs these checks in order. The first one that fails produces a **refus
    evidence; user-facing numbers like 1930 are inserted by our renderer from `app/facts.py`,
    never typed by the model.
 
+6. **Claims check (LLM judge)** — runs only after checks 1–5 all pass. One Spark 1.3 call at
+   `low` effort receives only the proposed reasons and the detail of each evidence item they cite,
+   and returns `{supported: bool, why}` per reason. Any unsupported reason is a refusal carrying
+   the judge's feedback. The judge can only refuse; it never changes the verdict or the floor. Its
+   JSON is validated strictly (one answer per reason); if the call fails or the output is invalid,
+   the submission is refused (fail closed).
+
 A refusal is appended to the record (`kind="refusal"`) and returned to the model as the tool's
 result, with the rule that failed and what to fix, for example:
 
@@ -85,7 +132,8 @@ result, with the rule that failed and what to fix, for example:
 
 ### Refused three times
 After the third refusal the loop stops and the final verdict is **CAUTION — "could not verify, do
-not pay yet"**, never SAFE. The record gets a `verdict` entry with `forced: true` and the list of
+not pay yet"**, never SAFE (or the risk-engine floor if that is stricter, so a run with lookalike
+evidence still ends as SCAM). The record gets a `verdict` entry with `forced: true` and the list of
 refusals, so the UI and audit log show why.
 
 ### Verdict policy (the risk engine's floor)
@@ -103,6 +151,9 @@ Same policy as the labelled dataset (`data/synthetic/README.md`):
 - At most 8 tool calls per run, plus at most 1 `ask_user` and 3 `submit_verdict` attempts.
 - Per-call timeouts come from the model client; a model outage ends the run as CAUTION.
 - Hitting a limit ends the run as CAUTION ("could not verify"), recorded with the reason.
+- Every run records model turns, judge calls, tool calls, refusals, latency and cost.
+  **Target on Spark 1.3 at `low` effort: ≤ 3 agent model turns and ≤ 10 s per run** (image
+  extraction excluded).
 
 ## 6. `ask_user`: one question, then resume
 
@@ -147,6 +198,11 @@ A `ScriptedModel` implements the same client interface and returns a fixed seque
 | `ask_user` then reply | pauses, resumes, verdict uses the new value |
 | Second `ask_user` | refused |
 | More than 8 tool calls | run ends as CAUTION |
+| Several tools in one turn | all run; recorded in requested order |
+| Call to a tool not in the registry | refused (`unknown_tool`), recorded, fed back |
+| Judge says a reason is unsupported | refused (`claims_check`) with the judge's feedback |
+| Judge call fails or returns invalid JSON | refused (fail closed) |
+| Scam SMS where extraction "forgets" the link | milestone check adds it; SAFE impossible until checked |
 
 The same 60-item dataset then runs end to end with scripted models that call the tools on each
 item's ground-truth fields, and the final verdicts must equal the labels before any live model
