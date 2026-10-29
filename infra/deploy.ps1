@@ -8,7 +8,8 @@
 
   Steps: 0 subscription, 1 CLI extension + providers, 2 region check, 3 resource group + budget,
   4 container registry, 5 image build, 6 pull identity, 7 environment, 8 container app, 9 health check,
-  10 model API keys as Container Apps secrets (read from api\.env, never printed).
+  10 model API keys as Container Apps secrets (read from api\.env, never printed),
+  11 web app on Azure Static Web Apps (Free), 12 API CORS for the web app's origin.
   Every step can be re-run safely. Secret values are never printed or put in the image.
 #>
 param(
@@ -25,6 +26,8 @@ $CaEnv = 'cae-billsaathi'
 $App = 'ca-billsaathi-api'
 $Identity = 'id-billsaathi-pull'
 $Image = 'billsaathi-api'
+$Swa = 'swa-billsaathi'
+$SwaLocation = 'eastasia'   # nearest Static Web Apps region to India
 $BudgetName = 'budget-billsaathi-cin'
 $BudgetAmount = 1000          # in the subscription's billing currency (INR expected)
 $BudgetEmail = 'ch.bharat34@gmail.com'
@@ -200,8 +203,41 @@ function Step10 {
     Invoke-Az containerapp secret list --name $App --resource-group $Rg --query '[].name' -o tsv
 }
 
-$steps = @{ '0' = 'Step0'; '1' = 'Step1'; '2' = 'Step2'; '3' = 'Step3'; '4' = 'Step4'; '5' = 'Step5'; '6' = 'Step6'; '7' = 'Step7'; '8' = 'Step8'; '9' = 'Step9'; '10' = 'Step10' }
-$order = if ($Step -eq 'all') { 0..10 | ForEach-Object { "$_" } } else { @($Step) }
+function Step11 {
+    # Web app on Azure Static Web Apps (Free tier). Static Web Apps only offers a few regions
+    # for the resource itself; the site is served from a global CDN.
+    $exists = Find-Az staticwebapp show --name $Swa --resource-group $Rg --query name -o tsv
+    if (-not $exists) {
+        Invoke-Az staticwebapp create --name $Swa --resource-group $Rg --location $SwaLocation --sku Free --only-show-errors -o none
+    }
+    $apiFqdn = az containerapp show --name $App --resource-group $Rg --query properties.configuration.ingress.fqdn -o tsv
+    Push-Location (Join-Path $Root 'web')
+    try {
+        $env:NEXT_PUBLIC_API_BASE = "https://$apiFqdn"
+        & npm ci --silent
+        if ($LASTEXITCODE -ne 0) { throw 'npm ci failed' }
+        & npm run build --silent
+        if ($LASTEXITCODE -ne 0) { throw 'web build failed' }
+        # The deployment token goes through an environment variable: never printed, never on a command line.
+        $env:SWA_CLI_DEPLOYMENT_TOKEN = az staticwebapp secrets list --name $Swa --resource-group $Rg --query properties.apiKey -o tsv
+        & npx --yes '@azure/static-web-apps-cli@2.1.0' deploy ./out --env production
+        if ($LASTEXITCODE -ne 0) { throw 'static web app deploy failed' }
+    } finally {
+        Remove-Item Env:SWA_CLI_DEPLOYMENT_TOKEN -ErrorAction SilentlyContinue
+        Pop-Location
+    }
+    Write-Host "Web app: https://$(az staticwebapp show --name $Swa --resource-group $Rg --query defaultHostname -o tsv)"
+}
+
+function Step12 {
+    # Allow the web app's origin (and local development) to call the API.
+    $swaHost = az staticwebapp show --name $Swa --resource-group $Rg --query defaultHostname -o tsv
+    Invoke-Az containerapp update --name $App --resource-group $Rg --set-env-vars "CORS_ORIGINS=https://$swaHost,http://localhost:3000" --only-show-errors -o none
+    Write-Host "API CORS origins: https://$swaHost, http://localhost:3000"
+}
+
+$steps = @{ '0' = 'Step0'; '1' = 'Step1'; '2' = 'Step2'; '3' = 'Step3'; '4' = 'Step4'; '5' = 'Step5'; '6' = 'Step6'; '7' = 'Step7'; '8' = 'Step8'; '9' = 'Step9'; '10' = 'Step10'; '11' = 'Step11'; '12' = 'Step12' }
+$order = if ($Step -eq 'all') { 0..12 | ForEach-Object { "$_" } } else { @($Step) }
 foreach ($s in $order) {
     if (-not $steps.ContainsKey($s)) { throw "Unknown step '$s' (use 0-9 or all)" }
     Write-Host "=== Step $s ===" -ForegroundColor Cyan
