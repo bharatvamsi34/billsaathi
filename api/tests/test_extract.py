@@ -62,6 +62,14 @@ def test_valid_first_try_from_image():
     assert sent.image_data_url.startswith("data:image/png;base64,")
 
 
+def test_visible_text_is_returned_separately_for_the_milestone_check():
+    reply = good_output() | {"visible_text": "Pay at demopower.example/pay"}
+    r = extract(FakeClient(json.dumps(reply)), image=b"img", image_mime="image/png")
+    assert r.visible_text == "Pay at demopower.example/pay"
+    assert "visible_text" not in r.output.model_dump()  # shared label format unchanged
+    assert "visible_text" in SYSTEM_PROMPT
+
+
 def test_text_input_and_fenced_json_with_prose():
     client = FakeClient("Sure!\n```json\n" + json.dumps(good_output()) + "\n```")
     r = extract(client, text="Dear consumer, your bill of Rs 1,240 ...")

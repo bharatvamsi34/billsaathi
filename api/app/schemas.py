@@ -57,6 +57,9 @@ class EvidenceCode(StrEnum):
     LOOKALIKE_VPA = "LOOKALIKE_VPA"
     REFUND_LURE = "REFUND_LURE"
     URGENCY_PRESSURE = "URGENCY_PRESSURE"
+    MISSED_BY_EXTRACTION = (
+        "MISSED_BY_EXTRACTION"  # milestone check: destination in text, not extracted
+    )
 
 
 class InputKind(StrEnum):

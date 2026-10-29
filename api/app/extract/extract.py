@@ -41,12 +41,25 @@ SYSTEM_PROMPT = (
     "connection tonight, says 'immediately', sets a deadline of hours).\n"
     "- confidence: 0 to 1 for each field; give a low value when the text is blurred, cut off or "
     "ambiguous.\n"
-    "JSON Schema:\n" + json.dumps(ExtractionOutput.model_json_schema())
+    "- visible_text: for an image, every piece of text you can see, copied verbatim (keep links, "
+    "UPI IDs and phone numbers exactly); for a text message, an empty string.\n"
+    "JSON Schema:\n"
 )
+
+
+class ExtractionReply(ExtractionOutput):
+    """What the model returns: the shared fields plus a verbatim transcription for the
+    milestone check (kept out of ExtractionOutput so the label format is unchanged)."""
+
+    visible_text: str = ""
+
+
+SYSTEM_PROMPT += json.dumps(ExtractionReply.model_json_schema())
 
 
 class ExtractionResult(BaseModel):
     output: ExtractionOutput
+    visible_text: str = ""  # image transcription, scanned by the milestone check
     model: str
     attempts: int
     latency_ms: float
@@ -123,7 +136,7 @@ def extract(
         for field in ("input_tokens", "output_tokens", "reasoning_tokens", "cost_usd"):
             setattr(usage, field, getattr(usage, field) + getattr(resp.usage, field))
         try:
-            output = ExtractionOutput.model_validate(parse_json(resp.text))
+            reply = ExtractionReply.model_validate(parse_json(resp.text))
         except (ValueError, ValidationError) as e:
             problem = _problem(e)
             log.warning(
@@ -142,6 +155,7 @@ def extract(
                 ),
             ]
             continue
+        output = ExtractionOutput.model_validate(reply.model_dump(exclude={"visible_text"}))
         log.info(
             "extraction ok attempts=%d model=%s biller=%s consumer=%s amount=%s destinations=%d",
             attempt,
@@ -152,6 +166,11 @@ def extract(
             len(output.payment_destinations.value),
         )
         return ExtractionResult(
-            output=output, model=model, attempts=attempt, latency_ms=latency_ms, usage=usage
+            output=output,
+            visible_text=reply.visible_text,
+            model=model,
+            attempts=attempt,
+            latency_ms=latency_ms,
+            usage=usage,
         )
     raise ExtractionFailed(f"no valid output after {MAX_ATTEMPTS} attempts", MAX_ATTEMPTS)

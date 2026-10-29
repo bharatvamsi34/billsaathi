@@ -33,6 +33,49 @@ class LLMError(Exception):
     """The model could not be reached or did not finish (after retries)."""
 
 
+# --- tool-calling conversations (agent loop) ---
+
+
+class ToolCall(BaseModel):
+    call_id: str
+    name: str
+    arguments: str  # raw JSON text as the model produced it; parsed and validated by the loop
+
+
+class ModelTurn(BaseModel):
+    """One model step: optional text plus zero or more tool calls (possibly several at once)."""
+
+    text: str = ""
+    tool_calls: list[ToolCall] = Field(default_factory=list)
+    # Opaque provider output (e.g. reasoning and function_call items), replayed to the same provider.
+    provider_items: list[dict] = Field(default_factory=list)
+    latency_ms: float = 0.0
+    usage: Usage = Field(default_factory=Usage)
+
+
+class UserText(BaseModel):
+    kind: Literal["user"] = "user"
+    text: str
+
+
+class AssistantTurn(BaseModel):
+    kind: Literal["assistant"] = "assistant"
+    turn: ModelTurn
+
+
+class ToolOutput(BaseModel):
+    call_id: str
+    output: str  # JSON text sent back to the model
+
+
+class ToolOutputs(BaseModel):
+    kind: Literal["tool_outputs"] = "tool_outputs"
+    outputs: list[ToolOutput]
+
+
+ConvItem = UserText | AssistantTurn | ToolOutputs
+
+
 class LLMClient(Protocol):
     provider: str
 
@@ -45,3 +88,14 @@ class LLMClient(Protocol):
         effort: Effort = "low",
         max_output_tokens: int = 4096,
     ) -> LLMResponse: ...
+
+    def step(
+        self,
+        *,
+        system: str,
+        conversation: list[ConvItem],
+        tools: list[dict],
+        model: str,
+        effort: Effort = "low",
+        max_output_tokens: int = 4096,
+    ) -> ModelTurn: ...
