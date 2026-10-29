@@ -13,6 +13,24 @@ from pathlib import Path
 import httpx
 
 
+def describe(e: dict) -> str:
+    kind = e["type"]
+    if kind == "extracted":
+        f = e["fields"]
+        return f"biller={f['biller_name']['value']} amount={f['amount']['value']} ({e['latency_ms']} ms)"
+    if kind == "check":
+        return f"[{e['origin']}] {e['tool']} -> {[x['code'] for x in e['evidence']]}"
+    if kind == "agent_turn":
+        return f"turn {e['turn']} calls={e['tool_calls']} ({e['latency_ms']} ms)"
+    if kind == "judge":
+        return f"accepted={e['accepted']}"
+    if kind == "verdict":
+        return f"{e['verdict']} forced={e['forced']} reasons={[x['text'] for x in e['reasons']]}"
+    if kind == "complete":
+        return f"timings={e['timings_ms']} cost={e['cost_usd']}"
+    return ""
+
+
 def main(base: str, image: Path, language: str = "en") -> None:
     sys.stdout.reconfigure(encoding="utf-8")
     base = base.rstrip("/")
@@ -28,24 +46,7 @@ def main(base: str, image: Path, language: str = "en") -> None:
                 if not line.startswith("data: "):
                     continue
                 e = json.loads(line[6:])
-                at = time.perf_counter() - t0
-                detail = {
-                    "extracted": lambda: (
-                        f"biller={e['fields']['biller_name']['value']} amount={e['fields']['amount']['value']} ({e['latency_ms']} ms)"
-                    ),
-                    "check": lambda: (
-                        f"[{e['origin']}] {e['tool']} -> {[x['code'] for x in e['evidence']]}"
-                    ),
-                    "agent_turn": lambda: (
-                        f"turn {e['turn']} calls={e['tool_calls']} ({e['latency_ms']} ms)"
-                    ),
-                    "judge": lambda: f"accepted={e['accepted']}",
-                    "verdict": lambda: (
-                        f"{e['verdict']} forced={e['forced']} reasons={[x['text'] for x in e['reasons']]}"
-                    ),
-                    "complete": lambda: f"timings={e['timings_ms']} cost={e['cost_usd']}",
-                }.get(e["type"], lambda: "")()
-                print(f"{at:6.1f}s  {e['type']:<20} {detail}")
+                print(f"{time.perf_counter() - t0:6.1f}s  {e['type']:<20} {describe(e)}")
         result = client.get(f"{base}/api/v1/checks/{check_id}").json()
     total = time.perf_counter() - t0
     print(
