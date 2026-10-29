@@ -37,6 +37,17 @@ class Settings(BaseSettings):
     app_env: Literal["local", "ci", "prod"] = "local"
     log_level: str = "INFO"
 
+    # Checks API
+    cors_origins: str = "http://localhost:3000"  # comma-separated; our web app's origin(s)
+    rate_limit_per_minute: int = 10  # new checks per client IP
+    daily_spend_cap_usd: float = 5.0  # model spend per UTC day; above it new checks get 503
+    check_ttl_seconds: int = 600  # finished or paused checks are kept in memory this long
+    model_timeout_seconds: float = 30.0
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
 
 @lru_cache
 def get_settings() -> Settings:

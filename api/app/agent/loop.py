@@ -8,6 +8,7 @@ Every tool result, refusal, question, reply and verdict goes into the EvidenceRe
 import json
 import time
 import uuid
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 
@@ -15,7 +16,7 @@ from pydantic import ValidationError
 
 from app.agent import control_tools
 from app.agent.checks import CheckContext, claims_check, run_deterministic
-from app.agent.evidence import EvidenceRecord, ToolResult, make_id
+from app.agent.evidence import EvidenceRecord, RecordEntry, ToolResult, make_id
 from app.agent.milestones import reconcile
 from app.agent.prompts import AGENT_SYSTEM, user_message
 from app.agent.protocol import (
@@ -91,9 +92,10 @@ def start(
     judge: LLMClient | None = None,
     config: AgentConfig | None = None,
     run_id: str | None = None,
+    listener: Callable[[RecordEntry], None] | None = None,
 ) -> AgentSession:
     run_id = run_id or uuid.uuid4().hex[:12]
-    record = EvidenceRecord(run_id)
+    record = EvidenceRecord(run_id, listener=listener)
     destinations, missed = reconcile(
         agent_input.raw_text, agent_input.extraction.payment_destinations.value
     )
@@ -234,6 +236,15 @@ def _run(session: AgentSession) -> None:
             session.metrics.model_turns += 1
             _add_usage(session, turn.usage)
             session.conversation.append(AssistantTurn(turn=turn))
+            session.record.append(
+                "note",
+                {
+                    "event": "agent_turn",
+                    "turn": session.metrics.model_turns,
+                    "tool_calls": [c.name for c in turn.tool_calls],
+                    "latency_ms": round(turn.latency_ms),
+                },
+            )
             if not turn.tool_calls:
                 if session.nudged:
                     _force(session, "the agent stopped without submitting a verdict")

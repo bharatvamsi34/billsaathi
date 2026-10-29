@@ -7,6 +7,7 @@ An EvidenceRecord is the append-only log of one agent run.
 
 import hashlib
 import json
+from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any, Literal
 
@@ -69,18 +70,21 @@ class EvidenceRecord:
     powers the live step-by-step UI and the audit log.
     """
 
-    def __init__(self, run_id: str):
+    def __init__(self, run_id: str, listener: Callable[[RecordEntry], None] | None = None):
         self.run_id = run_id
         self._entries: list[RecordEntry] = []
         self._evidence: dict[str, ToolEvidence] = {}
         self._results: list[ToolResult] = []
         self._origins: list[Origin] = []
+        self._listener = listener  # e.g. the API's live event stream; sees each entry once
 
     def append(self, kind: EntryKind, payload: dict[str, Any]) -> RecordEntry:
         entry = RecordEntry(
             seq=len(self._entries), kind=kind, at=datetime.now(UTC), payload=payload
         )
         self._entries.append(entry)
+        if self._listener is not None:
+            self._listener(entry)
         return entry
 
     def add_tool_result(self, result: ToolResult, origin: Origin = "agent") -> RecordEntry:
