@@ -7,8 +7,9 @@
   .\infra\deploy.ps1 -Step all   # run every step in order
 
   Steps: 0 subscription, 1 CLI extension + providers, 2 region check, 3 resource group + budget,
-  4 container registry, 5 image build, 6 pull identity, 7 environment, 8 container app, 9 health check.
-  Every step can be re-run safely. No secrets are passed or printed.
+  4 container registry, 5 image build, 6 pull identity, 7 environment, 8 container app, 9 health check,
+  10 model API keys as Container Apps secrets (read from api\.env, never printed).
+  Every step can be re-run safely. Secret values are never printed or put in the image.
 #>
 param(
     [Parameter(Mandatory = $true)][string]$Step
@@ -178,8 +179,29 @@ function Step9 {
     Invoke-RestMethod -Uri $url -TimeoutSec 90 | ConvertTo-Json
 }
 
-$steps = @{ '0' = 'Step0'; '1' = 'Step1'; '2' = 'Step2'; '3' = 'Step3'; '4' = 'Step4'; '5' = 'Step5'; '6' = 'Step6'; '7' = 'Step7'; '8' = 'Step8'; '9' = 'Step9' }
-$order = if ($Step -eq 'all') { 0..9 | ForEach-Object { "$_" } } else { @($Step) }
+function Step10 {
+    # Model API keys become Container Apps secrets, read from api\.env. They are never printed,
+    # never in the image or repo, and never passed to Invoke-Az (which echoes its arguments on error).
+    $vals = @{}
+    Get-Content (Join-Path $Root 'api\.env') | ForEach-Object {
+        if ($_ -match '^\s*(META_API_KEY|META_API_BASE_URL|BASETEN_API_KEY)\s*=\s*(.+?)\s*$') { $vals[$matches[1]] = $matches[2] }
+    }
+    if (-not $vals['META_API_KEY'] -or -not $vals['META_API_BASE_URL']) { throw 'META_API_KEY and META_API_BASE_URL must be set in api\.env' }
+    $secrets = @("meta-api-key=$($vals['META_API_KEY'])")
+    $envs = @('META_API_KEY=secretref:meta-api-key', "META_API_BASE_URL=$($vals['META_API_BASE_URL'])")
+    if ($vals['BASETEN_API_KEY']) {
+        $secrets += "baseten-api-key=$($vals['BASETEN_API_KEY'])"
+        $envs += 'BASETEN_API_KEY=secretref:baseten-api-key'
+    }
+    & az containerapp secret set --name $App --resource-group $Rg --secrets @secrets --only-show-errors -o none
+    if ($LASTEXITCODE -ne 0) { throw 'setting Container Apps secrets failed (values not shown)' }
+    Invoke-Az containerapp update --name $App --resource-group $Rg --set-env-vars @envs --only-show-errors -o none
+    Write-Host 'Secrets now set (names only):'
+    Invoke-Az containerapp secret list --name $App --resource-group $Rg --query '[].name' -o tsv
+}
+
+$steps = @{ '0' = 'Step0'; '1' = 'Step1'; '2' = 'Step2'; '3' = 'Step3'; '4' = 'Step4'; '5' = 'Step5'; '6' = 'Step6'; '7' = 'Step7'; '8' = 'Step8'; '9' = 'Step9'; '10' = 'Step10' }
+$order = if ($Step -eq 'all') { 0..10 | ForEach-Object { "$_" } } else { @($Step) }
 foreach ($s in $order) {
     if (-not $steps.ContainsKey($s)) { throw "Unknown step '$s' (use 0-9 or all)" }
     Write-Host "=== Step $s ===" -ForegroundColor Cyan
