@@ -6,20 +6,13 @@ label mistake or a tool bug. Verdicts are checked against the written verdict po
 """
 
 from collections import Counter
-from pathlib import Path
 
 import pytest
+from dataset_utils import DATA, LABELS, run_tools
 from PIL import Image
 
-from app.agent.tools import TOOLS
 from app.schemas import EvidenceCode as C
 from app.schemas import Label, Verdict
-
-DATA = Path(__file__).resolve().parents[2] / "data" / "synthetic"
-LABELS = [
-    Label.model_validate_json(line)
-    for line in (DATA / "labels.jsonl").read_text(encoding="utf-8").splitlines()
-]
 
 STRONG_SCAM = {C.LOOKALIKE_DOMAIN, C.LOOKALIKE_VPA, C.KNOWN_SCAM_DESTINATION, C.APK_LINK}
 SCAM_PHRASING = {C.DISCONNECTION_THREAT, C.KYC_UPDATE_LURE, C.REFUND_LURE}
@@ -38,37 +31,9 @@ def policy_verdict(codes: set[C]) -> Verdict:
 
 
 def tool_evidence(label: Label) -> set[tuple[C, str]]:
-    """Run the real tools on the label's ground-truth fields, as the agent would."""
-    f = label.expected.extracted
-    found: set[tuple[C, str]] = set()
-
-    def run(tool: str, /, **args) -> dict:
-        result = TOOLS[tool](**args)
-        assert result.ok, f"{tool} failed: {result.error}"
-        found.update((code, tool) for code in result.codes)
-        return result.data
-
-    biller_id = run("lookup_biller", name=f.biller_name, category=f.biller_category).get(
-        "biller_id"
-    )
-    if biller_id and f.consumer_number and f.amount is not None:
-        run(
-            "fetch_bill",
-            biller_id=biller_id,
-            consumer_number=f.consumer_number,
-            claimed_amount=f.amount,
-        )
-        run(
-            "get_bill_history",
-            biller_id=biller_id,
-            consumer_number=f.consumer_number,
-            current_amount=f.amount,
-        )
-    for d in f.payment_destinations:
-        run("check_payment_destination", kind=d.kind, value=d.value, biller_id=biller_id)
-    if label.input.text:
-        run("match_scam_patterns", text=label.input.text)
-    return found
+    results = run_tools(label)
+    assert all(r.ok for r in results), [r.error for r in results if not r.ok]
+    return {(code, r.tool) for r in results for code in r.codes}
 
 
 @pytest.mark.parametrize("label", LABELS, ids=[lbl.id for lbl in LABELS])

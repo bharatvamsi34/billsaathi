@@ -71,6 +71,7 @@ class EvidenceRecord:
         self.run_id = run_id
         self._entries: list[RecordEntry] = []
         self._evidence: dict[str, ToolEvidence] = {}
+        self._results: list[ToolResult] = []
 
     def append(self, kind: EntryKind, payload: dict[str, Any]) -> RecordEntry:
         entry = RecordEntry(
@@ -82,7 +83,13 @@ class EvidenceRecord:
     def add_tool_result(self, result: ToolResult) -> RecordEntry:
         for ev in result.evidence:
             self._evidence.setdefault(ev.evidence_id, ev)
+        self._results.append(result)
         return self.append("tool_result", result.model_dump(mode="json"))
+
+    @property
+    def tool_results(self) -> tuple[ToolResult, ...]:
+        """Every tool result of this run, in the order it was recorded."""
+        return tuple(self._results)
 
     @property
     def entries(self) -> tuple[RecordEntry, ...]:
