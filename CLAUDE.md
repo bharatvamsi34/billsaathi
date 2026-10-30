@@ -224,6 +224,9 @@ Record every decision and spike result here with a date, so the README and demo 
 - 2026-10-30 — API min replicas set to 1 (no cold starts). Cost at Central India idle rates ≈ ₹39/day; projected Oct ≈ ₹135 and Nov 1–8 ≈ ₹420 incl. registry, under the ₹800 alert. **Set min replicas back to 0 after Nov 8** (a full month at 1 replica ≈ ₹1,600 would exceed the budget).
 - 2026-10-30 — **Status at handoff** (`docs/HANDOFF.md`): API (image `a6acf3e`) and web app live; Fri core and Sat core done; next is the WhatsApp webhook (Sat extra), then Sunday core (explanations, voice, sandbox pay, eval page, user tests). Open: BV review of TE/HI UI text, WhatsApp permanent token + App Secret, min replicas → 0 after Nov 8. 482 API + 10 web tests green.
 
+- 2026-10-30 — Desktop layout for judges (≥1024 px): two columns, intro + "How it works" + capture/samples left, live timeline + verdict right (sticky); "Best on your phone" QR in the header; phone layout unchanged. Checked live at 1440/1024/360: no horizontal scroll, no console errors; SCAM 11.9 s, CAUTION 12.6 s (`docs/screenshots/04–06`). Manual test guide `docs/TESTING.md` (12 messages, verdicts reproduced with the real tools). **Fixed:** the Python `.gitignore` rule `lib/` had kept `web/src/lib/` (API client, i18n, timeline, tests) out of git; now tracked.
+- 2026-10-30 — Found while writing TESTING.md: Telugu pattern `cut_te` also matches "కట్టారు/కట్టండి" ("paid/pay"), so a genuine Telugu reminder gets `DISCONNECTION_THREAT`. No effect on verdicts when the destination is official; could push an unofficial-destination message from CAUTION to SCAM. To fix with BV.
+
 ## 12. How to work with BV (the builder)
 
 - Diagnose first, propose, and get explicit approval before implementing anything non-trivial.
