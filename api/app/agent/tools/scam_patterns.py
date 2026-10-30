@@ -23,6 +23,10 @@ def _p(pid: str, code: EvidenceCode, lang: str, pattern: str) -> ScamPattern:
     return ScamPattern(pid, code, lang, re.compile(pattern, re.IGNORECASE))
 
 
+# Telugu "cut" as a whole word: not preceded by another Telugu letter, not followed by ట (కట్టు = pay).
+_TE_CUT = r"(?<![ఀ-౿])కట్(?!‌?ట)"
+_TE_DISCONNECT = r"డిస్‌?కనెక్ట్"
+
 D, K, R, U = (
     EvidenceCode.DISCONNECTION_THREAT,
     EvidenceCode.KYC_UPDATE_LURE,
@@ -36,7 +40,10 @@ PATTERNS: tuple[ScamPattern, ...] = (
     _p("supply_cut_en", D, "en", r"\b(electricity|power|connection|supply|service)\b.{0,25}\b(cut|stopped|suspended|blocked)\b"),
     _p("cut_hinglish", D, "hi-Latn", r"\b(connection|light|bijli|power|current)\b.{0,20}\b(cut|kat|kaat|band)\b.{0,15}\b(ho|kar|diya|dega|jayega|jaega)"),
     _p("cut_hi", D, "hi", r"(कनेक्शन|बिजली|लाइट|सप्लाई).{0,30}(काट|कट|बंद)"),
-    _p("cut_te", D, "te", r"(కనెక్షన్|కరెంట్|విద్యుత్|పవర్|సరఫరా).{0,30}(కట్|నిలిపి|తొలగి|ఆపి|ఆపేస్త)"),
+    # Telugu: కట్టు / కట్టండి / కట్టారు mean "pay / paid", so "కట్" only counts as a whole
+    # word (not followed by ట), never as a bare substring.
+    _p("cut_te", D, "te", rf"(కనెక్షన్|కరెంట్|విద్యుత్|పవర్|సరఫరా|లైట్).{{0,30}}({_TE_CUT}|నిలిపి|తొలగి|ఆపి|ఆపేస్త|{_TE_DISCONNECT})"),
+    _p("cut_phrase_te", D, "te", rf"{_TE_CUT}\s*(చేస్తా|చేస్తు|చేయబడ|చేయడం|అవుతుంది|అయిపోతుంది|చేశా)|{_TE_DISCONNECT}|సరఫరా\s*నిలిపివేస్తా"),
     # KYC / document update lures
     _p("kyc_en", K, "en", r"\bkyc\b|\b(update|verify|link)\b.{0,20}\b(aadhaa?r|pan|kyc|account details)\b"),
     _p("kyc_hi", K, "hi", r"केवाईसी|(आधार|पैन).{0,20}(अपडेट|लिंक|सत्यापन)"),

@@ -210,6 +210,46 @@ def test_match_scam_patterns(text, codes):
     assert r.codes == codes
 
 
+def _disconnection(text: str) -> bool:
+    return C.DISCONNECTION_THREAT in match_scam_patterns(text=text).codes
+
+
+# కట్టు / కట్టండి / కట్టారు / కట్టవచ్చు mean "pay / paid": genuine reminders, not threats.
+@pytest.mark.parametrize(
+    "text",
+    [
+        "విద్యుత్ బిల్లు ₹941 గడువులోగా కట్టండి.",
+        "మీ కరెంట్ బిల్లు ఇప్పటికే కట్టారు, ధన్యవాదాలు.",
+        "విద్యుత్ శాఖ: మీరు ఎక్కువ బిల్లు కట్టారు.",
+        "కరెంట్ బిల్లు కట్టు, గడువు 27-10-2026.",
+        "పవర్ బిల్లు samplevidyut.example లో కట్టవచ్చు.",
+        "కనెక్షన్ బిల్లు ₹599 ను UPI ద్వారా కట్టండి.",
+        "సరఫరా బిల్లు కట్‌టండి",  # with a zero-width non-joiner
+    ],
+)  # fmt: skip
+def test_telugu_pay_words_are_not_a_disconnection_threat(text):
+    assert not _disconnection(text)
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "మీ కనెక్షన్ కట్ కాకుండా ఉండాలంటే చెల్లించండి",
+        "ఈ రాత్రి కరెంట్ కట్ అవుతుంది",
+        "బకాయి చెల్లించకపోతే కట్ చేస్తాం",
+        "మీ సర్వీస్ ఈ రాత్రి కట్ చేయబడుతుంది",
+        "మీ సర్వీస్ డిస్‌కనెక్ట్ చేయబడుతుంది",
+        "మీ సర్వీస్ డిస్కనెక్ట్ అవుతుంది",
+        "ఈ రోజు సరఫరా నిలిపివేస్తాం",
+        "విద్యుత్ సరఫరా నిలిపివేయబడుతుంది",
+        "మీ DTH కనెక్షన్ నిలిపివేయబడింది",
+        "మీ broadband కనెక్షన్ ఈ రోజు ఆపివేయబడుతుంది",
+    ],
+)  # fmt: skip
+def test_telugu_threat_phrasings_match(text):
+    assert _disconnection(text)
+
+
 def test_words_inside_links_and_upi_ids_are_not_phrasing():
     text = "Pay at https://kyc-update-portal.example/refund or to billupdate.refund@okdemo. Thanks."
     assert match_scam_patterns(text=text).codes == set()
