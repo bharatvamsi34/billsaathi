@@ -8,7 +8,7 @@
 
   Steps: 0 subscription, 1 CLI extension + providers, 2 region check, 3 resource group + budget,
   4 container registry, 5 image build, 6 pull identity, 7 environment, 8 container app, 9 health check,
-  10 model API keys + WhatsApp secrets as Container Apps secrets (read from api.env, never printed),
+  10 model API keys + WhatsApp secrets as Container Apps secrets (read from api\.env, never printed),
   11 web app on Azure Static Web Apps (Free), 12 API CORS for the web app's origin.
   Every step can be re-run safely. Secret values are never printed or put in the image.
 #>
