@@ -8,7 +8,7 @@
 
   Steps: 0 subscription, 1 CLI extension + providers, 2 region check, 3 resource group + budget,
   4 container registry, 5 image build, 6 pull identity, 7 environment, 8 container app, 9 health check,
-  10 model API keys as Container Apps secrets (read from api\.env, never printed),
+  10 model API keys + WhatsApp secrets as Container Apps secrets (read from api.env, never printed),
   11 web app on Azure Static Web Apps (Free), 12 API CORS for the web app's origin.
   Every step can be re-run safely. Secret values are never printed or put in the image.
 #>
@@ -187,7 +187,7 @@ function Step10 {
     # never in the image or repo, and never passed to Invoke-Az (which echoes its arguments on error).
     $vals = @{}
     Get-Content (Join-Path $Root 'api\.env') | ForEach-Object {
-        if ($_ -match '^\s*(META_API_KEY|META_API_BASE_URL|BASETEN_API_KEY)\s*=\s*(.+?)\s*$') { $vals[$matches[1]] = $matches[2] }
+        if ($_ -match '^\s*(META_API_KEY|META_API_BASE_URL|BASETEN_API_KEY|WHATSAPP_ACCESS_TOKEN|WHATSAPP_APP_SECRET|WHATSAPP_VERIFY_TOKEN|WHATSAPP_PHONE_NUMBER_ID)\s*=\s*(.+?)\s*$') { $vals[$matches[1]] = $matches[2] }
     }
     if (-not $vals['META_API_KEY'] -or -not $vals['META_API_BASE_URL']) { throw 'META_API_KEY and META_API_BASE_URL must be set in api\.env' }
     $secrets = @("meta-api-key=$($vals['META_API_KEY'])")
@@ -196,6 +196,15 @@ function Step10 {
         $secrets += "baseten-api-key=$($vals['BASETEN_API_KEY'])"
         $envs += 'BASETEN_API_KEY=secretref:baseten-api-key'
     }
+    # WhatsApp webhook: tokens and the App Secret as secrets; the phone number id is not secret.
+    foreach ($name in 'WHATSAPP_ACCESS_TOKEN', 'WHATSAPP_APP_SECRET', 'WHATSAPP_VERIFY_TOKEN') {
+        if ($vals[$name]) {
+            $ref = $name.ToLower().Replace('_', '-')
+            $secrets += "$ref=$($vals[$name])"
+            $envs += "$name=secretref:$ref"
+        }
+    }
+    if ($vals['WHATSAPP_PHONE_NUMBER_ID']) { $envs += "WHATSAPP_PHONE_NUMBER_ID=$($vals['WHATSAPP_PHONE_NUMBER_ID'])" }
     & az containerapp secret set --name $App --resource-group $Rg --secrets @secrets --only-show-errors -o none
     if ($LASTEXITCODE -ne 0) { throw 'setting Container Apps secrets failed (values not shown)' }
     Invoke-Az containerapp update --name $App --resource-group $Rg --set-env-vars @envs --only-show-errors -o none

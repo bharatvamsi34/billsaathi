@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.checks import router as checks_router
 from app.bbps_mock.router import router as bbps_mock_router
 from app.config import get_settings
+from app.whatsapp.router import router as whatsapp_router
 
 VERSION = "0.2.0"
 
@@ -23,6 +24,7 @@ app.add_middleware(
 )
 app.include_router(checks_router)
 app.include_router(bbps_mock_router)
+app.include_router(whatsapp_router)
 
 
 @app.get("/")
