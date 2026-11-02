@@ -64,3 +64,10 @@ describe("timeline", () => {
     expect(tl.refusals[0].rule).toBe("claims_check");
   });
 });
+
+describe("explanation", () => {
+  it("is kept from the stream", () => {
+    const state = reduce(emptyTimeline, { seq: 0, type: "explanation", text: "Do not pay yet.", source: "model" });
+    expect(state.explanation).toEqual({ text: "Do not pay yet.", source: "model" });
+  });
+});

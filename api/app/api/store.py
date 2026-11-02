@@ -27,6 +27,9 @@ class CheckState:
     secrets: list[str] = field(default_factory=list)  # values to mask in every outgoing text
     extraction_ms: float = 0.0
     extraction_cost: float = 0.0
+    explanation_ms: float = 0.0
+    explanation_cost: float = 0.0
+    clients: Any = None  # the model clients of this check (web/WhatsApp, normal/privacy)
     finished: float | None = None
     error: str | None = None
     lock: threading.Lock = field(default_factory=threading.Lock)

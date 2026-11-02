@@ -5,6 +5,7 @@ import { t, type Lang } from "@/lib/i18n";
 import { shareWarning, warningText } from "@/lib/share";
 import { evidenceIndex, type Timeline, type Verdict } from "@/lib/timeline";
 import { CautionIcon, PhoneIcon, SafeIcon, ScamIcon, ShareIcon } from "./icons";
+import Explanation from "./Explanation";
 import { EvidencePill } from "./Timeline";
 
 const LOOK: Record<Verdict, { band: string; icon: typeof SafeIcon }> = {
@@ -50,6 +51,8 @@ export default function VerdictCard({
       <div className="space-y-4 p-4">
         {tl.totalMs != null && <p className="text-sm font-semibold text-muted">{t(lang, "checkedIn", { s: (tl.totalMs / 1000).toFixed(1) })}</p>}
         {v.forced && <p className="rounded-lg bg-caution-bg p-2 text-[15px] text-caution">{t(lang, "forced")}</p>}
+
+        <Explanation text={tl.explanation?.text ?? (tl.done ? t(lang, `headline_${v.verdict}`) : null)} headline={t(lang, `headline_${v.verdict}`)} lang={lang} />
 
         <div>
           <h3 className="mb-2 text-lg font-extrabold">{t(lang, "why")}</h3>

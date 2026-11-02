@@ -142,6 +142,7 @@ def extract(
     image_mime: str | None = None,
     text: str | None = None,
     model: str = DEFAULT_MODEL,
+    effort: str = "low",
 ) -> ExtractionResult:
     if (image is None) == (text is None):
         raise ValueError("give exactly one of image or text")
@@ -158,7 +159,7 @@ def extract(
                 system=SYSTEM_PROMPT,
                 messages=messages,
                 model=model,
-                effort="low",
+                effort=effort,
                 max_output_tokens=MAX_OUTPUT_TOKENS,
             )
         except LLMError as e:

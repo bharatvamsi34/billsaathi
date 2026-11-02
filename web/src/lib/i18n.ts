@@ -168,6 +168,14 @@ export const STRINGS = {
   },
   howToTest: { en: "How to test", te: "ఎలా పరీక్షించాలి", hi: "कैसे परखें" },
   testGuide: { en: "Full test guide", te: "పూర్తి పరీక్ష గైడ్", hi: "पूरी परीक्षण गाइड" },
+  explaining: { en: "Writing the explanation…", te: "వివరణ రాస్తోంది…", hi: "समझा रहे हैं…" },
+  listen: { en: "Listen", te: "వినండి", hi: "सुनें" },
+  stopListening: { en: "Stop", te: "ఆపండి", hi: "रोकें" },
+  noVoice: {
+    en: "This device has no voice for this language.",
+    te: "ఈ పరికరంలో ఈ భాషకు వాయిస్ లేదు.",
+    hi: "इस डिवाइस में इस भाषा की आवाज़ नहीं है।",
+  },
   forced: {
     en: "Some checks could not be completed.",
     te: "కొన్ని తనిఖీలు పూర్తి కాలేదు.",

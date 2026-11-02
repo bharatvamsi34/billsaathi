@@ -10,12 +10,14 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 
-from app.agent.loop import AgentSession, resume, start
+from app.agent.loop import AgentConfig, AgentSession, resume, start
 from app.agent.protocol import AgentInput
 from app.api.events import extracted_event, public_event, verdict_view
 from app.api.store import CheckState, SpendMeter
+from app.explain import explain
 from app.extract import ExtractionFailed, TranscriptionFailed, extract, transcribe
 from app.models.base import LLMClient
+from app.pii import scrub
 
 log = logging.getLogger("billsaathi.pipeline")
 
@@ -25,6 +27,9 @@ class Clients:
     extract: LLMClient
     agent: LLMClient
     judge: LLMClient
+    explain: LLMClient | None = None  # None: template explanations, no model call
+    model: str = "muse-spark-1.3"
+    effort: str = "low"
 
 
 @dataclass
@@ -36,6 +41,7 @@ class CheckInput:
 
 
 def run_check(state: CheckState, check: CheckInput, clients: Clients, spend: SpendMeter) -> None:
+    state.clients = clients
     try:
         _run(state, check, clients, spend)
     except Exception as e:  # never leave a check hanging; a crash is "could not verify"
@@ -52,7 +58,7 @@ def answer(state: CheckState, reply: str, spend: SpendMeter) -> None:
             state.secrets.append(reply)
         resume(session, reply)
         spend.add(session.metrics.cost_usd - before)
-        _after_agent(state, session)
+        _after_agent(state, session, spend)
     except Exception as e:
         log.exception("answer failed check_id=%s", state.check_id)
         _fail(state, f"internal error: {type(e).__name__}")
@@ -68,10 +74,19 @@ def _run(state: CheckState, check: CheckInput, clients: Clients, spend: SpendMet
             # Fields and a verbatim transcription in parallel; time = the slower of the two.
             with ThreadPoolExecutor(max_workers=2) as pool:
                 fields = pool.submit(
-                    extract, clients.extract, image=check.image, image_mime=check.image_mime
+                    extract,
+                    clients.extract,
+                    image=check.image,
+                    image_mime=check.image_mime,
+                    model=clients.model,
+                    effort=clients.effort,
                 )
                 text = pool.submit(
-                    transcribe, clients.extract, image=check.image, image_mime=check.image_mime
+                    transcribe,
+                    clients.extract,
+                    image=check.image,
+                    image_mime=check.image_mime,
+                    model=clients.model,
                 )
                 ext = fields.result()
                 try:
@@ -83,7 +98,9 @@ def _run(state: CheckState, check: CheckInput, clients: Clients, spend: SpendMet
                 except TranscriptionFailed:
                     unreadable = True  # recorded as a failed milestone check: no SAFE
         else:
-            ext = extract(clients.extract, text=check.text)
+            ext = extract(
+                clients.extract, text=check.text, model=clients.model, effort=clients.effort
+            )
     except ExtractionFailed as e:
         _fail(state, f"could not read the input: {e}")
         return
@@ -112,25 +129,57 @@ def _run(state: CheckState, check: CheckInput, clients: Clients, spend: SpendMet
             state.emit(event)
 
     session = start(
-        clients.agent, agent_input, judge=clients.judge, run_id=state.check_id, listener=on_entry
+        clients.agent,
+        agent_input,
+        judge=clients.judge,
+        config=AgentConfig(model=clients.model, judge_model=clients.model, effort=clients.effort),
+        run_id=state.check_id,
+        listener=on_entry,
     )
     state.session = session
     spend.add(session.metrics.cost_usd)
-    _after_agent(state, session)
+    _after_agent(state, session, spend)
 
 
-def _after_agent(state: CheckState, session: AgentSession) -> None:
+def _after_agent(state: CheckState, session: AgentSession, spend: SpendMeter) -> None:
     if session.status == "needs_user_input":
         state.status = "needs_user_input"
         return
-    state.status = "done"
-    state.finished = time.monotonic()
-    state.emit({"type": "complete", **summary(state)})
+    state.finished = time.monotonic()  # the verdict is out; the explanation follows it
+    _explain(state, spend)
+    _complete(state, "done")
+
+
+def _explain(state: CheckState, spend: SpendMeter | None) -> None:
+    clients = state.clients
+    result = explain(
+        clients.explain if clients else None,
+        clients.model if clients else "",
+        state.events_after(-1),
+        state.language,
+    )
+    state.explanation_ms, state.explanation_cost = result.latency_ms, result.usage.cost_usd
+    if spend is not None:
+        spend.add(result.usage.cost_usd)
+    state.emit(
+        {
+            "type": "explanation",
+            "language": state.language,
+            "text": scrub(result.text, state.secrets),
+            "source": result.source,
+            "latency_ms": round(result.latency_ms),
+        }
+    )
+
+
+def _complete(state: CheckState, status: str) -> None:
+    # The stream closes on the status, so the last event goes out before it changes.
+    state.emit({"type": "complete", **summary(state), "status": status})
+    state.status = status
 
 
 def _fail(state: CheckState, why: str) -> None:
     state.error = why
-    state.status = "failed"
     state.finished = time.monotonic()
     verdict = {
         "verdict": "CAUTION",
@@ -141,7 +190,9 @@ def _fail(state: CheckState, why: str) -> None:
         "forced_reason": why,
     }
     state.emit(verdict_view(verdict, state.secrets))
-    state.emit({"type": "complete", **summary(state)})
+    state.clients = None  # template only: the model may be the thing that failed
+    _explain(state, None)
+    _complete(state, "failed")
 
 
 def summary(state: CheckState) -> dict:
@@ -154,12 +205,14 @@ def summary(state: CheckState) -> dict:
         "timings_ms": {
             "extraction": round(state.extraction_ms),
             "agent": round(agent_ms),
+            "explanation": round(state.explanation_ms),
             "total": round((end - state.created) * 1000),
         },
         "cost_usd": {
             "extraction": round(state.extraction_cost, 5),
             "agent": round(agent_cost, 5),
-            "total": round(state.extraction_cost + agent_cost, 5),
+            "explanation": round(state.explanation_cost, 5),
+            "total": round(state.extraction_cost + agent_cost + state.explanation_cost, 5),
         },
         "agent": session.metrics.model_dump() if session else None,
     }

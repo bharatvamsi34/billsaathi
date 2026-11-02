@@ -70,6 +70,13 @@ export const PhoneIcon = ({ className }: P) => (
   </svg>
 );
 
+export const SpeakerIcon = ({ className }: P) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...base}>
+    <path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" />
+    <path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11" />
+  </svg>
+);
+
 export const Spinner = ({ className }: P) => (
   <svg viewBox="0 0 24 24" className={`spin ${className ?? ""}`} aria-hidden="true">
     <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity=".2" strokeWidth="3" fill="none" />

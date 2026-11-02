@@ -4,7 +4,7 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, Field
 
-Effort = Literal["low", "medium", "high"]
+Effort = Literal["minimal", "low", "medium", "high"]
 
 
 class Message(BaseModel):

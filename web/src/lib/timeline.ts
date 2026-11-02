@@ -48,6 +48,7 @@ export interface Timeline {
   refusals: { rule: string; message: string }[];
   question: { field: string; question: string } | null;
   verdict: VerdictView | null;
+  explanation: { text: string; source: string } | null;
   totalMs: number | null;
   lastSeq: number;
   done: boolean;
@@ -62,6 +63,7 @@ export const emptyTimeline: Timeline = {
   refusals: [],
   question: null,
   verdict: null,
+  explanation: null,
   totalMs: null,
   lastSeq: -1,
   done: false,
@@ -102,6 +104,8 @@ export function reduce(state: Timeline, e: ApiEvent): Timeline {
         question: null,
         verdict: { verdict: e.verdict, reasons: e.reasons, facts: e.facts, forced: e.forced, forced_reason: e.forced_reason },
       };
+    case "explanation":
+      return { ...next, explanation: { text: e.text, source: e.source } };
     case "complete":
       return { ...next, done: true, totalMs: e.timings_ms?.total ?? null };
     default:

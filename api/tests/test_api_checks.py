@@ -122,13 +122,13 @@ def test_text_check_streams_every_step_in_order(api):
     types = [e["type"] for e in events]
     assert types == [
         "received", "extracted", "verification_started",
-        *["check"] * 6, "agent_turn", "judge", "verdict", "complete",
+        *["check"] * 6, "agent_turn", "judge", "verdict", "explanation", "complete",
     ]  # fmt: skip
     assert [e["seq"] for e in events] == list(range(len(events)))
     checks = [e for e in events if e["type"] == "check"]
     assert all(c["origin"] == "mandatory" for c in checks)
     assert [c["tool"] for c in checks][0] == "lookup_biller"
-    verdict = events[-2]
+    verdict = events[-3]
     assert verdict["verdict"] == "SAFE" and verdict["user_confirmation_required"] is True
 
     result = client.get(f"/api/v1/checks/{check_id}").json()
@@ -160,7 +160,7 @@ def test_image_check_and_last_event_id_resume(api):
     check_id = r.json()["check_id"]
     events = events_of(client, check_id)
     assert events[0] == {**events[0], "type": "received", "input": "image", "language": "te"}
-    assert events[-2]["verdict"] == "SAFE"
+    assert events[-3]["verdict"] == "SAFE"
     later = events_of(client, check_id, **{"Last-Event-ID": "3"})
     assert [e["seq"] for e in later] == list(range(4, len(events)))
 
@@ -222,7 +222,7 @@ def test_question_pauses_the_check_and_an_answer_resumes_it(api):
     assert done["status"] == "done" and done["verdict"]["verdict"] == "SAFE"
     tail = [e["type"] for e in events_of(client, check_id)]
     assert tail[tail.index("question") + 1] == "answer"
-    assert tail[-2:] == ["verdict", "complete"]
+    assert tail[-3:] == ["verdict", "explanation", "complete"]
     assert "DP-4410-882761" not in client.get(f"/api/v1/checks/{check_id}/events").text
     assert client.post(f"/api/v1/checks/{check_id}/answer", json={"answer": "x"}).status_code == 409
     assert consumer  # the dataset value is not what was answered here
@@ -330,7 +330,7 @@ def test_milestone_catches_a_link_missing_from_fields_via_the_transcription(api)
     assert link["origin"] == "mandatory" and "LOOKALIKE_DOMAIN" in [
         ev["code"] for ev in link["evidence"]
     ]
-    assert events[-2]["verdict"] == "SCAM"
+    assert events[-3]["verdict"] == "SCAM"
     first_message = agent.conversations[0][0].text
     assert "disconnected tonight" not in first_message  # the transcription never reaches the agent
 
@@ -347,7 +347,7 @@ def test_failed_transcription_is_recorded_and_blocks_safe(api):
     failed = next(e for e in events if e["type"] == "check" and e["tool"] == "milestone_check")
     assert failed["ok"] is False and "could not read the text" in failed["error"]
     assert [e["rule"] for e in events if e["type"] == "refusal"] == ["hard_rule_floor"]
-    assert events[-2]["verdict"] == "CAUTION"
+    assert events[-3]["verdict"] == "CAUTION"
 
 
 def test_agent_first_message_has_only_masked_fields_and_evidence(api):
@@ -373,7 +373,12 @@ def test_extraction_failure_ends_as_caution(api):
     result = client.get(f"/api/v1/checks/{check_id}").json()
     assert result["status"] == "failed"
     assert result["verdict"]["verdict"] == "CAUTION" and result["verdict"]["forced"]
-    assert [e["type"] for e in events_of(client, check_id)] == ["received", "verdict", "complete"]
+    assert [e["type"] for e in events_of(client, check_id)] == [
+        "received",
+        "verdict",
+        "explanation",
+        "complete",
+    ]
 
 
 def test_cors_allows_only_the_configured_origin():

@@ -54,7 +54,7 @@ export function followEvents(checkId: string, after: number, onEvent: (e: ApiEve
       source.close();
     }
   };
-  for (const type of ["received", "extracted", "verification_started", "check", "agent_turn", "refusal", "judge", "question", "answer", "verdict", "complete"]) {
+  for (const type of ["received", "extracted", "verification_started", "check", "agent_turn", "refusal", "judge", "question", "answer", "verdict", "explanation", "complete"]) {
     source.addEventListener(type, handle as EventListener);
   }
   source.onerror = () => {

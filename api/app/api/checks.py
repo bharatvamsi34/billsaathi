@@ -84,7 +84,7 @@ def _clients(request: Request) -> pipeline.Clients:
             meta = MetaClient(s, timeout_s=s.model_timeout_seconds)
         except LLMError as e:
             raise HTTPException(503, {"error": "not_configured", "message": str(e)}) from e
-        return pipeline.Clients(extract=meta, agent=meta, judge=meta)
+        return pipeline.Clients(extract=meta, agent=meta, judge=meta, explain=meta)
 
     return _state(request, "clients", build)
 
