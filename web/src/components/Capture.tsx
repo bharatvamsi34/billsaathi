@@ -119,23 +119,23 @@ export default function Capture({
         </div>
         <ul className="grid gap-2 lg:grid-cols-2">
           {samples.map((s) => (
-            <li key={s.id}>
+            <li key={s.id} className="lg:first:col-span-2">
               <button
                 type="button"
                 disabled={busy}
                 onClick={() => trySample(s)}
-                className="flex h-full w-full items-center gap-3 rounded-xl border border-line bg-card p-3 text-left shadow-sm transition-colors hover:border-brand active:translate-y-px disabled:opacity-60"
+                className="flex h-full w-full items-center gap-3 rounded-xl border border-line bg-card p-3 text-left shadow-sm transition-colors hover:border-brand active:translate-y-px disabled:opacity-60 lg:gap-2.5 lg:p-2.5"
               >
                 {s.kind === "image" ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={s.src} alt="" className="h-14 w-14 shrink-0 rounded-lg border border-line object-cover object-top" />
+                  <img src={s.src} alt="" className="h-14 w-14 shrink-0 rounded-lg border border-line object-cover object-top lg:h-11 lg:w-11" />
                 ) : (
-                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand">
+                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand lg:h-11 lg:w-11">
                     <MessageIcon className="h-7 w-7" />
                   </span>
                 )}
-                <span className="flex-1 font-semibold leading-snug">{s.title[lang]}</span>
-                <span className="shrink-0 rounded-md bg-paper px-2 py-1 text-xs font-bold uppercase text-muted">
+                <span className="flex-1 font-semibold leading-snug lg:text-[15px]">{s.title[lang]}</span>
+                <span className="shrink-0 rounded-md bg-paper px-2 py-1 text-xs font-bold uppercase text-muted lg:hidden">
                   {s.kind === "image" ? <BillIcon className="h-4 w-4" /> : s.language}
                 </span>
               </button>

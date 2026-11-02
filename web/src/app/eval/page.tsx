@@ -72,7 +72,7 @@ function Table({ head, rows, emphasis }: { head: string[]; rows: (string | numbe
           {rows.map((row, r) => (
             <tr key={r} className={`border-b border-line last:border-0 ${r === emphasis ? "bg-brand-soft font-semibold" : ""}`}>
               {row.map((cell, i) => (
-                <td key={i} className={`px-3 py-2 ${i ? "text-right tabular-nums" : ""}`}>
+                <td key={i} className={`px-3 py-2 ${i ? "whitespace-nowrap text-right tabular-nums" : ""}`}>
                   {cell}
                 </td>
               ))}
@@ -131,6 +131,9 @@ export default function Eval() {
             three). It shows the design works on these cases, not that it is proven in the field.
           </li>
           <li>Real scammers will write messages this set does not contain. Real bills end as CAUTION here by design, because every biller in the demo is a mock.</li>
+          <li>
+            Verdicts were right on all {main.n}, but the checks recorded every finding the label expected on {main.evidence_found} of {main.n}: on the others the verdict held on the remaining evidence.
+          </li>
           <li>Times were measured from a developer machine running three checks at once, not from a phone on a mobile network.</li>
         </ul>
       </section>
@@ -167,8 +170,8 @@ export default function Eval() {
         <section className="space-y-3">
           <h2 className="text-2xl font-extrabold">Reasoning effort on Muse Spark 1.3</h2>
           <p>
-            The same test set at four effort levels, applied to reading and the agent. Accuracy did not separate them on this set, so speed and cost decide. The independent judge stayed at{" "}
-            <code>low</code> in the other rows; the product row uses the shipped judge setting.
+            The same test set at four effort levels, applied to reading and the agent. Accuracy did not separate them on this set. Minimal looks fastest and cheapest, but the product stays at low: moving it because of this table would be tuning on the test set. The independent judge stayed
+            at <code>low</code> in the other rows; the product row uses the shipped setting, <code>minimal</code>, which was chosen on the development set.
           </p>
           <Table
             head={["Effort", "Correct", "False SAFE", "Forced CAUTION", "p50", "p90", "Cost per check"]}

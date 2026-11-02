@@ -187,9 +187,9 @@
       "explanation_cost_per_check_usd": 0.0
     },
     "spark-low": {
-      "title": "Spark 1.3, low (the product)",
-      "file": "eval/results/test_spark-low_2026-11-02_2356.jsonl",
-      "date": "2026-11-02",
+      "title": "Spark 1.3, low; judge minimal (the product)",
+      "file": "eval/results/test_spark-low_2026-11-03_0021.jsonl",
+      "date": "2026-11-03",
       "n": 21,
       "correct": 21,
       "accuracy": 1.0,
@@ -201,10 +201,10 @@
       "false_alarm_rate": 0.0,
       "scam_downgraded": 0,
       "evidence_found": 19,
-      "latency_p50_s": 10.51,
-      "latency_p90_s": 21.87,
-      "cost_per_check_usd": 0.025153333333333333,
-      "cost_total_usd": 0.52822,
+      "latency_p50_s": 10.92,
+      "latency_p90_s": 17.22,
+      "cost_per_check_usd": 0.023965714285714285,
+      "cost_total_usd": 0.50328,
       "turns_median": 1,
       "forced": 0,
       "asked_user": 0,
@@ -221,10 +221,10 @@
           "false_alarm_rate": 0.0,
           "scam_downgraded": 0,
           "evidence_found": 10,
-          "latency_p50_s": 13.91,
-          "latency_p90_s": 21.87,
-          "cost_per_check_usd": 0.028228000000000003,
-          "cost_total_usd": 0.28228000000000003
+          "latency_p50_s": 13.18,
+          "latency_p90_s": 18.55,
+          "cost_per_check_usd": 0.025978,
+          "cost_total_usd": 0.25978
         },
         "hi": {
           "n": 4,
@@ -237,11 +237,11 @@
           "safe": 1,
           "false_alarm_rate": 0.0,
           "scam_downgraded": 0,
-          "evidence_found": 3,
-          "latency_p50_s": 7.8,
-          "latency_p90_s": 10.32,
-          "cost_per_check_usd": 0.0215775,
-          "cost_total_usd": 0.08631
+          "evidence_found": 2,
+          "latency_p50_s": 8.22,
+          "latency_p90_s": 13.0,
+          "cost_per_check_usd": 0.0224875,
+          "cost_total_usd": 0.08995
         },
         "te": {
           "n": 7,
@@ -254,11 +254,11 @@
           "safe": 2,
           "false_alarm_rate": 0.0,
           "scam_downgraded": 0,
-          "evidence_found": 6,
-          "latency_p50_s": 10.51,
-          "latency_p90_s": 27.96,
-          "cost_per_check_usd": 0.022804285714285714,
-          "cost_total_usd": 0.15963
+          "evidence_found": 7,
+          "latency_p50_s": 10.6,
+          "latency_p90_s": 11.63,
+          "cost_per_check_usd": 0.021935714285714284,
+          "cost_total_usd": 0.15355
         }
       },
       "by_kind": {
@@ -273,11 +273,11 @@
           "safe": 4,
           "false_alarm_rate": 0.0,
           "scam_downgraded": 0,
-          "evidence_found": 8,
-          "latency_p50_s": 14.71,
-          "latency_p90_s": 27.96,
-          "cost_per_check_usd": 0.03135,
-          "cost_total_usd": 0.28215
+          "evidence_found": 9,
+          "latency_p50_s": 13.58,
+          "latency_p90_s": 18.7,
+          "cost_per_check_usd": 0.029004444444444444,
+          "cost_total_usd": 0.26104
         },
         "text": {
           "n": 12,
@@ -290,11 +290,11 @@
           "safe": 4,
           "false_alarm_rate": 0.0,
           "scam_downgraded": 0,
-          "evidence_found": 11,
-          "latency_p50_s": 9.21,
-          "latency_p90_s": 10.51,
-          "cost_per_check_usd": 0.020505833333333334,
-          "cost_total_usd": 0.24607
+          "evidence_found": 10,
+          "latency_p50_s": 8.22,
+          "latency_p90_s": 11.2,
+          "cost_per_check_usd": 0.02018666666666667,
+          "cost_total_usd": 0.24224
         }
       },
       "by_expected": {
@@ -310,10 +310,10 @@
           "false_alarm_rate": null,
           "scam_downgraded": 0,
           "evidence_found": 4,
-          "latency_p50_s": 13.91,
-          "latency_p90_s": 21.72,
-          "cost_per_check_usd": 0.030595,
-          "cost_total_usd": 0.12238
+          "latency_p50_s": 13.18,
+          "latency_p90_s": 18.55,
+          "cost_per_check_usd": 0.026915,
+          "cost_total_usd": 0.10766
         },
         "SAFE": {
           "n": 8,
@@ -327,10 +327,10 @@
           "false_alarm_rate": 0.0,
           "scam_downgraded": 0,
           "evidence_found": 8,
-          "latency_p50_s": 12.12,
-          "latency_p90_s": 24.18,
-          "cost_per_check_usd": 0.02606375,
-          "cost_total_usd": 0.20851
+          "latency_p50_s": 10.6,
+          "latency_p90_s": 18.7,
+          "cost_per_check_usd": 0.024395,
+          "cost_total_usd": 0.19516
         },
         "SCAM": {
           "n": 9,
@@ -344,10 +344,10 @@
           "false_alarm_rate": null,
           "scam_downgraded": 0,
           "evidence_found": 7,
-          "latency_p50_s": 9.97,
-          "latency_p90_s": 27.96,
-          "cost_per_check_usd": 0.021925555555555556,
-          "cost_total_usd": 0.19733
+          "latency_p50_s": 9.16,
+          "latency_p90_s": 13.0,
+          "cost_per_check_usd": 0.022273333333333332,
+          "cost_total_usd": 0.20046
         }
       },
       "confusion": {
@@ -368,7 +368,7 @@
         }
       },
       "misses": [],
-      "explanation_cost_per_check_usd": 0.004870952380952381
+      "explanation_cost_per_check_usd": 0.00452952380952381
     },
     "spark-medium": {
       "title": "Spark 1.3, medium",

@@ -19,12 +19,20 @@ export default function Hero({ lang, busy, onScam, onGenuine }: { lang: Lang; bu
   const best = (results.configs as Record<string, { correct: number; n: number; false_safe: number; risky: number; latency_p50_s: number; cost_per_check_usd: number }>)["spark-low"];
   return (
     <div className="hidden lg:block">
-      <section className="bg-ink px-[max(2rem,calc(50%-34rem))] pb-8 pt-2 text-white">
+      <section className="bg-ink px-[max(2rem,calc(50%-34rem))] pb-6 pt-1 text-white">
         <div className="grid grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] items-start gap-10">
           <div>
-            <h1 className="text-[2.5rem] font-extrabold leading-[1.15] tracking-tight">{t(lang, "heroTitle")}</h1>
-            <p className="mt-3 max-w-2xl text-lg leading-snug text-white/85">{t(lang, "intro")}</p>
-            <div className="mt-5 flex flex-wrap items-center gap-3">
+            <h1 className="text-[2rem] font-extrabold leading-[1.15] tracking-tight xl:text-[2.5rem]">
+              {t(lang, "heroTitle")
+                .split(/(?<=[.।])\s+/)
+                .map((sentence) => (
+                  <span key={sentence} className="block">
+                    {sentence}
+                  </span>
+                ))}
+            </h1>
+            <p className="mt-2 max-w-2xl leading-snug text-white/85 xl:text-lg">{t(lang, "intro")}</p>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
               <button
                 type="button"
                 disabled={busy}
@@ -43,10 +51,10 @@ export default function Hero({ lang, busy, onScam, onGenuine }: { lang: Lang; bu
               </button>
             </div>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="border-l-4 border-saffron pl-4">
-              <p className="text-[2rem] font-extrabold leading-none text-saffron">{t(lang, "statValue")}</p>
-              <p className="mt-1.5 leading-snug text-white/90">{t(lang, "statLabel")}</p>
+              <p className="text-[1.75rem] font-extrabold leading-none text-saffron xl:text-[2rem]">{t(lang, "statValue")}</p>
+              <p className="mt-1 text-[15px] leading-snug text-white/90 xl:text-base">{t(lang, "statLabel")}</p>
               <a href={SOURCE} target="_blank" rel="noreferrer" className="mt-1 inline-block text-sm text-white/70 underline underline-offset-2 hover:text-white">
                 {t(lang, "statSource")}
               </a>
@@ -71,7 +79,7 @@ export default function Hero({ lang, busy, onScam, onGenuine }: { lang: Lang; bu
                     <span className="block text-sm leading-tight text-white/80">{t(lang, "statLatency")}</span>
                   </span>
                 </span>
-                <span className="mt-2 block text-sm font-bold text-saffron">
+                <span className="mt-1.5 block text-sm font-bold leading-snug text-saffron">
                   {t(lang, "statMore", { n: best.n })} →
                 </span>
               </Link>
@@ -80,20 +88,20 @@ export default function Hero({ lang, busy, onScam, onGenuine }: { lang: Lang; bu
         </div>
       </section>
 
-      <section aria-labelledby="models-title" className="border-b border-line bg-card px-[max(2rem,calc(50%-34rem))] py-3">
-        <div className="flex items-start gap-5">
+      <section aria-labelledby="models-title" className="border-b border-line bg-card px-[max(2rem,calc(50%-34rem))] py-2.5">
+        <div className="flex items-center gap-5">
           <h2 id="models-title" className="w-24 shrink-0 text-sm font-extrabold leading-tight text-ink">
             {t(lang, "modelsTitle")}
           </h2>
-          <ul className="grid flex-1 grid-cols-5 gap-3">
+          <ul className="grid flex-1 grid-cols-5 gap-2 xl:gap-3">
             {MODELS.map(([model, job]) => (
               <li key={model}>
                 <ModelBadge model={model} />
-                <p className="mt-1 text-sm leading-snug text-muted">{t(lang, job)}</p>
+                <p className="mt-0.5 text-[13px] leading-snug text-muted xl:text-sm">{t(lang, job)}</p>
               </li>
             ))}
           </ul>
-          <div className="shrink-0">
+          <div className="hidden shrink-0 xl:block">
             <PhoneQR lang={lang} />
           </div>
         </div>

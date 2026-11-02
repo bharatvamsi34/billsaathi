@@ -203,7 +203,7 @@ export default function Home() {
                 {!tl.verdict && !tl.question && (
                   <div
                     data-step={tl.early ? "early" : undefined}
-                    className={`rounded-2xl px-4 py-5 text-xl font-extrabold text-white shadow-md transition-colors duration-300 ${tl.early === "scam_signals" ? "bg-scam" : "bg-ink"}`}
+                    className={`flex min-h-[5.75rem] items-center rounded-2xl px-4 py-4 text-xl font-extrabold text-white shadow-md transition-colors duration-300 ${tl.early === "scam_signals" ? "bg-scam" : "bg-ink"}`}
                     aria-live="polite"
                   >
                     {t(lang, tl.early === "scam_signals" ? "earlyScam" : tl.early ? "earlyChecking" : "checking")}

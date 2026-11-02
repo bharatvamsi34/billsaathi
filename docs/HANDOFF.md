@@ -105,3 +105,4 @@ cd web;  npm run lint; npm run typecheck; npm test
 - (e) Privacy Mode: **done**, commit `7a8c905`, same URL (3/3 dev items correct on real Baseten; no Meta call on that path).
 - (i) /privacy + app icon: **done**, commit `bbcfcc3`, https://zealous-coast-09279dd00.1.azurestaticapps.net/privacy and /icon-1024.png.
 - (g) Muse Image warning card: **done**, commit `3c94f42`+, same URL (live: Telugu card over the generated background; all model tools off).
+- (f) Evaluation page from real test-split runs: **done**, https://zealous-coast-09279dd00.1.azurestaticapps.net/eval (21/21, 0/13 false SAFE, p50 10.9 s; sweep and Spark Open included; caveats on the page).
