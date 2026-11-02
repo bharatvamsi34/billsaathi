@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { t, type Lang } from "@/lib/i18n";
-import { shareWarning, warningText } from "@/lib/share";
 import { evidenceIndex, type Timeline, type Verdict } from "@/lib/timeline";
-import { CautionIcon, PhoneIcon, SafeIcon, ScamIcon, ShareIcon } from "./icons";
+import { CautionIcon, PhoneIcon, SafeIcon, ScamIcon } from "./icons";
 import Explanation from "./Explanation";
 import SandboxPay from "./SandboxPay";
+import WarnFamily from "./WarnFamily";
 import { EvidencePill } from "./Timeline";
 
 const LOOK: Record<Verdict, { band: string; icon: typeof SafeIcon }> = {
@@ -28,18 +27,10 @@ export default function VerdictCard({
   onShowEvidence: (seq: number) => void;
   onReset: () => void;
 }) {
-  const [shared, setShared] = useState<string | null>(null);
   const v = tl.verdict!;
   const { band, icon: Icon } = LOOK[v.verdict];
   const index = evidenceIndex(tl);
   const helpline = v.facts.find((f) => f.key === "cybercrime_helpline")?.value;
-  const warning = warningText(v.verdict, lang, helpline);
-
-  const share = async () => {
-    if (!warning) return;
-    const result = await shareWarning(warning);
-    if (result === "copied") setShared(t(lang, "copied"));
-  };
 
   return (
     <section className="rise overflow-hidden rounded-2xl border border-line bg-card shadow-md" aria-live="polite">
@@ -86,15 +77,7 @@ export default function VerdictCard({
             </>
           ) : (
             <>
-              <button
-                type="button"
-                onClick={share}
-                className="flex min-h-14 items-center justify-center gap-2 rounded-xl bg-ink px-4 text-lg font-bold text-white active:translate-y-px"
-              >
-                <ShareIcon className="h-6 w-6" />
-                {t(lang, "warnFamily")}
-              </button>
-              {shared && <p className="text-center text-sm font-semibold text-safe">{shared}</p>}
+              <WarnFamily verdict={v.verdict} lang={lang} helpline={helpline} />
               {helpline && (
                 <a
                   href={`tel:${helpline}`}

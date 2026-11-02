@@ -214,6 +214,13 @@ export const STRINGS = {
     te: "ప్రైవసీ మోడ్ ఇప్పుడు అందుబాటులో లేదు. ఏదీ పంపలేదు.",
     hi: "प्राइवेसी मोड अभी उपलब्ध नहीं है। कुछ भी नहीं भेजा गया।",
   },
+  cardMaking: { en: "Making the warning card…", te: "హెచ్చరిక కార్డ్ తయారవుతోంది…", hi: "चेतावनी कार्ड बन रहा है…" },
+  cardSaved: {
+    en: "Card saved, and the warning copied. Send them on WhatsApp.",
+    te: "కార్డ్ సేవ్ అయింది, హెచ్చరిక కాపీ అయింది. WhatsApp లో పంపండి.",
+    hi: "कार्ड सेव हुआ और चेतावनी कॉपी हुई। WhatsApp पर भेजें।",
+  },
+  cardFailed: { en: "Could not share the card.", te: "కార్డ్ షేర్ చేయలేకపోయాం.", hi: "कार्ड साझा नहीं हो सका।" },
   explaining: { en: "Writing the explanation…", te: "వివరణ రాస్తోంది…", hi: "समझा रहे हैं…" },
   listen: { en: "Listen", te: "వినండి", hi: "सुनें" },
   stopListening: { en: "Stop", te: "ఆపండి", hi: "रोकें" },

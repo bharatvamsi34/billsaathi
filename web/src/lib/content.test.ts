@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import samples from "@/samples.generated.json";
 import { KNOWN_CODES } from "./codes";
 import { LANGS, STRINGS } from "./i18n";
+import { wrapLines } from "./card";
 import { warningText } from "./share";
 
 const ROOT = join(__dirname, "..", "..", "..");
@@ -64,5 +65,16 @@ describe("warn my family", () => {
         expect(text).not.toMatch(/https?:|@|\.example/);
       }
     }
+  });
+});
+
+describe("card text wrapping", () => {
+  it("keeps every word and respects the width", () => {
+    const lines = wrapLines("one two three four five", 9, (s) => s.length);
+    expect(lines.join(" ")).toBe("one two three four five");
+    for (const line of lines) expect(line.length).toBeLessThanOrEqual(9);
+  });
+  it("keeps a word longer than the width on its own line", () => {
+    expect(wrapLines("a verylongwordindeed b", 5, (s) => s.length)).toEqual(["a", "verylongwordindeed", "b"]);
   });
 });

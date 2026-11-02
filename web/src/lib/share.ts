@@ -28,17 +28,3 @@ export function warningText(verdict: Verdict, lang: Lang, helpline?: string): st
   if (helpline) parts.push(REPORT[lang].replace("{value}", helpline));
   return parts.join(" ");
 }
-
-/** Share with the Web Share API, or copy to the clipboard. Returns what happened. */
-export async function shareWarning(text: string): Promise<"shared" | "copied" | "failed"> {
-  try {
-    if (typeof navigator !== "undefined" && navigator.share) {
-      await navigator.share({ text });
-      return "shared";
-    }
-    await navigator.clipboard.writeText(text);
-    return "copied";
-  } catch {
-    return "failed";
-  }
-}
