@@ -77,3 +77,10 @@ describe("voice", () => {
     expect(reduce(emptyTimeline, { seq: 0, type: "transcribed", text: "Pay my bill" }).heard).toBe("Pay my bill");
   });
 });
+
+describe("isolation", () => {
+  it("keeps the box from SAM", () => {
+    const box = { x1: 1, y1: 2, x2: 3, y2: 4, w: 10, h: 10 };
+    expect(reduce(emptyTimeline, { seq: 0, type: "isolated", box, cropped: true }).isolated).toEqual({ box, cropped: true });
+  });
+});

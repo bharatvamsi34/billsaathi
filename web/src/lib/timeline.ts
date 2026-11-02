@@ -39,9 +39,19 @@ export interface VerdictView {
   forced_reason: string | null;
 }
 
+export interface Box {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  w: number;
+  h: number;
+}
+
 export interface Timeline {
   received: boolean;
   heard: string | null;
+  isolated: { box: Box | null; cropped: boolean } | null;
   extracted: Extracted | null;
   checks: CheckRow[];
   agentTurns: { turn: number; tool_calls: string[] }[];
@@ -58,6 +68,7 @@ export interface Timeline {
 export const emptyTimeline: Timeline = {
   received: false,
   heard: null,
+  isolated: null,
   extracted: null,
   checks: [],
   agentTurns: [],
@@ -82,6 +93,8 @@ export function reduce(state: Timeline, e: ApiEvent): Timeline {
       return { ...next, received: true };
     case "transcribed":
       return { ...next, heard: e.text };
+    case "isolated":
+      return { ...next, isolated: { box: e.box, cropped: e.cropped } };
     case "extracted":
       return { ...next, extracted: e.fields };
     case "check":

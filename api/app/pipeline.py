@@ -18,6 +18,7 @@ from app.explain import explain
 from app.extract import ExtractionFailed, TranscriptionFailed, extract, transcribe
 from app.models.base import LLMClient, LLMError
 from app.pii import scrub
+from app.vision import Segmenter, isolate
 from app.voice import SpeechClient
 
 log = logging.getLogger("billsaathi.pipeline")
@@ -30,6 +31,7 @@ class Clients:
     judge: LLMClient
     explain: LLMClient | None = None  # None: template explanations, no model call
     speech: SpeechClient | None = None
+    sam: Segmenter | None = None  # None: no isolation step (Privacy Mode stays off Meta's API)
     model: str = "muse-spark-1.3"
     effort: str = "low"
 
@@ -76,22 +78,24 @@ def _run(state: CheckState, check: CheckInput, clients: Clients, spend: SpendMet
     visible_text, unreadable, transcription_cost = None, False, 0.0
     try:
         if check.image is not None:
-            # Fields and a verbatim transcription in parallel; time = the slower of the two.
+            # A verbatim transcription of the ORIGINAL image runs from the start, so a link
+            # outside the crop still reaches the milestone check. Fields read the crop.
             with ThreadPoolExecutor(max_workers=2) as pool:
-                fields = pool.submit(
-                    extract,
-                    clients.extract,
-                    image=check.image,
-                    image_mime=check.image_mime,
-                    model=clients.model,
-                    effort=clients.effort,
-                )
                 text = pool.submit(
                     transcribe,
                     clients.extract,
                     image=check.image,
                     image_mime=check.image_mime,
                     model=clients.model,
+                )
+                image, image_mime = _isolate(state, check, clients, spend)
+                fields = pool.submit(
+                    extract,
+                    clients.extract,
+                    image=image,
+                    image_mime=image_mime,
+                    model=clients.model,
+                    effort=clients.effort,
                 )
                 ext = fields.result()
                 try:
@@ -144,6 +148,27 @@ def _run(state: CheckState, check: CheckInput, clients: Clients, spend: SpendMet
     state.session = session
     spend.add(session.metrics.cost_usd)
     _after_agent(state, session, spend)
+
+
+def _isolate(
+    state: CheckState, check: CheckInput, clients: Clients, spend: SpendMeter
+) -> tuple[bytes, str]:
+    """The image for field extraction: the bill cropped by SAM, or the original."""
+    if clients.sam is None:
+        return check.image, check.image_mime
+    result = isolate(clients.sam, check.image, check.image_mime)
+    state.isolation_ms, state.isolation_cost = result.latency_ms, result.cost_usd
+    spend.add(result.cost_usd)
+    state.emit(
+        {
+            "type": "isolated",
+            "model": "sam-3.1",
+            "box": result.box.model_dump() if result.box else None,
+            "cropped": result.cropped,
+            "latency_ms": round(result.latency_ms),
+        }
+    )
+    return result.image, result.mime
 
 
 def _transcribe_audio(
@@ -237,6 +262,7 @@ def summary(state: CheckState) -> dict:
         "status": state.status,
         "timings_ms": {
             "speech": round(state.speech_ms),
+            "isolation": round(state.isolation_ms),
             "extraction": round(state.extraction_ms),
             "agent": round(agent_ms),
             "explanation": round(state.explanation_ms),
@@ -244,11 +270,17 @@ def summary(state: CheckState) -> dict:
         },
         "cost_usd": {
             "speech": round(state.speech_cost, 5),
+            "isolation": round(state.isolation_cost, 5),
             "extraction": round(state.extraction_cost, 5),
             "agent": round(agent_cost, 5),
             "explanation": round(state.explanation_cost, 5),
             "total": round(
-                state.speech_cost + state.extraction_cost + agent_cost + state.explanation_cost, 5
+                state.speech_cost
+                + state.isolation_cost
+                + state.extraction_cost
+                + agent_cost
+                + state.explanation_cost,
+                5,
             ),
         },
         "agent": session.metrics.model_dump() if session else None,

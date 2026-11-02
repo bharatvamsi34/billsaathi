@@ -63,7 +63,45 @@ function CheckLine({ row, lang, highlighted }: { row: CheckRow; lang: Lang; high
 
 
 
-export default function Timeline({ tl, lang, highlightSeq }: { tl: TL; lang: Lang; highlightSeq: number | null }) {
+/** The user's own image with SAM's box drawn over it (the server only sends the box). */
+function IsolatedImage({ src, tl, lang }: { src: string; tl: TL; lang: Lang }) {
+  const found = tl.isolated;
+  const box = found?.box;
+  const note = !found ? null : found.cropped ? "isolatedCrop" : box ? "isolatedFull" : "isolatedNone";
+  return (
+    <div className="rise flex items-start gap-3 rounded-xl border border-line bg-card p-3">
+      <div className="relative w-24 shrink-0 overflow-hidden rounded-lg border border-line">
+        {/* eslint-disable-next-line @next/next/no-img-element -- a local blob, not a site asset */}
+        <img src={src} alt="" className="block w-full" />
+        {box && (
+          <span
+            aria-hidden="true"
+            className="absolute border-2 border-saffron shadow-[0_0_0_999px_rgba(11,34,57,0.45)]"
+            style={{
+              left: `${(box.x1 / box.w) * 100}%`,
+              top: `${(box.y1 / box.h) * 100}%`,
+              width: `${((box.x2 - box.x1) / box.w) * 100}%`,
+              height: `${((box.y2 - box.y1) / box.h) * 100}%`,
+            }}
+          />
+        )}
+      </div>
+      {note && <p className="text-[15px] font-semibold text-ink-soft">{t(lang, note)}</p>}
+    </div>
+  );
+}
+
+export default function Timeline({
+  tl,
+  lang,
+  highlightSeq,
+  imageUrl,
+}: {
+  tl: TL;
+  lang: Lang;
+  highlightSeq: number | null;
+  imageUrl: string | null;
+}) {
   const fixed = tl.checks.filter((c) => c.origin === "mandatory");
   const extra = tl.checks.filter((c) => c.origin === "agent");
   const reading: Stage = tl.extracted || tl.verdict ? "done" : "active";
@@ -74,6 +112,12 @@ export default function Timeline({ tl, lang, highlightSeq }: { tl: TL; lang: Lan
 
   return (
     <ol className="space-y-5">
+      {imageUrl && (
+        <li className="space-y-2">
+          <StageHeader stage={tl.isolated || tl.extracted || tl.verdict ? "done" : "active"} title={t(lang, "stepIsolate")} />
+          <IsolatedImage src={imageUrl} tl={tl} lang={lang} />
+        </li>
+      )}
       <li className="space-y-2">
         <StageHeader stage={reading} title={t(lang, "stepReading")} />
         {tl.heard && (

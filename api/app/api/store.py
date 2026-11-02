@@ -27,6 +27,8 @@ class CheckState:
     secrets: list[str] = field(default_factory=list)  # values to mask in every outgoing text
     extraction_ms: float = 0.0
     extraction_cost: float = 0.0
+    isolation_ms: float = 0.0
+    isolation_cost: float = 0.0
     speech_ms: float = 0.0
     speech_cost: float = 0.0
     explanation_ms: float = 0.0

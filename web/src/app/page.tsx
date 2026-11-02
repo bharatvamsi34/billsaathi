@@ -30,6 +30,7 @@ export default function Home() {
   const [error, setError] = useState<Key | null>(null);
   const [busy, setBusy] = useState(false);
   const [highlight, setHighlight] = useState<number | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const stop = useRef<(() => void) | null>(null);
   const lastSeq = useRef(-1);
 
@@ -54,12 +55,20 @@ export default function Home() {
     );
   };
 
+  const showImage = (image: Blob | null) => {
+    setImageUrl((old) => {
+      if (old) URL.revokeObjectURL(old);
+      return image ? URL.createObjectURL(image) : null;
+    });
+  };
+
   const submit = async (input: CaptureInput) => {
     setError(null);
     setBusy(true);
     setTl(emptyTimeline);
     lastSeq.current = -1;
     window.scrollTo({ top: 0, behavior: "smooth" });
+    showImage("image" in input ? input.image : null);
     try {
       const id =
         "text" in input
@@ -94,6 +103,7 @@ export default function Home() {
     setError(null);
     setBusy(false);
     setHighlight(null);
+    showImage(null);
   };
 
   const showEvidence = (seq: number) => {
@@ -195,7 +205,7 @@ export default function Home() {
               )}
               <section className="rounded-2xl border border-line bg-paper">
                 {tl.verdict && <h2 className="px-1 pb-3 text-xl font-extrabold">{t(lang, "howChecked")}</h2>}
-                <Timeline tl={tl} lang={lang} highlightSeq={highlight} />
+                <Timeline tl={tl} lang={lang} highlightSeq={highlight} imageUrl={imageUrl} />
               </section>
             </>
           )}

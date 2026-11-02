@@ -21,6 +21,7 @@ from app.config import Settings, get_settings
 from app.models.base import LLMError
 from app.models.meta import MetaClient
 from app.payments import PaymentRefused, PaymentStore, new_receipt, payable
+from app.vision import MetaSam
 
 router = APIRouter(prefix="/api/v1/checks", tags=["checks"])
 
@@ -90,7 +91,12 @@ def _clients(request: Request) -> pipeline.Clients:
         except LLMError as e:
             raise HTTPException(503, {"error": "not_configured", "message": str(e)}) from e
         return pipeline.Clients(
-            extract=meta, agent=meta, judge=meta, explain=meta, speech=voice.MetaSpeech(s)
+            extract=meta,
+            agent=meta,
+            judge=meta,
+            explain=meta,
+            speech=voice.MetaSpeech(s),
+            sam=MetaSam(s),
         )
 
     return _state(request, "clients", build)
