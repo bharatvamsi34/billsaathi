@@ -101,3 +101,4 @@ cd web;  npm run lint; npm run typecheck; npm test
 - (a) Verdict explanation + Listen: **done**, commit `185818f`, https://zealous-coast-09279dd00.1.azurestaticapps.net (live checks: TE and HI SCAM, EN CAUTION, all `source=model`).
 - (b) Voice input (web + WhatsApp voice notes): **done**, commit `6e68f26`, same URL (real browser with fake mic, live: heard → verdict). WhatsApp voice notes tested offline only.
 - (c) Sandbox pay + audit log: **done**, commit `4ed1bc2`, same URL (live browser: SAFE → confirm → receipt `SBX-…`, audit entry #1). The live test also found and fixed a 409 when paying during the explanation.
+- (d) SAM 3.1 crop + box in the timeline: **done**, commit `9e0bf7e`, same URL (live: phone-photo sample → SAFE). Fields read the crop; transcription reads the original.

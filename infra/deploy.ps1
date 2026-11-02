@@ -187,7 +187,7 @@ function Step10 {
     # never in the image or repo, and never passed to Invoke-Az (which echoes its arguments on error).
     $vals = @{}
     Get-Content (Join-Path $Root 'api\.env') | ForEach-Object {
-        if ($_ -match '^\s*(META_API_KEY|META_API_BASE_URL|BASETEN_API_KEY|WHATSAPP_ACCESS_TOKEN|WHATSAPP_APP_SECRET|WHATSAPP_VERIFY_TOKEN|WHATSAPP_PHONE_NUMBER_ID)\s*=\s*(.+?)\s*$') { $vals[$matches[1]] = $matches[2] }
+        if ($_ -match '^\s*(META_API_KEY|META_API_BASE_URL|BASETEN_API_KEY|FIREWORKS_API_KEY|WHATSAPP_ACCESS_TOKEN|WHATSAPP_APP_SECRET|WHATSAPP_VERIFY_TOKEN|WHATSAPP_PHONE_NUMBER_ID)\s*=\s*(.+?)\s*$') { $vals[$matches[1]] = $matches[2] }
     }
     if (-not $vals['META_API_KEY'] -or -not $vals['META_API_BASE_URL']) { throw 'META_API_KEY and META_API_BASE_URL must be set in api\.env' }
     $secrets = @("meta-api-key=$($vals['META_API_KEY'])")
@@ -197,7 +197,7 @@ function Step10 {
         $envs += 'BASETEN_API_KEY=secretref:baseten-api-key'
     }
     # WhatsApp webhook: tokens and the App Secret as secrets; the phone number id is not secret.
-    foreach ($name in 'WHATSAPP_ACCESS_TOKEN', 'WHATSAPP_APP_SECRET', 'WHATSAPP_VERIFY_TOKEN') {
+    foreach ($name in 'FIREWORKS_API_KEY', 'WHATSAPP_ACCESS_TOKEN', 'WHATSAPP_APP_SECRET', 'WHATSAPP_VERIFY_TOKEN') {
         if ($vals[$name]) {
             $ref = $name.ToLower().Replace('_', '-')
             $secrets += "$ref=$($vals[$name])"

@@ -14,9 +14,10 @@ export class ApiError extends Error {
   }
 }
 
-export async function startCheck(input: { image?: Blob; imageName?: string; audio?: Blob; text?: string; language: Lang }): Promise<string> {
+export async function startCheck(input: { image?: Blob; imageName?: string; audio?: Blob; text?: string; language: Lang; privacy?: boolean }): Promise<string> {
   const form = new FormData();
   form.set("language", input.language);
+  if (input.privacy) form.set("privacy", "true");
   if (input.image) form.set("image", input.image, input.imageName ?? "image.jpg");
   if (input.audio) form.set("audio", input.audio, "voice.wav");
   if (input.text) form.set("text", input.text);

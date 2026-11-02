@@ -20,6 +20,7 @@ from app.api.store import CheckState, CheckStore, RateLimiter, SpendMeter
 from app.config import Settings, get_settings
 from app.models.base import LLMError
 from app.models.meta import MetaClient
+from app.models.openweight import MODEL_LABEL, privacy_client
 from app.payments import PaymentRefused, PaymentStore, new_receipt, payable
 from app.vision import MetaSam
 
@@ -102,6 +103,24 @@ def _clients(request: Request) -> pipeline.Clients:
     return _state(request, "clients", build)
 
 
+def _privacy_clients(request: Request) -> pipeline.Clients:
+    """Muse Spark Open for everything. No SAM here: it is on Meta's API."""
+
+    def build(s: Settings) -> pipeline.Clients:
+        client = privacy_client(s)
+        return pipeline.Clients(
+            extract=client,
+            agent=client,
+            judge=client,
+            explain=client,
+            speech=client,
+            model=MODEL_LABEL,
+            privacy=True,
+        )
+
+    return _state(request, "privacy_clients", build)
+
+
 def _error(status: int, code: str, message: str) -> JSONResponse:
     return JSONResponse(status_code=status, content={"error": code, "message": message})
 
@@ -113,6 +132,7 @@ def _error(status: int, code: str, message: str) -> JSONResponse:
 async def create_check(
     request: Request,
     language: Annotated[Language, Form()] = "en",
+    privacy: Annotated[bool, Form()] = False,
     text: Annotated[str | None, Form()] = None,
     image: Annotated[UploadFile | None, File()] = None,
     audio: Annotated[UploadFile | None, File(description="16 kHz mono 16-bit WAV")] = None,
@@ -151,7 +171,10 @@ async def create_check(
             )
         check.text = text.strip()
 
-    clients = _clients(request)
+    try:
+        clients = _privacy_clients(request) if privacy else _clients(request)
+    except LLMError:  # never fall back to Meta's API when the user asked for Privacy Mode
+        return _error(503, "privacy_unavailable", "Privacy Mode is not available right now.")
     state = CheckState(
         check_id=uuid.uuid4().hex,
         language=language,

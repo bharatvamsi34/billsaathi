@@ -81,7 +81,7 @@ def cite_all(verdict):
 @pytest.fixture
 def api():
     """A clean app state per test; returns a function to install the fake models."""
-    names = ("settings", "executor", "clients", "check_store", "rate_limiter", "spend_meter", "payments")  # fmt: skip
+    names = ("settings", "executor", "clients", "check_store", "rate_limiter", "spend_meter", "payments", "privacy_clients")  # fmt: skip
     saved = {n: getattr(app.state, n, None) for n in names}
     app.state.settings = Settings(
         _env_file=None, rate_limit_per_minute=50, daily_spend_cap_usd=5.0, audit_db_path=":memory:"

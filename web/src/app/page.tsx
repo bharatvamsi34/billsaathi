@@ -18,6 +18,7 @@ const TEST_GUIDE = "https://github.com/bharatvamsi34/billsaathi/blob/main/docs/T
 
 const ERRORS: Record<string, Key> = {
   rate_limited: "errRate",
+  privacy_unavailable: "errPrivacy",
   service_busy: "errBusy",
   unsupported_image: "errImage",
   image_too_large: "errImage",
@@ -31,6 +32,7 @@ export default function Home() {
   const [busy, setBusy] = useState(false);
   const [highlight, setHighlight] = useState<number | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [privacy, setPrivacy] = useState(false);
   const stop = useRef<(() => void) | null>(null);
   const lastSeq = useRef(-1);
 
@@ -72,10 +74,10 @@ export default function Home() {
     try {
       const id =
         "text" in input
-          ? await startCheck({ text: input.text, language: lang })
+          ? await startCheck({ text: input.text, language: lang, privacy })
           : "audio" in input
-            ? await startCheck({ audio: input.audio, language: lang })
-            : await startCheck({ image: await prepareImage(input.image), imageName: input.imageName, language: lang });
+            ? await startCheck({ audio: input.audio, language: lang, privacy })
+            : await startCheck({ image: await prepareImage(input.image), imageName: input.imageName, language: lang, privacy });
       setCheckId(id);
       follow(id, -1);
     } catch (e) {
@@ -168,7 +170,7 @@ export default function Home() {
             <HowItWorks lang={lang} />
           </div>
           <div className={checking ? "hidden lg:block" : undefined}>
-            <Capture lang={lang} busy={busy} onSubmit={submit} />
+            <Capture lang={lang} busy={busy} privacy={privacy} onPrivacy={setPrivacy} onSubmit={submit} />
           </div>
         </div>
 

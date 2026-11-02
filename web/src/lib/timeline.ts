@@ -50,6 +50,7 @@ export interface Box {
 
 export interface Timeline {
   received: boolean;
+  privacy: boolean;
   heard: string | null;
   isolated: { box: Box | null; cropped: boolean } | null;
   extracted: Extracted | null;
@@ -67,6 +68,7 @@ export interface Timeline {
 
 export const emptyTimeline: Timeline = {
   received: false,
+  privacy: false,
   heard: null,
   isolated: null,
   extracted: null,
@@ -90,7 +92,7 @@ export function reduce(state: Timeline, e: ApiEvent): Timeline {
   const next = { ...state, lastSeq: e.seq };
   switch (e.type) {
     case "received":
-      return { ...next, received: true };
+      return { ...next, received: true, privacy: !!e.privacy };
     case "transcribed":
       return { ...next, heard: e.text };
     case "isolated":

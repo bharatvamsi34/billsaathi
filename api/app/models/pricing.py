@@ -4,6 +4,8 @@ PRICES: dict[str, tuple[float, float]] = {
     "muse-spark-1.3": (1.25, 4.25),
     "muse-spark-1.1": (1.25, 4.25),
     "muse-wonder-1.0": (4.00, 20.00),
+    # Not a confirmed price: estimated at Spark 1.3 rates so Privacy Mode counts towards the cap.
+    "muse-spark-open": (1.25, 4.25),
 }
 
 

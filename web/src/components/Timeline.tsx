@@ -112,7 +112,10 @@ export default function Timeline({
 
   return (
     <ol className="space-y-5">
-      {imageUrl && (
+      {tl.privacy && (
+        <li className="rise rounded-xl bg-ink px-3 py-2 text-[15px] font-bold text-white">{t(lang, "privacyActive")}</li>
+      )}
+      {imageUrl && !tl.privacy && (
         <li className="space-y-2">
           <StageHeader stage={tl.isolated || tl.extracted || tl.verdict ? "done" : "active"} title={t(lang, "stepIsolate")} />
           <IsolatedImage src={imageUrl} tl={tl} lang={lang} />

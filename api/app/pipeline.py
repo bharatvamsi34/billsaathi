@@ -34,6 +34,7 @@ class Clients:
     sam: Segmenter | None = None  # None: no isolation step (Privacy Mode stays off Meta's API)
     model: str = "muse-spark-1.3"
     effort: str = "low"
+    privacy: bool = False  # open-weight model; no Meta API call anywhere on this path
 
 
 @dataclass
@@ -70,7 +71,15 @@ def answer(state: CheckState, reply: str, spend: SpendMeter) -> None:
 
 
 def _run(state: CheckState, check: CheckInput, clients: Clients, spend: SpendMeter) -> None:
-    state.emit({"type": "received", "input": state.input_kind, "language": check.language})
+    state.emit(
+        {
+            "type": "received",
+            "input": state.input_kind,
+            "language": check.language,
+            "privacy": clients.privacy,
+            "model": clients.model,
+        }
+    )
     if check.audio is not None and not _transcribe_audio(state, check, clients, spend):
         return
     state.status = "extracting"

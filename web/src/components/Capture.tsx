@@ -10,7 +10,19 @@ export type CaptureInput = { image: Blob; imageName: string } | { text: string }
 
 type Sample = (typeof samples)[number];
 
-export default function Capture({ lang, busy, onSubmit }: { lang: Lang; busy: boolean; onSubmit: (input: CaptureInput) => void }) {
+export default function Capture({
+  lang,
+  busy,
+  privacy,
+  onPrivacy,
+  onSubmit,
+}: {
+  lang: Lang;
+  busy: boolean;
+  privacy: boolean;
+  onPrivacy: (on: boolean) => void;
+  onSubmit: (input: CaptureInput) => void;
+}) {
   const camera = useRef<HTMLInputElement>(null);
   const upload = useRef<HTMLInputElement>(null);
   const [text, setText] = useState("");
@@ -36,6 +48,13 @@ export default function Capture({ lang, busy, onSubmit }: { lang: Lang; busy: bo
         {t(lang, "noBill")} ↓
       </a>
       <section className="rounded-2xl border border-line bg-card p-4 shadow-sm">
+        <label className="mb-3 flex cursor-pointer items-start gap-3 rounded-xl bg-paper p-3">
+          <input type="checkbox" checked={privacy} onChange={(e) => onPrivacy(e.target.checked)} className="mt-1 h-5 w-5 shrink-0 accent-brand" />
+          <span>
+            <span className="block font-bold">{t(lang, "privacyToggle")}</span>
+            <span className="block text-sm leading-snug text-muted">{t(lang, "privacyHelp")}</span>
+          </span>
+        </label>
         <div className="grid gap-3">
           <button
             type="button"

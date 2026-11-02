@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     baseten_api_key: SecretStr | None = None
     baseten_base_url: str = "https://inference.baseten.co/v1"
     baseten_model: str = "meta-models/muse-spark-open-1026"
+    # Fireworks serverless: the same open weights, used if Baseten cannot answer.
+    fireworks_api_key: SecretStr | None = None
+    fireworks_base_url: str = "https://api.fireworks.ai/inference/v1"
+    fireworks_model: str = "accounts/fireworks/models/muse-spark-open"
 
     app_env: Literal["local", "ci", "prod"] = "local"
     log_level: str = "INFO"

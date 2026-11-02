@@ -197,6 +197,22 @@ export const STRINGS = {
   isolatedCrop: { en: "Bill found and cropped", te: "బిల్లు గుర్తించి కత్తిరించాం", hi: "बिल मिला और काटा गया" },
   isolatedFull: { en: "The bill fills the image", te: "చిత్రం మొత్తం బిల్లే", hi: "पूरा चित्र ही बिल है" },
   isolatedNone: { en: "Using the whole image", te: "మొత్తం చిత్రాన్ని వాడుతున్నాం", hi: "पूरा चित्र इस्तेमाल कर रहे हैं" },
+  privacyToggle: { en: "Privacy Mode", te: "ప్రైవసీ మోడ్", hi: "प्राइवेसी मोड" },
+  privacyHelp: {
+    en: "Runs the whole check on the open-weight Muse Spark Open model.",
+    te: "మొత్తం తనిఖీని ఓపెన్-వెయిట్ Muse Spark Open మోడల్‌పై నడుపుతుంది.",
+    hi: "पूरी जाँच ओपन-वेट Muse Spark Open मॉडल पर चलती है।",
+  },
+  privacyActive: {
+    en: "Privacy Mode: open-weight model (Muse Spark Open)",
+    te: "ప్రైవసీ మోడ్: ఓపెన్-వెయిట్ మోడల్ (Muse Spark Open)",
+    hi: "प्राइवेसी मोड: ओपन-वेट मॉडल (Muse Spark Open)",
+  },
+  errPrivacy: {
+    en: "Privacy Mode is not available right now. Nothing was sent.",
+    te: "ప్రైవసీ మోడ్ ఇప్పుడు అందుబాటులో లేదు. ఏదీ పంపలేదు.",
+    hi: "प्राइवेसी मोड अभी उपलब्ध नहीं है। कुछ भी नहीं भेजा गया।",
+  },
   explaining: { en: "Writing the explanation…", te: "వివరణ రాస్తోంది…", hi: "समझा रहे हैं…" },
   listen: { en: "Listen", te: "వినండి", hi: "सुनें" },
   stopListening: { en: "Stop", te: "ఆపండి", hi: "रोकें" },
