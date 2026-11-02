@@ -10,7 +10,7 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+from fastapi import APIRouter, File, Form, Header, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
 from PIL import Image
 from pydantic import BaseModel, Field
@@ -20,6 +20,7 @@ from app.api.store import CheckState, CheckStore, RateLimiter, SpendMeter
 from app.config import Settings, get_settings
 from app.models.base import LLMError
 from app.models.meta import MetaClient
+from app.payments import PaymentRefused, PaymentStore, new_receipt, payable
 
 router = APIRouter(prefix="/api/v1/checks", tags=["checks"])
 
@@ -76,6 +77,10 @@ def _spend(request: Request) -> SpendMeter:
 
 def _executor(request: Request):
     return _state(request, "executor", lambda s: ThreadPoolExecutor(max_workers=8))
+
+
+def _payments(request: Request) -> PaymentStore:
+    return _state(request, "payments", lambda s: PaymentStore(s.audit_db_path))
 
 
 def _clients(request: Request) -> pipeline.Clients:
@@ -212,6 +217,40 @@ async def stream_events(request: Request, check_id: str, after: int = -1):
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+class PayRequest(BaseModel):
+    confirm: bool = False
+
+
+@router.post("/{check_id}/pay")
+def pay_check(
+    request: Request,
+    check_id: str,
+    body: PayRequest,
+    idempotency_key: Annotated[str | None, Header(min_length=8, max_length=128)] = None,
+):
+    """Sandbox payment after a SAFE verdict: explicit confirmation, idempotent, audited."""
+    payments = _payments(request)
+    state = _get(request, check_id)
+    try:
+        if not idempotency_key:
+            raise PaymentRefused(400, "idempotency_key_required", "Send an Idempotency-Key header.")
+        if not body.confirm:
+            raise PaymentRefused(400, "confirmation_required", "The user must confirm the payment.")
+        if state.status != "done":
+            raise PaymentRefused(409, "not_finished", "This check has not finished.")
+        payment = payable(state.session)
+    except PaymentRefused as e:
+        payments.refuse(check_id, idempotency_key, e.code)
+        return _error(e.status, e.code, e.message)
+    try:
+        receipt, replayed = payments.pay(
+            check_id, idempotency_key, lambda: new_receipt(payment, check_id)
+        )
+    except PaymentRefused as e:
+        return _error(e.status, e.code, e.message)
+    return {"receipt": receipt, "replayed": replayed}
 
 
 class Answer(BaseModel):

@@ -3,6 +3,7 @@
 Secrets are SecretStr so they never appear in logs, reprs or tracebacks.
 """
 
+import tempfile
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
@@ -43,6 +44,7 @@ class Settings(BaseSettings):
     daily_spend_cap_usd: float = 5.0  # model spend per UTC day; above it new checks get 503
     check_ttl_seconds: int = 600  # finished or paused checks are kept in memory this long
     model_timeout_seconds: float = 30.0
+    audit_db_path: str = str(Path(tempfile.gettempdir()) / "billsaathi_audit.sqlite")
 
     # WhatsApp Cloud API webhook (Meta test number). Without the App Secret and verify token
     # the webhook refuses everything.

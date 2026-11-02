@@ -99,3 +99,4 @@ cd web;  npm run lint; npm run typecheck; npm test
 ## Build log, final batch (Nov 2)
 
 - (a) Verdict explanation + Listen: **done**, commit `185818f`, https://zealous-coast-09279dd00.1.azurestaticapps.net (live checks: TE and HI SCAM, EN CAUTION, all `source=model`).
+- (b) Voice input (web + WhatsApp voice notes): **done**, commit `6e68f26`, same URL (real browser with fake mic, live: heard → verdict). WhatsApp voice notes tested offline only.

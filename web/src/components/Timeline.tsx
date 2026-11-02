@@ -2,7 +2,7 @@
 
 import { codeLabel, toolLabel, type Tone } from "@/lib/codes";
 import { t, type Lang } from "@/lib/i18n";
-import { lowConfidence, type CheckRow, type Timeline as TL } from "@/lib/timeline";
+import { lowConfidence, money, type CheckRow, type Timeline as TL } from "@/lib/timeline";
 import { Check, Dot, Spinner } from "./icons";
 
 type Stage = "waiting" | "active" | "done";
@@ -61,7 +61,7 @@ function CheckLine({ row, lang, highlighted }: { row: CheckRow; lang: Lang; high
   );
 }
 
-const money = (n: number) => `₹${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
 
 export default function Timeline({ tl, lang, highlightSeq }: { tl: TL; lang: Lang; highlightSeq: number | null }) {
   const fixed = tl.checks.filter((c) => c.origin === "mandatory");

@@ -186,7 +186,7 @@ export default function Home() {
 
           {checking && (
             <>
-              {tl.verdict && <VerdictCard tl={tl} lang={lang} onShowEvidence={showEvidence} onReset={reset} />}
+              {tl.verdict && <VerdictCard key={checkId} checkId={checkId} tl={tl} lang={lang} onShowEvidence={showEvidence} onReset={reset} />}
               {tl.question && !tl.verdict && <QuestionBox question={tl.question.question} lang={lang} onAnswer={answer} />}
               {!tl.verdict && (
                 <p className="flex items-center gap-2 text-xl font-extrabold text-brand" aria-live="polite">

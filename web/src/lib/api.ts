@@ -40,6 +40,28 @@ export async function sendAnswer(checkId: string, answer: string): Promise<void>
   if (!r.ok) throw new ApiError(r.status, "answer_failed", "could not send the answer");
 }
 
+export interface Receipt {
+  receipt_id: string;
+  biller_name: string;
+  consumer_masked: string;
+  amount: number;
+  paid_at: string;
+  audit_id: number;
+  sandbox: true;
+}
+
+/** Sandbox payment. The same key always returns the same receipt, so a retry cannot pay twice. */
+export async function paySandbox(checkId: string, idempotencyKey: string): Promise<Receipt> {
+  const r = await fetch(`${API_BASE}/api/v1/checks/${checkId}/pay`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Idempotency-Key": idempotencyKey },
+    body: JSON.stringify({ confirm: true }),
+  });
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) throw new ApiError(r.status, body.error ?? "error", body.message ?? "payment failed");
+  return body.receipt;
+}
+
 /**
  * Follow the live event stream from `after`. The server closes the stream when the check is
  * complete or waiting for an answer; we close our side too, so the browser does not reconnect.

@@ -127,3 +127,5 @@ export function evidenceIndex(state: Timeline): Map<string, EvidenceItem & { seq
 export function lowConfidence(field: Field<unknown> | undefined): boolean {
   return !!field && field.confidence < 0.8;
 }
+
+export const money = (n: number) => `₹${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

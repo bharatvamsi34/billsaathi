@@ -6,6 +6,7 @@ import { shareWarning, warningText } from "@/lib/share";
 import { evidenceIndex, type Timeline, type Verdict } from "@/lib/timeline";
 import { CautionIcon, PhoneIcon, SafeIcon, ScamIcon, ShareIcon } from "./icons";
 import Explanation from "./Explanation";
+import SandboxPay from "./SandboxPay";
 import { EvidencePill } from "./Timeline";
 
 const LOOK: Record<Verdict, { band: string; icon: typeof SafeIcon }> = {
@@ -15,11 +16,13 @@ const LOOK: Record<Verdict, { band: string; icon: typeof SafeIcon }> = {
 };
 
 export default function VerdictCard({
+  checkId,
   tl,
   lang,
   onShowEvidence,
   onReset,
 }: {
+  checkId: string | null;
   tl: Timeline;
   lang: Lang;
   onShowEvidence: (seq: number) => void;
@@ -78,9 +81,7 @@ export default function VerdictCard({
         <div className="grid gap-2">
           {v.verdict === "SAFE" ? (
             <>
-              <button type="button" disabled className="min-h-14 rounded-xl bg-safe px-4 text-lg font-bold text-white opacity-60">
-                {t(lang, "pay")}
-              </button>
+              {checkId && <SandboxPay checkId={checkId} tl={tl} lang={lang} />}
               <p className="text-center text-sm text-muted">{t(lang, "payNote")}</p>
             </>
           ) : (

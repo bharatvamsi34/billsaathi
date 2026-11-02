@@ -20,7 +20,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=get_settings().cors_origin_list,  # only our web app
     allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type", "Last-Event-ID"],
+    allow_headers=["Content-Type", "Last-Event-ID", "Idempotency-Key"],
 )
 app.include_router(checks_router)
 app.include_router(bbps_mock_router)
