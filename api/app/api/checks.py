@@ -238,8 +238,9 @@ def pay_check(
             raise PaymentRefused(400, "idempotency_key_required", "Send an Idempotency-Key header.")
         if not body.confirm:
             raise PaymentRefused(400, "confirmation_required", "The user must confirm the payment.")
-        if state.status != "done":
-            raise PaymentRefused(409, "not_finished", "This check has not finished.")
+        # The verdict decides, not the explanation still being written after it.
+        if state.session is None or state.session.final is None:
+            raise PaymentRefused(409, "not_finished", "This check has no verdict yet.")
         payment = payable(state.session)
     except PaymentRefused as e:
         payments.refuse(check_id, idempotency_key, e.code)

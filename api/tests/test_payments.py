@@ -95,6 +95,13 @@ def test_confirmation_and_key_are_required(api):  # noqa: F811
     assert pay(client, check_id).status_code == 200  # the refused attempts paid nothing
 
 
+def test_paying_while_the_explanation_is_being_written_works(api):  # noqa: F811
+    client, install = api
+    check_id = safe_check(client, install)
+    app.state.check_store.get(check_id).status = "verifying"  # verdict out, explanation running
+    assert pay(client, check_id).status_code == 200
+
+
 def test_unknown_check_is_404(api):  # noqa: F811
     client, install = api
     install(GENUINE, [])
