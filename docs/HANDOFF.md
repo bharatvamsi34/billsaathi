@@ -106,3 +106,6 @@ cd web;  npm run lint; npm run typecheck; npm test
 - (i) /privacy + app icon: **done**, commit `bbcfcc3`, https://zealous-coast-09279dd00.1.azurestaticapps.net/privacy and /icon-1024.png.
 - (g) Muse Image warning card: **done**, commit `3c94f42`+, same URL (live: Telugu card over the generated background; all model tools off).
 - (f) Evaluation page from real test-split runs: **done**, https://zealous-coast-09279dd00.1.azurestaticapps.net/eval (21/21, 0/13 false SAFE, p50 10.9 s; sweep and Spark Open included; caveats on the page).
+- (j) Speed: **done**. 6 live checks, median before -> after: verdict 12.4 -> 12.1 s (no real change), first signal none -> 6.8 s, explanation shown 17.0 -> 15.7 s. Early event, judge at minimal, prompt cache keys, live step timers.
+- (k) Desktop redesign: **done**, 3 review passes, same URL. Hero with cited stat, Meta models at work, guide, badges, Motion, reduced-motion respected.
+- (h) README: **done**, https://github.com/bharatvamsi34/billsaathi

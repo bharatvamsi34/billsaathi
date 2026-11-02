@@ -80,7 +80,7 @@ export default function Hero({ lang, busy, onScam, onGenuine }: { lang: Lang; bu
                   </span>
                 </span>
                 <span className="mt-1.5 block text-sm font-bold leading-snug text-saffron">
-                  {t(lang, "statMore", { n: best.n })} →
+                  {t(lang, "statMore", { n: best.n })}&nbsp;→
                 </span>
               </Link>
             )}

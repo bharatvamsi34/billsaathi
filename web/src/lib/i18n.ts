@@ -249,7 +249,7 @@ export const STRINGS = {
   statFalseSafe: { en: "risky called SAFE", te: "ప్రమాదకరమైనవి సురక్షితం అన్నవి", hi: "जोखिम को सुरक्षित कहा" },
   statLatency: { en: "median to verdict", te: "తీర్పుకు మధ్యస్థ సమయం", hi: "फ़ैसले का औसत समय" },
   statMore: {
-    en: "On {n} made-up, held-out test items. How we measured",
+    en: "{n} made-up, held-out test items · How we measured",
     te: "{n} కల్పిత, పక్కన ఉంచిన పరీక్షలపై. ఎలా కొలిచాం",
     hi: "{n} काल्पनिक, अलग रखे परीक्षणों पर। कैसे मापा",
   },

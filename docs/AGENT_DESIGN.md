@@ -226,3 +226,15 @@ evaluation.
 
 The loop is provider-neutral. Privacy Mode swaps the Meta client for the Baseten client
 (Muse Spark Open, open weights); tools, checks, refusals and the evidence record are unchanged.
+
+## 10. Added in the final build (Nov 2-3)
+
+- **Isolation:** SAM 3.1 crops the bill for field extraction only. The verbatim transcription reads the
+  original image, so the milestone check still sees anything outside the crop. Any failure means the original.
+- **Early signal:** after the mandatory checks, an `early` event says `scam_signals` (the evidence floor is
+  SCAM) or `checking`. It carries no verdict; only `submit_verdict` produces one, and SAFE is never signalled early.
+- **Judge effort:** `minimal`. On the dev split 39/39 correct and 0 false SAFE; on 24 adversarial judgments no
+  bad reason was accepted at either effort, at half the latency (`eval/judge_adversarial.py`).
+- **Explanation:** after the verdict, the model rewords only the cited evidence. Code rejects any number, link or
+  UPI ID not in the evidence, and any reply not in the user's script; then a template from evidence labels.
+- **Privacy Mode:** the same loop and checks on Muse Spark Open; refused, never downgraded, if no provider is up.
