@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "motion/react";
 import { t, type Lang } from "@/lib/i18n";
 import { evidenceIndex, type Timeline, type Verdict } from "@/lib/timeline";
 import { CautionIcon, PhoneIcon, SafeIcon, ScamIcon } from "./icons";
@@ -33,7 +34,13 @@ export default function VerdictCard({
   const helpline = v.facts.find((f) => f.key === "cybercrime_helpline")?.value;
 
   return (
-    <section className="rise overflow-hidden rounded-2xl border border-line bg-card shadow-md" aria-live="polite">
+    <motion.section
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className="overflow-hidden rounded-2xl border border-line bg-card shadow-md"
+      aria-live="polite"
+    >
       <div className={`flex items-center gap-3 px-4 py-4 ${band}`}>
         <Icon className="h-12 w-12 shrink-0" />
         <div>
@@ -94,6 +101,6 @@ export default function VerdictCard({
           </button>
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }

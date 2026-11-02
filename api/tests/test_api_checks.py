@@ -125,7 +125,7 @@ def test_text_check_streams_every_step_in_order(api):
     types = [e["type"] for e in events]
     assert types == [
         "received", "extracted", "verification_started",
-        *["check"] * 6, "agent_turn", "judge", "verdict", "explanation", "complete",
+        *["check"] * 6, "early", "agent_turn", "judge", "verdict", "explanation", "complete",
     ]  # fmt: skip
     assert [e["seq"] for e in events] == list(range(len(events)))
     checks = [e for e in events if e["type"] == "check"]
@@ -391,3 +391,24 @@ def test_cors_allows_only_the_configured_origin():
     assert ok.headers.get("access-control-allow-origin") == "http://localhost:3000"
     bad = client.options("/api/v1/checks", headers={"Origin": "https://evil.example", **preflight})
     assert "access-control-allow-origin" not in bad.headers
+
+
+# --- early signal ---
+
+
+def test_early_signal_comes_before_the_agent_and_is_never_a_verdict(api):
+    client, install = api
+    install(SCAM, [cite_all("SCAM")])
+    events = events_of(client, post_text(client, SCAM.input.text).json()["check_id"])
+    types = [e["type"] for e in events]
+    early = next(e for e in events if e["type"] == "early")
+    assert types.index("early") < types.index("agent_turn") < types.index("verdict")
+    assert early["signal"] == "scam_signals"
+    assert set(early) == {"seq", "at", "type", "signal"}  # no verdict, no reasons
+
+
+def test_genuine_message_gets_a_neutral_early_signal_not_a_safe_one(api):
+    client, install = api
+    install(GENUINE, [cite_all("SAFE")])
+    events = events_of(client, post_text(client, GENUINE.input.text).json()["check_id"])
+    assert next(e for e in events if e["type"] == "early")["signal"] == "checking"

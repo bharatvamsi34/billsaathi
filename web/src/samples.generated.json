@@ -1,5 +1,16 @@
 [
   {
+    "id": "scam_en_known_vpa",
+    "title": {
+      "en": "English SMS: “pay now or power cut”",
+      "te": "ఇంగ్లీష్ SMS: “ఇప్పుడే చెల్లించండి, లేకపోతే కరెంట్ కట్”",
+      "hi": "अंग्रेज़ी SMS: “अभी भुगतान करें, वरना बिजली कटेगी”"
+    },
+    "language": "en",
+    "kind": "text",
+    "text": "Electricity Office: Pending bill Rs 3,150. Pay immediately to UPI electricityofficer@okdemo or your power supply will be cut."
+  },
+  {
     "id": "scam_te_known_vpa",
     "title": {
       "en": "Telugu SMS: “pay now or power cut”",

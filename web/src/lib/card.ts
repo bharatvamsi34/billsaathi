@@ -46,9 +46,9 @@ export function drawCard(background: ImageBitmap | null, opts: { title: string; 
   }
   // A dark wash keeps the text readable on any picture.
   const wash = ctx.createLinearGradient(0, 0, 0, SIZE);
-  wash.addColorStop(0, "rgba(11,34,57,0.55)");
-  wash.addColorStop(0.35, "rgba(11,34,57,0.82)");
-  wash.addColorStop(1, "rgba(11,34,57,0.96)");
+  wash.addColorStop(0, "rgba(11,34,57,0.45)");
+  wash.addColorStop(0.35, "rgba(11,34,57,0.74)");
+  wash.addColorStop(1, "rgba(11,34,57,0.92)");
   ctx.fillStyle = wash;
   ctx.fillRect(0, 0, SIZE, SIZE);
 
@@ -84,19 +84,27 @@ export function canvasToFile(canvas: HTMLCanvasElement): Promise<File> {
   );
 }
 
-/** Share the picture if this device can; otherwise download it. */
-export async function shareCard(file: File, text: string): Promise<"shared" | "downloaded" | "failed"> {
+function download(file: File): void {
+  const url = URL.createObjectURL(file);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = file.name;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/** Share the picture if this device can; otherwise, or if sharing is refused, download it. */
+export async function shareCard(file: File, text: string): Promise<"shared" | "downloaded" | "cancelled" | "failed"> {
   try {
     if (navigator.canShare?.({ files: [file] })) {
       await navigator.share({ files: [file], text });
       return "shared";
     }
-    const url = URL.createObjectURL(file);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = file.name;
-    a.click();
-    URL.revokeObjectURL(url);
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") return "cancelled"; // the user changed their mind
+  }
+  try {
+    download(file);
     await navigator.clipboard?.writeText(text).catch(() => undefined);
     return "downloaded";
   } catch {

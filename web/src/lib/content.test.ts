@@ -18,9 +18,9 @@ describe("sample gallery", () => {
       .map((l) => [l.id, l]),
   );
 
-  it("has 4 to 6 samples, all from the DEV split (never test items)", () => {
+  it("has 4 to 7 samples, all from the DEV split (never test items)", () => {
     expect(samples.length).toBeGreaterThanOrEqual(4);
-    expect(samples.length).toBeLessThanOrEqual(6);
+    expect(samples.length).toBeLessThanOrEqual(7);
     for (const s of samples) expect(labels.get(s.id)?.split, s.id).toBe("dev");
   });
 

@@ -53,6 +53,7 @@ from app.schemas import EvidenceCode, PaymentDestination, Verdict
 class AgentConfig:
     model: str = "muse-spark-1.3"
     judge_model: str = "muse-spark-1.3"
+    judge_effort: str = "low"
     effort: str = "low"
     max_output_tokens: int = 4096
     max_tool_calls: int = 8
@@ -133,6 +134,13 @@ def start(
     t0 = time.perf_counter()
     _mandatory_checks(session)
     session.metrics.latency_ms += (time.perf_counter() - t0) * 1000
+    # An early signal for the screen, from the evidence floor. Never a verdict: only
+    # submit_verdict produces one, and this can only say "risk found" or "still checking".
+    results = record.tool_results
+    floor = floor_verdict([e for r in results for e in r.evidence], sum(not r.ok for r in results))
+    record.append(
+        "note", {"event": "mandatory_done", "scam_signals": floor.verdict == Verdict.SCAM}
+    )
     consumer = agent_input.extraction.consumer_number.value
     secrets = [consumer] if consumer else []
     briefing = "\n\n".join(
@@ -402,7 +410,9 @@ def _submit(session: AgentSession, call: ToolCall) -> str:
     )
     refusal = run_deterministic(ctx)
     if refusal is None:  # the judge runs only after every deterministic check passed
-        refusal, judge_resp, feedback = claims_check(ctx, session.judge, session.config.judge_model)
+        refusal, judge_resp, feedback = claims_check(
+            ctx, session.judge, session.config.judge_model, session.config.judge_effort
+        )
         session.metrics.judge_calls += 1
         if judge_resp is not None:
             _add_usage(session, judge_resp.usage)

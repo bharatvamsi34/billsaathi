@@ -71,6 +71,8 @@ def public_event(entry: RecordEntry, secrets: list[str] = ()) -> dict[str, Any] 
         }
     if kind == "note" and p.get("event") == "run_started":
         return {"type": "verification_started", "destinations": p.get("destinations", 0)}
+    if kind == "note" and p.get("event") == "mandatory_done":
+        return {"type": "early", "signal": "scam_signals" if p["scam_signals"] else "checking"}
     if kind == "note" and p.get("event") == "agent_turn":
         return {
             "type": "agent_turn",

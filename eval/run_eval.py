@@ -38,6 +38,7 @@ CONFIGS = {
     "spark-medium": ("muse-spark-1.3", "medium"),
     "spark-high": ("muse-spark-1.3", "high"),
     "open": (MODEL_LABEL, "default"),
+    "judge-minimal": ("muse-spark-1.3", "low"),  # only used on the dev split, to choose the judge
 }
 
 
@@ -59,6 +60,7 @@ def clients_for(name: str) -> pipeline.Clients:
         sam=MetaSam(settings),
         model=model,
         effort=effort,
+        judge_effort="minimal" if name in ("judge-minimal", "spark-low") else "low",
     )
 
 
@@ -110,10 +112,10 @@ def run_item(label: Label, clients: pipeline.Clients) -> dict:
     }
 
 
-def run_config(name: str, labels: list[Label], budget: float, workers: int) -> None:
+def run_config(name: str, labels: list[Label], budget: float, workers: int, split: str) -> None:
     clients = clients_for(name)
     RESULTS.mkdir(exist_ok=True)
-    out = RESULTS / f"test_{name}_{datetime.now():%Y-%m-%d_%H%M}.jsonl"
+    out = RESULTS / f"{split}_{name}_{datetime.now():%Y-%m-%d_%H%M}.jsonl"
     spent, right, done = 0.0, 0, 0
     with ThreadPoolExecutor(max_workers=workers) as pool:
         for row in pool.map(lambda lbl: run_item(lbl, clients), labels):
@@ -135,12 +137,13 @@ def main() -> None:
     ap.add_argument("configs", nargs="+", choices=sorted(CONFIGS))
     ap.add_argument("--budget", type=float, default=2.5, help="USD per config")
     ap.add_argument("--workers", type=int, default=3)
+    ap.add_argument("--split", choices=["test", "dev"], default="test")
     args = ap.parse_args()
     lines = (DATA / "labels.jsonl").read_text(encoding="utf-8").splitlines()
-    labels = [lbl for lbl in map(Label.model_validate_json, lines) if lbl.split == "test"]
-    print(f"{len(labels)} test items", flush=True)
+    labels = [lbl for lbl in map(Label.model_validate_json, lines) if lbl.split == args.split]
+    print(f"{len(labels)} {args.split} items", flush=True)
     for name in args.configs:
-        run_config(name, labels, args.budget, args.workers)
+        run_config(name, labels, args.budget, args.workers, args.split)
 
 
 if __name__ == "__main__":

@@ -13,6 +13,10 @@ const outJson = join(here, "..", "src", "samples.generated.json");
 // Order = order in the gallery. Titles are shown in the user's language.
 const SAMPLES = [
   {
+    id: "scam_en_known_vpa",
+    title: { en: "English SMS: “pay now or power cut”", te: "ఇంగ్లీష్ SMS: “ఇప్పుడే చెల్లించండి, లేకపోతే కరెంట్ కట్”", hi: "अंग्रेज़ी SMS: “अभी भुगतान करें, वरना बिजली कटेगी”" },
+  },
+  {
     id: "scam_te_known_vpa",
     title: { en: "Telugu SMS: “pay now or power cut”", te: "తెలుగు SMS: “ఇప్పుడే చెల్లించండి, లేకపోతే కరెంట్ కట్”", hi: "तेलुगु SMS: “अभी भुगतान करें, वरना बिजली कटेगी”" },
   },

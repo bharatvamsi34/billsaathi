@@ -156,7 +156,7 @@ class JudgeReply(BaseModel):
 
 
 def claims_check(
-    ctx: CheckContext, judge: LLMClient, model: str
+    ctx: CheckContext, judge: LLMClient, model: str, effort: str = "low"
 ) -> tuple[Refusal | None, LLMResponse | None, list[dict]]:
     """One judge call. Returns (refusal or None, the judge's response for metrics,
     per-reason feedback for the evidence record: reason text, supported, why)."""
@@ -190,7 +190,7 @@ def claims_check(
                 Message(role="user", text=json.dumps(payload, ensure_ascii=False, default=str))
             ],
             model=model,
-            effort="low",
+            effort=effort,
             max_output_tokens=2048,
         )
     except LLMError:

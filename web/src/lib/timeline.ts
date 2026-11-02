@@ -50,8 +50,11 @@ export interface Box {
 
 export interface Timeline {
   received: boolean;
+  input: string | null;
   privacy: boolean;
+  times: Partial<Record<string, number>>; // when each event type last arrived (client clock, ms)
   heard: string | null;
+  early: "scam_signals" | "checking" | null;
   isolated: { box: Box | null; cropped: boolean } | null;
   extracted: Extracted | null;
   checks: CheckRow[];
@@ -68,8 +71,11 @@ export interface Timeline {
 
 export const emptyTimeline: Timeline = {
   received: false,
+  input: null,
   privacy: false,
+  times: {},
   heard: null,
+  early: null,
   isolated: null,
   extracted: null,
   checks: [],
@@ -89,10 +95,10 @@ export type ApiEvent = { seq: number; type: string } & Record<string, any>;
 
 export function reduce(state: Timeline, e: ApiEvent): Timeline {
   if (e.seq <= state.lastSeq) return state; // duplicates after a reconnect
-  const next = { ...state, lastSeq: e.seq };
+  const next = { ...state, lastSeq: e.seq, times: e.receivedAt != null ? { ...state.times, [e.type]: e.receivedAt } : state.times };
   switch (e.type) {
     case "received":
-      return { ...next, received: true, privacy: !!e.privacy };
+      return { ...next, received: true, input: e.input ?? null, privacy: !!e.privacy };
     case "transcribed":
       return { ...next, heard: e.text };
     case "isolated":
@@ -107,6 +113,8 @@ export function reduce(state: Timeline, e: ApiEvent): Timeline {
           { seq: e.seq, origin: e.origin, tool: e.tool, args: e.args ?? {}, ok: e.ok, error: e.error, evidence: e.evidence },
         ],
       };
+    case "early":
+      return { ...next, early: e.signal };
     case "agent_turn":
       return { ...next, agentTurns: [...state.agentTurns, { turn: e.turn, tool_calls: e.tool_calls }] };
     case "judge":

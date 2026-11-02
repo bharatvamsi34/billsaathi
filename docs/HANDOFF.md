@@ -104,3 +104,4 @@ cd web;  npm run lint; npm run typecheck; npm test
 - (d) SAM 3.1 crop + box in the timeline: **done**, commit `9e0bf7e`, same URL (live: phone-photo sample → SAFE). Fields read the crop; transcription reads the original.
 - (e) Privacy Mode: **done**, commit `7a8c905`, same URL (3/3 dev items correct on real Baseten; no Meta call on that path).
 - (i) /privacy + app icon: **done**, commit `bbcfcc3`, https://zealous-coast-09279dd00.1.azurestaticapps.net/privacy and /icon-1024.png.
+- (g) Muse Image warning card: **done**, commit `3c94f42`+, same URL (live: Telugu card over the generated background; all model tools off).

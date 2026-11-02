@@ -5,6 +5,7 @@ and one log line per request with model, latency, tokens and estimated cost. Pro
 outputs are never logged.
 """
 
+import hashlib
 import logging
 import time
 
@@ -27,6 +28,12 @@ from app.models.base import (
 from app.models.pricing import cost_usd
 
 log = logging.getLogger("billsaathi.llm")
+
+
+def _cache_key(system: str) -> str:
+    """Same system prompt, same key: Meta only reports cached tokens when a key is sent."""
+    return f"billsaathi-{hashlib.sha256(system.encode()).hexdigest()[:16]}"
+
 
 _RETRYABLE = (
     openai.APITimeoutError,
@@ -125,6 +132,7 @@ class MetaClient:
             {
                 "model": model,
                 "input": self._input(system, messages),
+                "prompt_cache_key": _cache_key(system),
                 "reasoning": {"effort": effort},
                 "max_output_tokens": max_output_tokens,
             }
@@ -169,6 +177,7 @@ class MetaClient:
             {
                 "model": model,
                 "input": self._conversation(system, conversation),
+                "prompt_cache_key": _cache_key(system),
                 "tools": tools,
                 "reasoning": {"effort": effort},
                 "max_output_tokens": max_output_tokens,

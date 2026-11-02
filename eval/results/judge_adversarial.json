@@ -1,0 +1,20 @@
+[
+  {
+    "effort": "low",
+    "calls": 24,
+    "correct": 23,
+    "bad_reason_accepted": 0,
+    "good_reason_refused": 1,
+    "mean_latency_ms": 2359,
+    "cost_usd": 0.0447
+  },
+  {
+    "effort": "minimal",
+    "calls": 24,
+    "correct": 23,
+    "bad_reason_accepted": 0,
+    "good_reason_refused": 1,
+    "mean_latency_ms": 1200,
+    "cost_usd": 0.027
+  }
+]

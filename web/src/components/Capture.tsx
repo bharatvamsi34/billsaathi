@@ -10,6 +10,12 @@ export type CaptureInput = { image: Blob; imageName: string } | { text: string }
 
 type Sample = (typeof samples)[number];
 
+export async function sampleInput(s: Sample): Promise<CaptureInput> {
+  if (s.kind === "text") return { text: s.text! };
+  const blob = await (await fetch(s.src!)).blob();
+  return { image: blob, imageName: s.src!.split("/").pop()! };
+}
+
 export default function Capture({
   lang,
   busy,
@@ -33,17 +39,13 @@ export default function Capture({
     if (file) onSubmit({ image: file, imageName: file.name });
   };
 
-  const trySample = async (s: Sample) => {
-    if (s.kind === "text") return onSubmit({ text: s.text! });
-    const blob = await (await fetch(s.src!)).blob();
-    onSubmit({ image: blob, imageName: s.src!.split("/").pop()! });
-  };
+  const trySample = async (s: Sample) => onSubmit(await sampleInput(s));
 
   return (
-    <div className="space-y-5">
+    <div className="flex flex-col gap-5">
       <a
         href="#samples"
-        className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-soft px-4 font-bold text-brand underline-offset-4 hover:underline"
+        className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-soft px-4 font-bold text-brand underline-offset-4 hover:underline lg:hidden"
       >
         {t(lang, "noBill")} ↓
       </a>
@@ -108,21 +110,21 @@ export default function Capture({
         </button>
       </section>
 
-      <section>
+      <section className="lg:order-first">
         <div className="mb-2 px-1">
           <h2 id="samples" className="scroll-mt-20 text-xl font-extrabold">
             {t(lang, "samplesTitle")}
           </h2>
           <p className="text-sm text-muted">{t(lang, "samplesNote")}</p>
         </div>
-        <ul className="grid gap-2">
+        <ul className="grid gap-2 lg:grid-cols-2">
           {samples.map((s) => (
             <li key={s.id}>
               <button
                 type="button"
                 disabled={busy}
                 onClick={() => trySample(s)}
-                className="flex w-full items-center gap-3 rounded-xl border border-line bg-card p-3 text-left shadow-sm active:translate-y-px disabled:opacity-60"
+                className="flex h-full w-full items-center gap-3 rounded-xl border border-line bg-card p-3 text-left shadow-sm transition-colors hover:border-brand active:translate-y-px disabled:opacity-60"
               >
                 {s.kind === "image" ? (
                   // eslint-disable-next-line @next/next/no-img-element

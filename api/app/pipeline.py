@@ -34,6 +34,7 @@ class Clients:
     sam: Segmenter | None = None  # None: no isolation step (Privacy Mode stays off Meta's API)
     model: str = "muse-spark-1.3"
     effort: str = "low"
+    judge_effort: str = "minimal"  # as accurate as low on the dev set, about twice as fast
     privacy: bool = False  # open-weight model; no Meta API call anywhere on this path
 
 
