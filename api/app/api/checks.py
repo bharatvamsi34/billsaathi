@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from PIL import Image
 from pydantic import BaseModel, Field
 
-from app import pipeline
+from app import pipeline, voice
 from app.api.store import CheckState, CheckStore, RateLimiter, SpendMeter
 from app.config import Settings, get_settings
 from app.models.base import LLMError
@@ -84,7 +84,9 @@ def _clients(request: Request) -> pipeline.Clients:
             meta = MetaClient(s, timeout_s=s.model_timeout_seconds)
         except LLMError as e:
             raise HTTPException(503, {"error": "not_configured", "message": str(e)}) from e
-        return pipeline.Clients(extract=meta, agent=meta, judge=meta, explain=meta)
+        return pipeline.Clients(
+            extract=meta, agent=meta, judge=meta, explain=meta, speech=voice.MetaSpeech(s)
+        )
 
     return _state(request, "clients", build)
 
@@ -102,9 +104,7 @@ async def create_check(
     language: Annotated[Language, Form()] = "en",
     text: Annotated[str | None, Form()] = None,
     image: Annotated[UploadFile | None, File()] = None,
-    audio: Annotated[
-        UploadFile | None, File(description="Voice input placeholder (not yet)")
-    ] = None,
+    audio: Annotated[UploadFile | None, File(description="16 kHz mono 16-bit WAV")] = None,
 ):
     client_ip = request.client.host if request.client else "unknown"
     if not _limiter(request).allow(client_ip):
@@ -113,12 +113,9 @@ async def create_check(
         )
     if _spend(request).exceeded():
         return _error(503, "service_busy", "BillSaathi is busy right now. Please try again later.")
-    if audio is not None:
-        return _error(
-            501, "audio_not_supported_yet", "Voice input is coming soon. Send text or an image."
-        )
-    if (image is None) == (not text or not text.strip()):
-        return _error(400, "bad_input", "Send exactly one of: text, image.")
+    given = [image is not None, bool(text and text.strip()), audio is not None]
+    if sum(given) != 1:
+        return _error(400, "bad_input", "Send exactly one of: text, image, audio.")
 
     check = pipeline.CheckInput(language=language)
     if image is not None:
@@ -129,6 +126,13 @@ async def create_check(
         if mime is None:
             return _error(415, "unsupported_image", "Send a PNG, JPEG or WebP image.")
         check.image, check.image_mime = data, mime
+    elif audio is not None:
+        data = await audio.read(voice.MAX_WAV_BYTES + 1)
+        try:
+            voice.check_wav(data)
+        except voice.VoiceError as e:
+            return _error(415, "unsupported_audio", f"Send a short recording: {e}.")
+        check.audio = data
     else:
         if len(text) > MAX_TEXT_CHARS:
             return _error(
@@ -138,7 +142,9 @@ async def create_check(
 
     clients = _clients(request)
     state = CheckState(
-        check_id=uuid.uuid4().hex, language=language, input_kind="image" if image else "text"
+        check_id=uuid.uuid4().hex,
+        language=language,
+        input_kind="image" if image else "audio" if audio else "text",
     )
     _store(request).add(state)
     _executor(request).submit(pipeline.run_check, state, check, clients, _spend(request))

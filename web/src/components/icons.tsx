@@ -70,6 +70,13 @@ export const PhoneIcon = ({ className }: P) => (
   </svg>
 );
 
+export const MicIcon = ({ className }: P) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...base}>
+    <rect x="9" y="3" width="6" height="11" rx="3" />
+    <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3" />
+  </svg>
+);
+
 export const SpeakerIcon = ({ className }: P) => (
   <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...base}>
     <path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" />

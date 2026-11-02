@@ -16,10 +16,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from app import pipeline
+from app import pipeline, voice
 from app.api.checks import MAX_IMAGE_BYTES, MAX_TEXT_CHARS, sniff_image
 from app.api.store import CheckState, CheckStore, RateLimiter, SpendMeter
 from app.config import Settings
+from app.models.base import LLMError
 from app.whatsapp import texts
 from app.whatsapp.graph import GraphClient, GraphError
 from app.whatsapp.texts import Lang
@@ -116,7 +117,7 @@ class WhatsAppService:
         lang = self._language(
             sid, text if kind == "text" else (message.get("image") or {}).get("caption")
         )
-        if kind not in ("text", "image") or (kind == "text" and not text):
+        if kind not in ("text", "image", "audio") or (kind == "text" and not text):
             self._send(phone, texts.t(lang, "unsupported"), msg_id)
             return
         if not self.limiter.allow(sid):
@@ -139,6 +140,14 @@ class WhatsAppService:
                 self._send(phone, texts.t(lang, "bad_image"), msg_id)
                 return
             check.image, check.image_mime = data, mime
+        elif kind == "audio":
+            heard = self._voice_note(message, phone, sid, lang, msg_id)
+            if heard is None:
+                return
+            if not self._chosen(sid):
+                lang = texts.detect_language(heard) or lang
+            check = pipeline.CheckInput(language=lang, text=heard[:MAX_TEXT_CHARS])
+            self._send(phone, texts.t(lang, "heard", text=heard[:300]))
         else:
             check.text = text[:MAX_TEXT_CHARS]
 
@@ -147,6 +156,25 @@ class WhatsAppService:
         self.store.add(state)
         pipeline.run_check(state, check, self.clients(), self.spend)
         self._finish(phone, sid, state, lang)
+
+    def _voice_note(
+        self, message: dict[str, Any], phone: str, sid: str, lang: Lang, msg_id: str | None
+    ) -> str | None:
+        """The words in a voice note, or None after telling the sender it did not work."""
+        try:
+            data, _ = self.graph.download_media(message["audio"]["id"], voice.MAX_NOTE_BYTES)
+            wav = voice.note_to_wav(data)
+            # With no language chosen yet, the transcriber listens for all three.
+            heard = self.clients().speech.transcribe_audio(wav, self._chosen(sid))
+        except (GraphError, KeyError, voice.VoiceError, LLMError) as e:
+            log.warning("whatsapp voice note failed sender=%s: %s", sid, type(e).__name__)
+            self._send(phone, texts.t(lang, "bad_voice"), msg_id)
+            return None
+        self.spend.add(heard.cost_usd)
+        if not heard.text:
+            self._send(phone, texts.t(lang, "bad_voice"), msg_id)
+            return None
+        return heard.text
 
     def _finish(self, phone: str, sid: str, state: CheckState, lang: Lang) -> None:
         if state.status == "needs_user_input":
@@ -186,6 +214,10 @@ class WhatsAppService:
     def _take_pending(self, sid: str) -> Pending | None:
         with self._lock:
             return self._pending.pop(sid, None)
+
+    def _chosen(self, sid: str) -> Lang | None:
+        with self._lock:
+            return self._lang.get(sid)
 
     def _language(self, sid: str, text: str | None) -> Lang:
         with self._lock:

@@ -41,6 +41,7 @@ export interface VerdictView {
 
 export interface Timeline {
   received: boolean;
+  heard: string | null;
   extracted: Extracted | null;
   checks: CheckRow[];
   agentTurns: { turn: number; tool_calls: string[] }[];
@@ -56,6 +57,7 @@ export interface Timeline {
 
 export const emptyTimeline: Timeline = {
   received: false,
+  heard: null,
   extracted: null,
   checks: [],
   agentTurns: [],
@@ -78,6 +80,8 @@ export function reduce(state: Timeline, e: ApiEvent): Timeline {
   switch (e.type) {
     case "received":
       return { ...next, received: true };
+    case "transcribed":
+      return { ...next, heard: e.text };
     case "extracted":
       return { ...next, extracted: e.fields };
     case "check":

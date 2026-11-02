@@ -249,9 +249,9 @@ def test_image_message_is_downloaded_and_checked(wa):
 def test_unsupported_message_type_gets_a_hint(wa):
     client, install, graph, _ = wa
     install(GENUINE, [])
-    audio = message("x") | {"type": "audio", "audio": {"id": "A1"}}
-    audio.pop("text")
-    post(client, payload(audio))
+    sticker = message("x") | {"type": "sticker", "sticker": {"id": "A1"}}
+    sticker.pop("text")
+    post(client, payload(sticker))
     assert graph.bodies == [texts.t("en", "unsupported")]
 
 

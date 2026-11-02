@@ -64,7 +64,9 @@ export default function Home() {
       const id =
         "text" in input
           ? await startCheck({ text: input.text, language: lang })
-          : await startCheck({ image: await prepareImage(input.image), imageName: input.imageName, language: lang });
+          : "audio" in input
+            ? await startCheck({ audio: input.audio, language: lang })
+            : await startCheck({ image: await prepareImage(input.image), imageName: input.imageName, language: lang });
       setCheckId(id);
       follow(id, -1);
     } catch (e) {

@@ -76,6 +76,12 @@ export default function Timeline({ tl, lang, highlightSeq }: { tl: TL; lang: Lan
     <ol className="space-y-5">
       <li className="space-y-2">
         <StageHeader stage={reading} title={t(lang, "stepReading")} />
+        {tl.heard && (
+          <blockquote lang={lang} className="rise rounded-xl border border-line bg-card p-3 text-[15px]">
+            <span className="font-semibold text-muted">{t(lang, "heard")}: </span>
+            {tl.heard}
+          </blockquote>
+        )}
         {f && (
           <dl className="rise grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-xl border border-line bg-card p-3 text-[15px]">
             {[

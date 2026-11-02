@@ -14,10 +14,11 @@ export class ApiError extends Error {
   }
 }
 
-export async function startCheck(input: { image?: Blob; imageName?: string; text?: string; language: Lang }): Promise<string> {
+export async function startCheck(input: { image?: Blob; imageName?: string; audio?: Blob; text?: string; language: Lang }): Promise<string> {
   const form = new FormData();
   form.set("language", input.language);
   if (input.image) form.set("image", input.image, input.imageName ?? "image.jpg");
+  if (input.audio) form.set("audio", input.audio, "voice.wav");
   if (input.text) form.set("text", input.text);
   let r: Response;
   try {
@@ -54,7 +55,7 @@ export function followEvents(checkId: string, after: number, onEvent: (e: ApiEve
       source.close();
     }
   };
-  for (const type of ["received", "extracted", "verification_started", "check", "agent_turn", "refusal", "judge", "question", "answer", "verdict", "explanation", "complete"]) {
+  for (const type of ["received", "transcribed", "extracted", "verification_started", "check", "agent_turn", "refusal", "judge", "question", "answer", "verdict", "explanation", "complete"]) {
     source.addEventListener(type, handle as EventListener);
   }
   source.onerror = () => {

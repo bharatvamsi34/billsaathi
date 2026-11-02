@@ -84,9 +84,19 @@ T: dict[str, dict[Lang, str]] = {
         "hi": "ठीक है, अब मैं हिंदी में जवाब दूँगा।",
     },
     "unsupported": {
-        "en": "Please send the bill or payment message as text, or a photo or screenshot.",
-        "te": "దయచేసి బిల్లు లేదా చెల్లింపు సందేశాన్ని టెక్స్ట్‌గా, లేదా ఫోటో / స్క్రీన్‌షాట్‌గా పంపండి.",
-        "hi": "कृपया बिल या भुगतान संदेश टेक्स्ट, फ़ोटो या स्क्रीनशॉट के रूप में भेजें।",
+        "en": "Please send the bill or payment message as text, a photo, a screenshot or a voice note.",
+        "te": "దయచేసి బిల్లు లేదా చెల్లింపు సందేశాన్ని టెక్స్ట్, ఫోటో, స్క్రీన్‌షాట్ లేదా వాయిస్ నోట్‌గా పంపండి.",
+        "hi": "कृपया बिल या भुगतान संदेश टेक्स्ट, फ़ोटो, स्क्रीनशॉट या वॉइस नोट के रूप में भेजें।",
+    },
+    "heard": {
+        "en": "🎤 I heard: {text}",
+        "te": "🎤 నేను విన్నది: {text}",
+        "hi": "🎤 मैंने सुना: {text}",
+    },
+    "bad_voice": {
+        "en": "I could not understand that voice note. Please try again, or send the message as text.",
+        "te": "ఆ వాయిస్ నోట్ అర్థం కాలేదు. మళ్లీ ప్రయత్నించండి, లేదా సందేశాన్ని టెక్స్ట్‌గా పంపండి.",
+        "hi": "वह वॉइस नोट समझ नहीं आया। फिर कोशिश करें, या संदेश टेक्स्ट में भेजें।",
     },
     "bad_image": {
         "en": "I could not open that image. Please send a PNG, JPEG or WebP photo up to 8 MB.",

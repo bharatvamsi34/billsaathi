@@ -95,3 +95,7 @@ Tests: 482 API (pytest) + 10 web (vitest), all green. Screenshots: `docs/screens
 cd api;  .venv\Scripts\python -m ruff check .; .venv\Scripts\python -m ruff format --check .; .venv\Scripts\python -m pytest -q
 cd web;  npm run lint; npm run typecheck; npm test
 ```
+
+## Build log, final batch (Nov 2)
+
+- (a) Verdict explanation + Listen: **done**, commit `185818f`, https://zealous-coast-09279dd00.1.azurestaticapps.net (live checks: TE and HI SCAM, EN CAUTION, all `source=model`).

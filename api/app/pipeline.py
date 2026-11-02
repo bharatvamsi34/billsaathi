@@ -16,8 +16,9 @@ from app.api.events import extracted_event, public_event, verdict_view
 from app.api.store import CheckState, SpendMeter
 from app.explain import explain
 from app.extract import ExtractionFailed, TranscriptionFailed, extract, transcribe
-from app.models.base import LLMClient
+from app.models.base import LLMClient, LLMError
 from app.pii import scrub
+from app.voice import SpeechClient
 
 log = logging.getLogger("billsaathi.pipeline")
 
@@ -28,6 +29,7 @@ class Clients:
     agent: LLMClient
     judge: LLMClient
     explain: LLMClient | None = None  # None: template explanations, no model call
+    speech: SpeechClient | None = None
     model: str = "muse-spark-1.3"
     effort: str = "low"
 
@@ -38,6 +40,7 @@ class CheckInput:
     text: str | None = None
     image: bytes | None = None
     image_mime: str | None = None
+    audio: bytes | None = None  # 16 kHz mono 16-bit WAV; transcribed, then checked as text
 
 
 def run_check(state: CheckState, check: CheckInput, clients: Clients, spend: SpendMeter) -> None:
@@ -66,6 +69,8 @@ def answer(state: CheckState, reply: str, spend: SpendMeter) -> None:
 
 def _run(state: CheckState, check: CheckInput, clients: Clients, spend: SpendMeter) -> None:
     state.emit({"type": "received", "input": state.input_kind, "language": check.language})
+    if check.audio is not None and not _transcribe_audio(state, check, clients, spend):
+        return
     state.status = "extracting"
     t0 = time.perf_counter()
     visible_text, unreadable, transcription_cost = None, False, 0.0
@@ -141,6 +146,34 @@ def _run(state: CheckState, check: CheckInput, clients: Clients, spend: SpendMet
     _after_agent(state, session, spend)
 
 
+def _transcribe_audio(
+    state: CheckState, check: CheckInput, clients: Clients, spend: SpendMeter
+) -> bool:
+    state.status = "transcribing"
+    if clients.speech is None:
+        _fail(state, "voice input is not available")
+        return False
+    try:
+        heard = clients.speech.transcribe_audio(check.audio, check.language)
+    except LLMError as e:
+        _fail(state, f"could not hear the recording: {e}")
+        return False
+    state.speech_cost, state.speech_ms = heard.cost_usd, heard.latency_ms
+    spend.add(heard.cost_usd)
+    if not heard.text:
+        _fail(state, "nothing could be heard in the recording")
+        return False
+    check.text = heard.text
+    state.emit(
+        {
+            "type": "transcribed",
+            "text": scrub(heard.text, state.secrets),
+            "latency_ms": round(heard.latency_ms),
+        }
+    )
+    return True
+
+
 def _after_agent(state: CheckState, session: AgentSession, spend: SpendMeter) -> None:
     if session.status == "needs_user_input":
         state.status = "needs_user_input"
@@ -203,16 +236,20 @@ def summary(state: CheckState) -> dict:
     return {
         "status": state.status,
         "timings_ms": {
+            "speech": round(state.speech_ms),
             "extraction": round(state.extraction_ms),
             "agent": round(agent_ms),
             "explanation": round(state.explanation_ms),
             "total": round((end - state.created) * 1000),
         },
         "cost_usd": {
+            "speech": round(state.speech_cost, 5),
             "extraction": round(state.extraction_cost, 5),
             "agent": round(agent_cost, 5),
             "explanation": round(state.explanation_cost, 5),
-            "total": round(state.extraction_cost + agent_cost + state.explanation_cost, 5),
+            "total": round(
+                state.speech_cost + state.extraction_cost + agent_cost + state.explanation_cost, 5
+            ),
         },
         "agent": session.metrics.model_dump() if session else None,
     }

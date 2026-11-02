@@ -274,7 +274,7 @@ def test_input_shape_rules(api):
     )
     assert both.status_code == 400
     audio = client.post("/api/v1/checks", files={"audio": ("q.wav", b"RIFF....WAVE", "audio/wav")})
-    assert audio.status_code == 501 and audio.json()["error"] == "audio_not_supported_yet"
+    assert audio.status_code == 415 and audio.json()["error"] == "unsupported_audio"
     assert client.post("/api/v1/checks", data={"text": "hi", "language": "fr"}).status_code == 422
     assert post_text(client, "x" * 4001).status_code == 413
     assert client.get("/api/v1/checks/nope").status_code == 404

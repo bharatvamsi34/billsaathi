@@ -71,3 +71,9 @@ describe("explanation", () => {
     expect(state.explanation).toEqual({ text: "Do not pay yet.", source: "model" });
   });
 });
+
+describe("voice", () => {
+  it("keeps what was heard", () => {
+    expect(reduce(emptyTimeline, { seq: 0, type: "transcribed", text: "Pay my bill" }).heard).toBe("Pay my bill");
+  });
+});

@@ -4,8 +4,9 @@ import { useRef, useState } from "react";
 import samples from "@/samples.generated.json";
 import { t, type Lang } from "@/lib/i18n";
 import { BillIcon, CameraIcon, ImageIcon, MessageIcon } from "./icons";
+import VoiceButton from "./VoiceButton";
 
-export type CaptureInput = { image: Blob; imageName: string } | { text: string };
+export type CaptureInput = { image: Blob; imageName: string } | { text: string } | { audio: Blob };
 
 type Sample = (typeof samples)[number];
 
@@ -54,6 +55,7 @@ export default function Capture({ lang, busy, onSubmit }: { lang: Lang; busy: bo
             <ImageIcon className="h-7 w-7" />
             {t(lang, "upload")}
           </button>
+          <VoiceButton lang={lang} busy={busy} onAudio={(audio) => onSubmit({ audio })} />
           <input ref={camera} type="file" accept="image/*" capture="environment" className="hidden" onChange={pick} />
           <input ref={upload} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={pick} />
         </div>
