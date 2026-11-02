@@ -218,6 +218,10 @@ export default function Home() {
         BillSaathi · Meta AI Developer Hackathon 2026 · Muse Spark on the Meta Model API ·{" "}
         <a href={TEST_GUIDE} className="font-semibold text-brand underline underline-offset-4">
           {t(lang, "testGuide")}
+        </a>{" "}
+        ·{" "}
+        <a href="/privacy" className="font-semibold text-brand underline underline-offset-4">
+          {t(lang, "privacy")}
         </a>
       </footer>
     </div>

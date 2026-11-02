@@ -197,6 +197,7 @@ export const STRINGS = {
   isolatedCrop: { en: "Bill found and cropped", te: "బిల్లు గుర్తించి కత్తిరించాం", hi: "बिल मिला और काटा गया" },
   isolatedFull: { en: "The bill fills the image", te: "చిత్రం మొత్తం బిల్లే", hi: "पूरा चित्र ही बिल है" },
   isolatedNone: { en: "Using the whole image", te: "మొత్తం చిత్రాన్ని వాడుతున్నాం", hi: "पूरा चित्र इस्तेमाल कर रहे हैं" },
+  privacy: { en: "Privacy", te: "ప్రైవసీ", hi: "प्राइवेसी" },
   privacyToggle: { en: "Privacy Mode", te: "ప్రైవసీ మోడ్", hi: "प्राइवेसी मोड" },
   privacyHelp: {
     en: "Runs the whole check on the open-weight Muse Spark Open model.",
