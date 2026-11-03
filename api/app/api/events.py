@@ -138,6 +138,7 @@ def public_event(entry: RecordEntry, secrets: list[str] = ()) -> dict[str, Any] 
                     "reason": scrub(r["reason"], secrets),
                     "supported": r["supported"],
                     "why": scrub(r["why"], secrets),
+                    "evidence_ids": r.get("evidence_ids", []),
                 }
                 for r in p.get("reasons", [])
             ],
@@ -158,5 +159,6 @@ def verdict_view(p: dict[str, Any], secrets: list[str] = ()) -> dict[str, Any]:
         "facts": resolve_facts(p.get("facts", [])),
         "forced": p.get("forced", False),
         "forced_reason": scrub(p.get("forced_reason"), secrets),
+        "floor": (p.get("floor") or {}).get("verdict"),  # what the code enforced, for the trace
         "user_confirmation_required": True,  # nothing is ever paid without the user's sign-off
     }

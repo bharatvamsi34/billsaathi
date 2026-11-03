@@ -4,9 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { MAX_SECONDS, startRecording, toWav, type Recorder } from "@/lib/audio";
 import { t, type Lang } from "@/lib/i18n";
 import { MicIcon, Spinner } from "./icons";
+import { Button } from "./ui";
 
 /** Tap to speak the message, tap again to check it. */
-export default function VoiceButton({ lang, busy, onAudio }: { lang: Lang; busy: boolean; onAudio: (wav: Blob) => void }) {
+export default function VoiceButton({ lang, busy, compact, onAudio }: { lang: Lang; busy: boolean; compact?: boolean; onAudio: (wav: Blob) => void }) {
   const [state, setState] = useState<"idle" | "recording" | "converting">("idle");
   const [seconds, setSeconds] = useState(0);
   const [failed, setFailed] = useState(false);
@@ -52,21 +53,20 @@ export default function VoiceButton({ lang, busy, onAudio }: { lang: Lang; busy:
 
   const recording = state === "recording";
   return (
-    <div>
-      <button
-        type="button"
+    <div className="min-w-0">
+      <Button
+        variant={recording ? "danger" : "secondary"}
+        size={compact ? "sm" : "md"}
         disabled={busy || state === "converting"}
         onClick={recording ? finish : begin}
         aria-pressed={recording}
-        className={`flex min-h-14 w-full items-center justify-center gap-3 rounded-xl px-4 text-lg font-bold active:translate-y-px disabled:opacity-60 ${
-          recording ? "bg-scam text-white" : "border-2 border-brand bg-card text-brand"
-        }`}
+        className={compact ? "h-full w-full flex-col gap-0.5! rounded-2xl! py-2" : "w-full"}
       >
-        {state === "converting" ? <Spinner className="h-7 w-7" /> : <MicIcon className="h-7 w-7" />}
-        {recording ? `${t(lang, "stopVoice")} · ${seconds}s` : t(lang, "speak")}
-      </button>
+        {state === "converting" ? <Spinner className="h-5 w-5" /> : <MicIcon className="h-5 w-5" />}
+        {recording ? `${compact ? "■" : t(lang, "stopVoice")} · ${seconds}s` : t(lang, compact ? "speakShort" : "speak")}
+      </Button>
       {failed && (
-        <p role="alert" className="mt-1 text-sm font-semibold text-scam">
+        <p role="alert" className="t-caption mt-1 font-semibold text-scam">
           {t(lang, "errMic")}
         </p>
       )}

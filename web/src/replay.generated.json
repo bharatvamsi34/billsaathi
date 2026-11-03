@@ -1,0 +1,59 @@
+{
+  "file": "eval/results/agent_live_2026-10-29_2355.jsonl",
+  "date": "2026-10-29",
+  "id": "scam_te_known_vpa",
+  "verdict": "SCAM",
+  "message": "విద్యుత్ కార్యాలయం: మీ బకాయి ₹2,750. వెంటనే electricityofficer@okdemo కు చెల్లించండి, లేకపోతే ఈ రాత్రి కరెంట్ కట్ అవుతుంది.",
+  "attempts": [
+    {
+      "accepted": false,
+      "reasons": [
+        {
+          "reason": "The payment ID is on the known-scam list.",
+          "supported": true,
+          "why": "Evidence explicitly lists electricityofficer@okdemo as known-scam."
+        },
+        {
+          "reason": "The payment ID is not an official channel.",
+          "supported": true,
+          "why": "Evidence states that VPA is not an official UPI ID."
+        },
+        {
+          "reason": "The biller name matches no registered biller.",
+          "supported": true,
+          "why": "Evidence states no registered biller matches the queried name."
+        },
+        {
+          "reason": "The message threatens disconnection tonight with urgency pressure.",
+          "supported": false,
+          "why": "Evidence shows cut threat and urgency but does not mention tonight."
+        }
+      ]
+    },
+    {
+      "accepted": true,
+      "reasons": [
+        {
+          "reason": "The payment ID is on the known-scam list.",
+          "supported": true,
+          "why": "Evidence states that ID is on the known-scam list."
+        },
+        {
+          "reason": "The payment ID is not an official channel.",
+          "supported": true,
+          "why": "Evidence states that ID is not official."
+        },
+        {
+          "reason": "The biller name matches no registered biller.",
+          "supported": true,
+          "why": "Evidence states no registered biller matches the name."
+        },
+        {
+          "reason": "The message threatens disconnection with urgency pressure.",
+          "supported": true,
+          "why": "Evidences show both disconnection threat and urgency pressure."
+        }
+      ]
+    }
+  ]
+}

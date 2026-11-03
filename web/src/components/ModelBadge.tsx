@@ -1,21 +1,31 @@
-// Shows which model does each step, so the Meta tools at work are visible on every screen.
-const NAMES = {
+// Shows which model does each step, so the Meta models at work are visible at the moment their
+// output appears. In Privacy Mode every model badge names the open-weight model instead.
+import { t, type Key, type Lang } from "@/lib/i18n";
+
+export const MODEL_NAMES = {
   spark: "Muse Spark 1.3",
   sam: "SAM 3.1",
-  voice: "Voice Transcribe",
+  voice: "Muse Voice Transcribe",
   open: "Muse Spark Open",
   image: "Muse Image",
 } as const;
 
-export type Model = keyof typeof NAMES;
+export type Model = keyof typeof MODEL_NAMES;
 
-export default function ModelBadge({ model, code, privacy }: { model?: Model; code?: boolean; privacy?: boolean }) {
+export default function ModelBadge({ model, job, code, privacy, lang = "en" }: { model?: Model; job?: Key; code?: boolean; privacy?: boolean; lang?: Lang }) {
+  const name = model && (privacy ? MODEL_NAMES.open : MODEL_NAMES[model]);
   return (
-    <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-bold">
-      {model && (
-        <span className="rounded-md bg-ink px-1.5 py-0.5 text-white">{privacy ? NAMES.open : NAMES[model]}</span>
+    <span className="inline-flex max-w-full flex-wrap items-center gap-1 text-xs font-semibold leading-tight">
+      {name && (
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-[#d5e3fb] bg-brand-soft px-2 py-0.5 text-[#0a4fb0]">
+          <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "var(--accent-gradient)" }} />
+          <span>
+            {name}
+            {privacy ? ` · ${t(lang, "openWeights")}` : job ? ` · ${t(lang, job)}` : ""}
+          </span>
+        </span>
       )}
-      {code && <span className="rounded-md border border-muted px-1.5 py-[1px] text-ink-soft">Code</span>}
+      {code && <span className="rounded-full border border-line bg-card px-2 py-0.5 text-ink-soft">{t(lang, "codeBadge")}</span>}
     </span>
   );
 }

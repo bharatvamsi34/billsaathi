@@ -1,14 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import { demoConsumer, WRONG_CONSUMER } from "@/lib/demo";
 import { t, type Lang } from "@/lib/i18n";
+import { Button, Card, Chip } from "./ui";
 
 export default function QuestionBox({
   question,
+  field,
+  biller,
   lang,
   onAnswer,
 }: {
   question: string;
+  field: string;
+  biller: string | null | undefined;
   lang: Lang;
   onAnswer: (answer: string) => void;
 }) {
@@ -19,29 +25,35 @@ export default function QuestionBox({
     onAnswer(value);
   };
   return (
-    <section className="rise rounded-2xl border-2 border-saffron bg-card p-4 shadow-md">
-      <h2 className="text-lg font-extrabold">{t(lang, "questionTitle")}</h2>
-      <p className="mt-1 text-lg">{question}</p>
+    <Card className="gradient-ring rise p-4" data-testid="question">
+      <h2 className="t-title">{t(lang, "questionTitle")}</h2>
+      <p className="wrap-words mt-1 text-[15px]">{question}</p>
       <input
         value={answer}
         maxLength={200}
+        aria-label={question}
         onChange={(e) => setAnswer(e.target.value)}
-        className="mt-3 w-full rounded-xl border-2 border-line bg-paper p-3 text-lg focus:border-brand"
+        className="mt-3 w-full rounded-2xl border border-line bg-paper p-3 text-[15px] transition-colors focus:border-brand focus:bg-card"
         autoFocus
       />
+      {field === "consumer_number" && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          <Chip disabled={sent} onClick={() => setAnswer(demoConsumer(biller))} data-testid="fill-valid">
+            {t(lang, "fillValid")}
+          </Chip>
+          <Chip disabled={sent} onClick={() => setAnswer(WRONG_CONSUMER)} data-testid="fill-wrong">
+            {t(lang, "fillWrong")}
+          </Chip>
+        </div>
+      )}
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          disabled={sent || !answer.trim()}
-          onClick={() => send(answer.trim())}
-          className="min-h-14 rounded-xl bg-brand px-4 text-lg font-bold text-white disabled:opacity-40"
-        >
+        <Button variant="primary" disabled={sent || !answer.trim()} onClick={() => send(answer.trim())} data-testid="send-answer">
           {t(lang, "send")}
-        </button>
-        <button type="button" disabled={sent} onClick={() => send("")} className="min-h-14 rounded-xl border-2 border-line px-4 font-bold">
+        </Button>
+        <Button variant="secondary" disabled={sent} onClick={() => send("")}>
           {t(lang, "skip")}
-        </button>
+        </Button>
       </div>
-    </section>
+    </Card>
   );
 }

@@ -5,19 +5,24 @@ import { MotionConfig } from "motion/react";
 import Link from "next/link";
 import Capture, { sampleInput, type CaptureInput } from "@/components/Capture";
 import Guide from "@/components/Guide";
-import Hero from "@/components/Hero";
+import Hero, { ProofStrip, type QuickSample } from "@/components/Hero";
+import InputReview, { type ReviewInput } from "@/components/InputReview";
 import QuestionBox from "@/components/QuestionBox";
+import Replay from "@/components/Replay";
 import Timeline from "@/components/Timeline";
+import TopBar from "@/components/TopBar";
+import Trace from "@/components/Trace";
+import { Button, Card } from "@/components/ui";
 import VerdictCard from "@/components/VerdictCard";
-import { ShieldMark } from "@/components/icons";
 import samples from "@/samples.generated.json";
 import { ApiError, followEvents, sendAnswer, startCheck } from "@/lib/api";
-import { LANGS, t, type Key } from "@/lib/i18n";
+import { useDemoMode } from "@/lib/demo";
+import { t, type Key } from "@/lib/i18n";
 import { prepareImage } from "@/lib/image";
 import { useLang } from "@/lib/useLang";
 import { emptyTimeline, reduce, type Timeline as TL } from "@/lib/timeline";
 
-const GUTTER = "lg:px-[max(2rem,calc(50%-34rem))]";
+const GUTTER = "lg:px-[max(2rem,calc(50%-38rem))]";
 const TEST_GUIDE = "https://github.com/bharatvamsi34/billsaathi/blob/main/docs/TESTING.md";
 
 const ERRORS: Record<string, Key> = {
@@ -28,21 +33,40 @@ const ERRORS: Record<string, Key> = {
   image_too_large: "errImage",
 };
 
+function scrollToResults() {
+  requestAnimationFrame(() => document.getElementById("results-top")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+}
+
 export default function Home() {
   const [lang, setLang] = useLang();
+  const demo = useDemoMode();
   const [checkId, setCheckId] = useState<string | null>(null);
   const [tl, setTl] = useState<TL>(emptyTimeline);
   const [error, setError] = useState<Key | null>(null);
   const [busy, setBusy] = useState(false);
   const [highlight, setHighlight] = useState<number | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [review, setReview] = useState<ReviewInput>(null);
   const [privacy, setPrivacy] = useState(false);
+  const [replaying, setReplaying] = useState(false);
+  const [traceOpen, setTraceOpen] = useState(false);
+  const [lastInput, setLastInput] = useState<CaptureInput | null>(null);
   const stop = useRef<(() => void) | null>(null);
   const lastSeq = useRef(-1);
 
   useEffect(() => {
     document.documentElement.lang = lang; // right fonts and line height for Telugu / Hindi
   }, [lang]);
+
+  useEffect(() => {
+    if (demo) document.documentElement.dataset.demo = "1";
+  }, [demo]);
+
+  // The verdict is the moment to read: bring it into view, under the sticky bar.
+  const hasVerdict = !!tl.verdict;
+  useEffect(() => {
+    if (hasVerdict) scrollToResults();
+  }, [hasVerdict]);
 
   const follow = (id: string, after: number) => {
     stop.current?.();
@@ -51,7 +75,7 @@ export default function Home() {
       after,
       (e) => {
         lastSeq.current = Math.max(lastSeq.current, e.seq);
-        const receivedAt = performance.now();
+        const receivedAt = Date.now();
         setTl((prev) => reduce(prev, { ...e, receivedAt }));
         if (e.type === "complete" || e.type === "question") setBusy(false);
       },
@@ -63,23 +87,32 @@ export default function Home() {
   };
 
   const showImage = (image: Blob | null) => {
+    let url: string | null = null;
     setImageUrl((old) => {
       if (old) URL.revokeObjectURL(old);
-      return image ? URL.createObjectURL(image) : null;
+      url = image ? URL.createObjectURL(image) : null;
+      return url;
     });
+    return () => url;
   };
 
   const submit = async (input: CaptureInput) => {
     setError(null);
     setBusy(true);
+    setReplaying(false);
+    setTraceOpen(false);
+    setHighlight(null);
     setTl(emptyTimeline);
+    setCheckId(null);
+    setLastInput(input);
     lastSeq.current = -1;
-    if (window.matchMedia("(min-width: 1024px)").matches) {
-      document.getElementById("workspace")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    } else {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-    showImage("image" in input ? input.image : null);
+    const url = "image" in input ? URL.createObjectURL(input.image) : null;
+    setImageUrl((old) => {
+      if (old) URL.revokeObjectURL(old);
+      return url;
+    });
+    setReview("text" in input ? { kind: "text", text: input.text } : "image" in input ? { kind: "image", url: url! } : { kind: "audio", url: input.audioUrl });
+    scrollToResults();
     try {
       const id =
         "text" in input
@@ -114,125 +147,135 @@ export default function Home() {
     setError(null);
     setBusy(false);
     setHighlight(null);
+    setReview(null);
+    setReplaying(false);
+    setTraceOpen(false);
+    setLastInput(null);
     showImage(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const showEvidence = (seq: number) => {
     setHighlight(seq);
-    document.getElementById(`check-${seq}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    setTraceOpen(true);
+    // After the trace has opened.
+    setTimeout(() => document.getElementById(`check-${seq}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 260);
   };
 
-  const checking = checkId !== null;
+  const startReplay = () => {
+    stop.current?.();
+    setBusy(false);
+    setCheckId(null);
+    setTl(emptyTimeline);
+    setReview(null);
+    setError(null);
+    setReplaying(true);
+    scrollToResults();
+  };
+
+  const checking = review !== null;
+  const showResults = checking || replaying || !!error;
   const runSample = async (id: string) => {
     const sample = samples.find((s) => s.id === id);
     if (sample) void submit(await sampleInput(sample));
   };
   const scamSample = lang === "te" ? "scam_te_known_vpa" : lang === "hi" ? "scam_hi_kyc_apk" : "scam_en_known_vpa";
-
-  // "How to test" opens the sample gallery; after a finished check it first goes back to capture.
-  const goToSamples = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (checking && !busy) reset();
-    requestAnimationFrame(() => document.getElementById("samples")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  const quick = (s: QuickSample) => {
+    const ids: Record<QuickSample, string> = { scam: scamSample, tampered: "demo_tampered_same_account", genuine: "photo_genuine_demo", voice: "demo_voice_note" };
+    void runSample(ids[s]);
   };
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="mx-auto max-w-xl lg:max-w-none">
-        <div className={`sticky top-0 z-10 bg-caution-bg px-4 py-2 text-[14px] font-semibold leading-snug text-caution shadow-sm ${GUTTER}`} role="note">
-          {t(lang, "banner")}
+      <TopBar lang={lang} onLang={setLang} privacy={privacy} onPrivacy={setPrivacy} busy={busy} onBack={showResults ? reset : null} />
+
+      {/* Phone: while a check runs the hero steps aside, so the result fits the first screen. */}
+      <div className={showResults ? "hidden lg:block" : undefined}>
+        <Hero lang={lang} busy={busy} onQuick={quick} />
+        {!demo && <Guide lang={lang} step={tl.verdict ? 3 : checking ? 2 : 1} />}
+      </div>
+
+      <main id="workspace" className={`flex flex-col gap-4 px-4 py-4 lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start lg:gap-8 lg:py-6 ${GUTTER}`}>
+        <div className={`lg:sticky lg:top-[calc(var(--topbar-h)+1rem)] ${showResults ? "hidden lg:block" : ""}`}>
+          <Capture lang={lang} busy={busy} onSubmit={submit} onReplay={startReplay} />
         </div>
 
-        <header className={`bg-ink px-4 pb-5 pt-4 text-white lg:flex lg:items-center lg:gap-6 lg:py-3 ${GUTTER}`}>
-          <div className="flex items-center gap-2">
-            <ShieldMark className="h-9 w-9" />
-            <span className="text-2xl font-extrabold tracking-tight">BillSaathi</span>
-            <a href="#samples" onClick={goToSamples} className="ml-auto whitespace-nowrap rounded-lg px-2 py-1 text-base font-bold text-saffron underline underline-offset-4 lg:ml-4">
-              {t(lang, "howToTest")}
-            </a>
-            <Link href="/eval" className="hidden whitespace-nowrap rounded-lg px-2 py-1 text-base font-bold text-saffron underline underline-offset-4 lg:inline">
-              {t(lang, "evalLink")}
-            </Link>
-          </div>
-          <p className="mt-2 text-lg leading-snug text-white/90 lg:hidden">{t(lang, "tagline")}</p>
-          <div role="group" aria-label={t(lang, "language")} className="mt-4 grid grid-cols-3 gap-1 rounded-xl bg-ink-soft p-1 lg:ml-auto lg:mt-0 lg:w-80 lg:shrink-0">
-            {LANGS.map((l) => (
-              <button
-                key={l.code}
-                type="button"
-                lang={l.code}
-                aria-pressed={lang === l.code}
-                onClick={() => setLang(l.code)}
-                className={`min-h-11 rounded-lg px-2 text-base font-bold transition-colors lg:min-h-9 ${lang === l.code ? "bg-white text-ink" : "text-white/85"}`}
-              >
-                {l.name}
-              </button>
-            ))}
-          </div>
-        </header>
+        <div className="min-w-0 space-y-3">
+          {!showResults && (
+            <Card className="hidden p-4 lg:block">
+              <h2 className="t-title">{t(lang, "watchTitle")}</h2>
+              <p className="mb-2 mt-1 text-[15px] text-muted">{t(lang, "watchBody")}</p>
+              <Timeline tl={emptyTimeline} lang={lang} highlightSeq={null} imageUrl={null} idle />
+            </Card>
+          )}
 
-        <Hero lang={lang} busy={busy} onScam={() => runSample(scamSample)} onGenuine={() => runSample("photo_genuine_demo")} />
-        <Guide lang={lang} step={tl.verdict ? 3 : checking ? 2 : 1} />
+          {replaying && <Replay lang={lang} onClose={reset} />}
 
-        {/* Phone: one column; the wrappers are display:contents, so order and spacing stay simple.
-            Desktop (lg): samples and capture on the left, the live check on the right. */}
-        <main id="workspace" className={`flex scroll-mt-10 flex-col gap-5 px-4 py-5 lg:grid lg:grid-cols-2 lg:items-start lg:gap-8 lg:py-6 ${GUTTER}`}>
-          <div className={checking ? "hidden lg:block" : undefined}>
-            <Capture lang={lang} busy={busy} privacy={privacy} onPrivacy={setPrivacy} onSubmit={submit} />
-          </div>
+          {checking && <InputReview input={review} tl={tl} lang={lang} />}
 
-          <div className="contents lg:sticky lg:top-11 lg:block lg:max-h-[calc(100dvh-3.5rem)] lg:space-y-5 lg:overflow-y-auto lg:p-1">
-            {error && (
-              <p role="alert" className="order-first rounded-xl bg-scam-bg p-3 font-semibold text-scam lg:order-none">
-                {t(lang, error)}
-              </p>
-            )}
+          {error && (
+            <div role="alert" id={checking ? undefined : "results-top"} className="rise rounded-2xl border border-scam/30 bg-scam-bg p-4">
+              <p className="font-semibold text-scam">{t(lang, error)}</p>
+              {lastInput && (
+                <Button variant="secondary" className="mt-3" onClick={() => void submit(lastInput)} data-testid="retry">
+                  {t(lang, "retry")}
+                </Button>
+              )}
+            </div>
+          )}
 
-            {!checking && (
-              <section className="hidden rounded-2xl border border-line bg-paper p-4 lg:block">
-                <h2 className="text-xl font-extrabold">{t(lang, "watchTitle")}</h2>
-                <p className="mb-4 mt-1 text-muted">{t(lang, "watchBody")}</p>
-                <Timeline tl={emptyTimeline} lang={lang} highlightSeq={null} imageUrl={null} idle />
-              </section>
-            )}
+          {checking && tl.privacy && (
+            <div className="t-caption rise space-y-0.5 rounded-2xl bg-navy px-3.5 py-2.5 font-semibold text-white" data-testid="privacy-bar">
+              <p>{t(lang, "privacyActive")}</p>
+              {tl.input === "image" && <p className="font-normal text-white/80">{t(lang, "photoCropSkipped")}</p>}
+            </div>
+          )}
 
-            {checking && (
-              <>
-                {tl.verdict && <VerdictCard key={checkId} checkId={checkId} tl={tl} lang={lang} onShowEvidence={showEvidence} onReset={reset} />}
-                {tl.question && !tl.verdict && <QuestionBox question={tl.question.question} lang={lang} onAnswer={answer} />}
-                {!tl.verdict && !tl.question && (
-                  <div
-                    data-step={tl.early ? "early" : undefined}
-                    className={`flex min-h-[5.75rem] items-center rounded-2xl px-4 py-4 text-xl font-extrabold text-white shadow-md transition-colors duration-300 ${tl.early === "scam_signals" ? "bg-scam" : "bg-ink"}`}
-                    aria-live="polite"
-                  >
-                    {t(lang, tl.early === "scam_signals" ? "earlyScam" : tl.early ? "earlyChecking" : "checking")}
-                  </div>
-                )}
-                <section className="rounded-2xl border border-line bg-paper p-3">
-                  {tl.verdict && <h2 className="pb-3 text-xl font-extrabold">{t(lang, "howChecked")}</h2>}
+          {checking && !error && (
+            <>
+              {tl.verdict && <VerdictCard key={checkId ?? "verdict"} checkId={checkId} tl={tl} lang={lang} onShowEvidence={showEvidence} onReset={reset} />}
+              {tl.question && !tl.verdict && <QuestionBox question={tl.question.question} field={tl.question.field} biller={tl.extracted?.biller_name.value} lang={lang} onAnswer={answer} />}
+              {!tl.verdict && !tl.question && (
+                <div
+                  data-testid="status"
+                  data-step={tl.early ?? undefined}
+                  aria-live="polite"
+                  className={`flex min-h-16 items-center gap-2 rounded-2xl px-4 py-3 text-[17px] font-semibold shadow-soft transition-colors duration-200 ${
+                    tl.early === "scam_signals" ? "border border-caution-line bg-caution-bg text-caution" : "bg-navy text-white"
+                  }`}
+                >
+                  {tl.early === "scam_signals" && <span aria-hidden="true">⚠️</span>}
+                  {t(lang, tl.early === "scam_signals" ? "earlyScam" : tl.early ? "earlyChecking" : "checking")}
+                </div>
+              )}
+              {tl.verdict ? (
+                <Trace tl={tl} lang={lang} open={traceOpen} onToggle={() => setTraceOpen(!traceOpen)} highlightSeq={highlight} imageUrl={imageUrl} />
+              ) : (
+                <Card className="p-2">
                   <Timeline tl={tl} lang={lang} highlightSeq={highlight} imageUrl={imageUrl} />
-                </section>
-              </>
-            )}
-          </div>
-        </main>
+                </Card>
+              )}
+            </>
+          )}
+        </div>
+      </main>
 
-        <footer className="px-4 pb-8 pt-2 text-center text-sm text-muted">
-          BillSaathi · Meta AI Developer Hackathon 2026 ·{" "}
-          <Link href="/eval" className="font-semibold text-brand underline underline-offset-4">
-            {t(lang, "evalLink")}
-          </Link>{" "}
-          ·{" "}
-          <a href={TEST_GUIDE} className="font-semibold text-brand underline underline-offset-4">
-            {t(lang, "testGuide")}
-          </a>{" "}
-          ·{" "}
-          <Link href="/privacy" className="font-semibold text-brand underline underline-offset-4">
-            {t(lang, "privacy")}
-          </Link>
-        </footer>
-      </div>
+      <ProofStrip lang={lang} />
+
+      <footer className={`t-caption px-4 py-6 text-center text-muted ${GUTTER}`}>
+        BillSaathi · Meta Global AI Developer Hackathon 2026 ·{" "}
+        <Link href="/eval" className="font-semibold text-brand underline underline-offset-4">
+          {t(lang, "evalLink")}
+        </Link>{" "}
+        ·{" "}
+        <a href={TEST_GUIDE} className="font-semibold text-brand underline underline-offset-4">
+          {t(lang, "testGuide")}
+        </a>{" "}
+        ·{" "}
+        <Link href="/privacy" className="font-semibold text-brand underline underline-offset-4">
+          {t(lang, "privacy")}
+        </Link>
+      </footer>
     </MotionConfig>
   );
 }

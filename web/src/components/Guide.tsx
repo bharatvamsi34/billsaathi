@@ -28,11 +28,11 @@ export default function Guide({ lang, step }: { lang: Lang; step: 1 | 2 | 3 }) {
   };
 
   return (
-    <div className="hidden items-center gap-4 border-b border-line bg-brand-soft px-[max(2rem,calc(50%-34rem))] py-2.5 lg:flex" role="note">
-      <ol className="flex flex-1 items-center gap-3">
+    <div className="hidden items-center gap-4 border-b border-line bg-brand-soft px-[max(2rem,calc(50%-38rem))] py-2 lg:flex" role="note">
+      <ol className="flex flex-1 items-center gap-3 text-[15px]">
         {(["guide1", "guide2", "guide3"] as const).map((key, i) => (
-          <li key={key} className={`flex items-center gap-2 font-bold ${step === i + 1 ? "text-brand" : "text-muted"}`}>
-            <span className={`flex h-6 w-6 items-center justify-center rounded-full text-sm ${step === i + 1 ? "bg-brand text-white" : "bg-card text-muted"}`}>{i + 1}</span>
+          <li key={key} className={`flex items-center gap-2 font-semibold ${step === i + 1 ? "text-brand" : "text-muted"}`}>
+            <span className={`flex h-6 w-6 items-center justify-center rounded-full text-[13px] ${step === i + 1 ? "bg-brand text-white" : "bg-card text-muted"}`}>{i + 1}</span>
             {t(lang, key)}
             {i < 2 && (
               <span aria-hidden="true" className="ml-1 text-muted">
@@ -42,7 +42,7 @@ export default function Guide({ lang, step }: { lang: Lang; step: 1 | 2 | 3 }) {
           </li>
         ))}
       </ol>
-      <button type="button" onClick={close} className="rounded-lg px-3 py-1 font-bold text-brand underline underline-offset-4">
+      <button type="button" onClick={close} className="min-h-9 rounded-full px-3 text-[15px] font-semibold text-brand hover:bg-white/60">
         {t(lang, "guideClose")}
       </button>
     </div>

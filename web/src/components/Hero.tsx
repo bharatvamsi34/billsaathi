@@ -1,8 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import results from "@/eval.generated.json";
 import { t, type Lang } from "@/lib/i18n";
 import ModelBadge, { type Model } from "./ModelBadge";
 import PhoneQR from "./PhoneQR";
+import { Button, Chip } from "./ui";
 
 const SOURCE = "https://www.theweek.in/wire-updates/business/2025/07/22/del23-lsq-cyber-fraud.html";
 
@@ -14,90 +17,103 @@ const MODELS: [Model, "modelSpark" | "modelSam" | "modelVoice" | "modelOpen" | "
   ["image", "modelImage"],
 ];
 
-/** Desktop only: the problem, one real number, one big button, and proof it was measured. */
-export default function Hero({ lang, busy, onScam, onGenuine }: { lang: Lang; busy: boolean; onScam: () => void; onGenuine: () => void }) {
-  const best = (results.configs as Record<string, { correct: number; n: number; false_safe: number; risky: number; latency_p50_s: number; cost_per_check_usd: number }>)["spark-low"];
-  return (
-    <div className="hidden lg:block">
-      <section className="bg-ink px-[max(2rem,calc(50%-34rem))] pb-6 pt-1 text-white">
-        <div className="grid grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] items-start gap-10">
-          <div>
-            <h1 className="text-[2rem] font-extrabold leading-[1.15] tracking-tight xl:text-[2.5rem]">
-              {t(lang, "heroTitle")
-                .split(/(?<=[.।])\s+/)
-                .map((sentence) => (
-                  <span key={sentence} className="block">
-                    {sentence}
-                  </span>
-                ))}
-            </h1>
-            <p className="mt-2 max-w-2xl leading-snug text-white/85 xl:text-lg">{t(lang, "intro")}</p>
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                disabled={busy}
-                onClick={onScam}
-                className="min-h-14 rounded-xl bg-saffron px-7 text-lg font-extrabold text-ink shadow-md transition-transform hover:-translate-y-px active:translate-y-px disabled:opacity-60"
-              >
-                {t(lang, "tryScam")}
-              </button>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={onGenuine}
-                className="min-h-14 rounded-xl border-2 border-white/40 px-5 font-bold text-white transition-colors hover:border-white disabled:opacity-60"
-              >
-                {t(lang, "tryGenuine")}
-              </button>
-            </div>
-          </div>
-          <div className="space-y-3">
-            <div className="border-l-4 border-saffron pl-4">
-              <p className="text-[1.75rem] font-extrabold leading-none text-saffron xl:text-[2rem]">{t(lang, "statValue")}</p>
-              <p className="mt-1 text-[15px] leading-snug text-white/90 xl:text-base">{t(lang, "statLabel")}</p>
-              <a href={SOURCE} target="_blank" rel="noreferrer" className="mt-1 inline-block text-sm text-white/70 underline underline-offset-2 hover:text-white">
-                {t(lang, "statSource")}
-              </a>
-            </div>
-            {best && (
-              <Link href="/eval" className="block rounded-xl bg-ink-soft p-3 transition-colors hover:bg-[#2c4c6e]">
-                <span className="grid grid-cols-3 gap-2">
-                  <span>
-                    <span className="block text-xl font-extrabold tabular-nums">
-                      {best.correct}/{best.n}
-                    </span>
-                    <span className="block text-sm leading-tight text-white/80">{t(lang, "statCorrect")}</span>
-                  </span>
-                  <span>
-                    <span className="block text-xl font-extrabold tabular-nums">
-                      {best.false_safe}/{best.risky}
-                    </span>
-                    <span className="block text-sm leading-tight text-white/80">{t(lang, "statFalseSafe")}</span>
-                  </span>
-                  <span>
-                    <span className="block text-xl font-extrabold tabular-nums">{best.latency_p50_s.toFixed(1)} s</span>
-                    <span className="block text-sm leading-tight text-white/80">{t(lang, "statLatency")}</span>
-                  </span>
-                </span>
-                <span className="mt-1.5 block text-sm font-bold leading-snug text-saffron">
-                  {t(lang, "statMore", { n: best.n })}&nbsp;→
-                </span>
-              </Link>
-            )}
-          </div>
-        </div>
-      </section>
+export type QuickSample = "scam" | "tampered" | "genuine" | "voice";
 
-      <section aria-labelledby="models-title" className="border-b border-line bg-card px-[max(2rem,calc(50%-34rem))] py-2.5">
-        <div className="flex items-center gap-5">
-          <h2 id="models-title" className="w-24 shrink-0 text-sm font-extrabold leading-tight text-ink">
+function Stat({ lang }: { lang: Lang }) {
+  return (
+    <div>
+      <p className="text-[1.375rem] font-bold leading-tight tracking-tight text-white">{t(lang, "statValue")}</p>
+      <p className="mt-1 text-[15px] leading-snug text-white/85">{t(lang, "statLabel")}</p>
+      <a href={SOURCE} target="_blank" rel="noreferrer" className="t-caption mt-1 inline-flex min-h-6 items-center text-white/70 underline underline-offset-2 hover:text-white">
+        {t(lang, "statSource")}
+      </a>
+    </div>
+  );
+}
+
+function EvalProof({ lang }: { lang: Lang }) {
+  const best = (results.configs as Record<string, { correct: number; n: number; false_safe: number; risky: number; latency_p50_s: number }>)["spark-low"];
+  if (!best) return null;
+  return (
+    <Link href="/eval" className="block rounded-2xl border border-white/15 bg-white/[0.07] p-3.5 transition-colors duration-150 hover:bg-white/[0.12]">
+      <span className="grid grid-cols-3 gap-2">
+        {[
+          [`${best.correct}/${best.n}`, "statCorrect"],
+          [`${best.false_safe}/${best.risky}`, "statFalseSafe"],
+          [`${best.latency_p50_s.toFixed(1)} s`, "statLatency"],
+        ].map(([value, label]) => (
+          <span key={label}>
+            <span className="block text-lg font-bold tabular-nums">{value}</span>
+            <span className="t-caption block text-white/75">{t(lang, label as "statCorrect")}</span>
+          </span>
+        ))}
+      </span>
+      <span className="t-caption mt-2 block font-semibold text-[#9cc3ff]">{t(lang, "statMore", { n: best.n })}&nbsp;→</span>
+    </Link>
+  );
+}
+
+export default function Hero({ lang, busy, onQuick }: { lang: Lang; busy: boolean; onQuick: (s: QuickSample) => void }) {
+  return (
+    <section className="hero-glow px-4 pb-5 pt-4 text-white lg:px-[max(2rem,calc(50%-38rem))] lg:pb-8 lg:pt-8">
+      <div className="lg:grid lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] lg:items-start lg:gap-12">
+        <div>
+          <h1 className="t-display">{t(lang, "heroTitle")}</h1>
+          <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-white/85 lg:mt-3 lg:text-lg">{t(lang, "heroBody")}</p>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center lg:mt-5 lg:gap-3">
+            <Button variant="onDark" size="lg" disabled={busy} onClick={() => onQuick("scam")} data-testid="cta-scam">
+              {t(lang, "tryScam")}
+            </Button>
+            <span className="hidden lg:contents">
+              <Button variant="onDarkGhost" size="lg" disabled={busy} onClick={() => onQuick("genuine")} data-testid="cta-genuine">
+                {t(lang, "tryGenuine")}
+              </Button>
+            </span>
+          </div>
+          {/* Phone: one tap to every kind of sample, right at the top. */}
+          <div className="mt-3 grid grid-cols-2 gap-2 lg:hidden">
+            {(
+              [
+                ["tampered", "chipTampered"],
+                ["genuine", "chipGenuine"],
+                ["voice", "chipVoice"],
+                ["scam", "chipScam"],
+              ] as const
+            ).map(([sample, label]) => (
+              <Chip key={sample} disabled={busy} onClick={() => onQuick(sample)} className="border-white/30! bg-white/10! text-white!">
+                {t(lang, label)}
+              </Chip>
+            ))}
+          </div>
+          <p className="t-caption mt-3 text-white/70">{t(lang, "heroSim")}</p>
+        </div>
+        <div className="hidden space-y-4 lg:block">
+          <Stat lang={lang} />
+          <EvalProof lang={lang} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** The Meta models at work, and on a phone the stat and the measured results, below the workspace. */
+export function ProofStrip({ lang }: { lang: Lang }) {
+  return (
+    <>
+      <section className="hero-glow space-y-4 px-4 py-5 text-white lg:hidden">
+        <Stat lang={lang} />
+        <EvalProof lang={lang} />
+      </section>
+      <section aria-labelledby="models-title" className="border-y border-line bg-card px-4 py-4 lg:px-[max(2rem,calc(50%-38rem))]">
+        <div className="lg:flex lg:items-center lg:gap-6">
+          <h2 id="models-title" className="mb-3 text-sm font-bold leading-tight lg:mb-0 lg:w-24 lg:shrink-0">
             {t(lang, "modelsTitle")}
           </h2>
-          <ul className="grid flex-1 grid-cols-5 gap-2 xl:gap-3">
+          <ul className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {MODELS.map(([model, job]) => (
               <li key={model}>
-                <ModelBadge model={model} />
-                <p className="mt-0.5 text-[13px] leading-snug text-muted xl:text-sm">{t(lang, job)}</p>
+                <ModelBadge model={model} lang={lang} />
+                <p className="t-caption mt-1 text-muted">{t(lang, job)}</p>
               </li>
             ))}
           </ul>
@@ -106,6 +122,6 @@ export default function Hero({ lang, busy, onScam, onGenuine }: { lang: Lang; bu
           </div>
         </div>
       </section>
-    </div>
+    </>
   );
 }

@@ -1,47 +1,148 @@
 @import "tailwindcss";
 
-/* BillSaathi design tokens: warm paper, deep ink, one teal accent. Verdict colours always come
-   with an icon and a word, never colour alone. */
+/* BillSaathi design tokens: near-white surfaces, a deep-navy hero, one blue for actions, and a
+   soft blue-to-violet accent used sparingly. Verdict colours always come with an icon and a word. */
 @theme {
-  --color-ink: #0b2239;
-  --color-ink-soft: #24405e;
-  --color-paper: #f6f3ec;
+  --color-ink: #1c2b33;
+  --color-ink-soft: #3d4f5c;
+  --color-navy: #0a1633;
+  --color-navy-soft: #16264d;
+  --color-paper: #f5f7fa;
   --color-card: #ffffff;
-  --color-line: #e2dccf;
-  --color-muted: #55606e;
-  --color-brand: #0f6e68;
-  --color-brand-soft: #e3f1ef;
-  --color-saffron: #f2a33a;
-  --color-safe: #0a6b3d;
-  --color-safe-bg: #e5f3ea;
+  --color-line: #e2e6ec;
+  --color-muted: #566372;
+  --color-brand: #0064e0;
+  --color-brand-bright: #0866ff;
+  --color-brand-soft: #e9f2ff;
+  --color-violet: #7a5cff;
+  --color-safe: #0a7a43;
+  --color-safe-bg: #e7f6ee;
   --color-caution: #8a4b00;
-  --color-caution-bg: #fff1d9;
-  --color-scam: #a11b1b;
-  --color-scam-bg: #fde7e7;
-  --font-sans: var(--font-latin), var(--font-telugu), var(--font-deva), system-ui, sans-serif;
+  --color-caution-bg: #fff4e0;
+  --color-caution-line: #f3c677;
+  --color-scam: #b3141c;
+  --color-scam-bg: #fdecec;
+  --shadow-soft: 0 1px 2px rgb(16 32 64 / 0.05), 0 4px 16px rgb(16 32 64 / 0.05);
+  --shadow-lift: 0 2px 4px rgb(16 32 64 / 0.06), 0 12px 32px rgb(16 32 64 / 0.1);
+  --font-sans: var(--font-latin), var(--font-telugu), var(--font-deva), system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+:root {
+  --topbar-h: 5.75rem;
+  --accent-gradient: linear-gradient(120deg, #0866ff 0%, #7a5cff 100%);
+}
+@media (min-width: 1024px) {
+  :root {
+    --topbar-h: 3.75rem;
+  }
 }
 
 html {
   -webkit-text-size-adjust: 100%;
+  scroll-padding-top: calc(var(--topbar-h) + 0.75rem);
 }
 
 body {
   background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans);
-  font-size: 18px;
-  line-height: 1.5;
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: clip;
+}
+
+/* ?demo=1, for recording: bigger type, no behaviour change. */
+html[data-demo="1"] {
+  font-size: 125%;
+}
+html[data-demo="1"] body {
+  font-size: 20px;
 }
 
 /* Telugu and Devanagari need a little more line height to stay readable. */
 :lang(te),
 :lang(hi) {
-  line-height: 1.65;
+  line-height: 1.7;
 }
 
 :focus-visible {
-  outline: 3px solid var(--color-saffron);
+  outline: 3px solid var(--color-brand-bright);
   outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Type scale */
+.t-display {
+  font-size: clamp(1.625rem, 1.1rem + 2.1vw, 2.75rem);
+  font-weight: 700;
+  line-height: 1.14;
+  letter-spacing: -0.022em;
+}
+.t-title {
+  font-size: 1.125rem;
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+.t-caption {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+/* Words break only between words; names never split mid-word. */
+.wrap-words {
+  word-break: normal;
+  overflow-wrap: break-word;
+  hyphens: none;
+}
+/* Links and UPI IDs have no spaces: they may wrap anywhere rather than overflow. */
+.wrap-value {
+  overflow-wrap: anywhere;
+  hyphens: none;
+}
+
+/* Frosted glass for floating chrome only, with a solid fallback. */
+.glass {
+  background: rgb(255 255 255 / 0.97);
+}
+@supports (backdrop-filter: blur(12px)) {
+  .glass {
+    background: rgb(255 255 255 / 0.78);
+    backdrop-filter: saturate(180%) blur(16px);
+  }
+}
+
+.hero-glow {
+  background-color: var(--color-navy);
+  background-image:
+    radial-gradient(52rem 26rem at 88% -20%, rgb(122 92 255 / 0.34), transparent 70%),
+    radial-gradient(44rem 24rem at 8% 120%, rgb(8 102 255 / 0.3), transparent 70%);
+}
+
+.gradient-text {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* The gradient ring for the active step and a judge-verified result. */
+.gradient-ring {
+  position: relative;
+}
+.gradient-ring::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: var(--accent-gradient);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }
 
 @keyframes spin {
@@ -64,12 +165,56 @@ body {
   }
 }
 .rise {
-  animation: rise 0.25s ease-out both;
+  animation: rise 0.22s ease-out both;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -120% 0;
+  }
+}
+.skeleton {
+  background: linear-gradient(90deg, #e9edf2 25%, #f6f8fa 50%, #e9edf2 75%);
+  background-size: 220% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* Highlights inside the message under review */
+.mark-risky {
+  background: var(--color-scam-bg);
+  color: var(--color-scam);
+  box-shadow: inset 0 -2px 0 var(--color-scam);
+  font-weight: 650;
+  border-radius: 3px;
+  padding: 0 2px;
+}
+.mark-unverified {
+  background: var(--color-caution-bg);
+  color: var(--color-caution);
+  box-shadow: inset 0 -2px 0 var(--color-caution-line);
+  font-weight: 650;
+  border-radius: 3px;
+  padding: 0 2px;
+}
+.mark-ok {
+  background: var(--color-safe-bg);
+  color: var(--color-safe);
+  font-weight: 650;
+  border-radius: 3px;
+  padding: 0 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .spin,
-  .rise {
+  .rise,
+  .skeleton {
     animation: none;
+  }
+  html {
+    scroll-behavior: auto;
   }
 }

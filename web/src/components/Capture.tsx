@@ -3,35 +3,63 @@
 import { useRef, useState } from "react";
 import samples from "@/samples.generated.json";
 import { t, type Lang } from "@/lib/i18n";
-import { BillIcon, CameraIcon, ImageIcon, MessageIcon } from "./icons";
+import { CameraIcon, ImageIcon, MessageIcon, MicIcon } from "./icons";
+import { Button, Card, Tabs } from "./ui";
 import VoiceButton from "./VoiceButton";
 
-export type CaptureInput = { image: Blob; imageName: string } | { text: string } | { audio: Blob };
+export type CaptureInput = { image: Blob; imageName: string } | { text: string } | { audio: Blob; audioUrl?: string };
 
-type Sample = (typeof samples)[number];
+export type Sample = (typeof samples)[number];
 
 export async function sampleInput(s: Sample): Promise<CaptureInput> {
   if (s.kind === "text") return { text: s.text! };
   const blob = await (await fetch(s.src!)).blob();
+  if (s.kind === "audio") return { audio: blob, audioUrl: s.src! };
   return { image: blob, imageName: s.src!.split("/").pop()! };
+}
+
+function SampleCard({ s, lang, busy, onRun }: { s: Sample; lang: Lang; busy: boolean; onRun: () => void }) {
+  return (
+    <li className={s.kind === "audio" ? "lg:col-span-2 lg:first:col-span-2" : "lg:first:col-span-2"}>
+      <Card className="h-full overflow-hidden transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-px hover:border-brand hover:shadow-lift">
+        <button type="button" disabled={busy} onClick={onRun} data-sample={s.id} className="flex w-full items-center gap-3 p-2.5 text-left disabled:opacity-60">
+          {s.kind === "image" ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={s.src} alt="" className="h-12 w-12 shrink-0 rounded-xl border border-line object-cover object-top" />
+          ) : (
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand">
+              {s.kind === "audio" ? <MicIcon className="h-6 w-6" /> : <MessageIcon className="h-6 w-6" />}
+            </span>
+          )}
+          <span className="wrap-words flex-1 text-[15px] font-semibold leading-snug">{s.title[lang]}</span>
+        </button>
+        {s.kind === "audio" && (
+          <div className="px-2.5 pb-2.5">
+            <audio controls preload="none" src={s.src} aria-label={t(lang, "playSample")} className="h-9 w-full" />
+          </div>
+        )}
+      </Card>
+    </li>
+  );
 }
 
 export default function Capture({
   lang,
   busy,
-  privacy,
-  onPrivacy,
   onSubmit,
+  onReplay,
+  extra,
 }: {
   lang: Lang;
   busy: boolean;
-  privacy: boolean;
-  onPrivacy: (on: boolean) => void;
   onSubmit: (input: CaptureInput) => void;
+  onReplay: () => void;
+  extra?: React.ReactNode;
 }) {
   const camera = useRef<HTMLInputElement>(null);
   const upload = useRef<HTMLInputElement>(null);
   const [text, setText] = useState("");
+  const [tab, setTab] = useState<"samples" | "own">("samples");
 
   const pick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -39,110 +67,94 @@ export default function Capture({
     if (file) onSubmit({ image: file, imageName: file.name });
   };
 
-  const trySample = async (s: Sample) => onSubmit(await sampleInput(s));
-
   return (
-    <div className="flex flex-col gap-5">
-      <a
-        href="#samples"
-        className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-soft px-4 font-bold text-brand underline-offset-4 hover:underline lg:hidden"
-      >
-        {t(lang, "noBill")} ↓
-      </a>
-      <section className="rounded-2xl border border-line bg-card p-4 shadow-sm">
-        <div className="grid gap-3">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => camera.current?.click()}
-            className="flex min-h-14 items-center justify-center gap-3 rounded-xl bg-brand px-4 text-lg font-bold text-white shadow-sm active:translate-y-px disabled:opacity-60"
-          >
-            <CameraIcon className="h-7 w-7" />
-            {t(lang, "takePhoto")}
-          </button>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => upload.current?.click()}
-            className="flex min-h-14 items-center justify-center gap-3 rounded-xl border-2 border-brand bg-card px-4 text-lg font-bold text-brand active:translate-y-px disabled:opacity-60"
-          >
-            <ImageIcon className="h-7 w-7" />
-            {t(lang, "upload")}
-          </button>
-          <VoiceButton lang={lang} busy={busy} onAudio={(audio) => onSubmit({ audio })} />
+    <div className="flex flex-col gap-3">
+      <div id="samples" className="scroll-mt-[calc(var(--topbar-h)+0.75rem)]">
+        <Tabs
+          id="capture"
+          label={t(lang, "samplesTitle")}
+          value={tab}
+          onChange={setTab}
+          tabs={[
+            { value: "samples", label: t(lang, "tabSamples") },
+            { value: "own", label: t(lang, "tabOwn") },
+          ]}
+        />
+      </div>
+
+      {tab === "samples" ? (
+        <section className="rise">
+          <p className="t-caption mb-2 px-1 text-muted">{t(lang, "samplesNote")}</p>
+          <ul className="grid gap-2 lg:grid-cols-2">
+            {samples.map((s) => (
+              <SampleCard key={s.id} s={s} lang={lang} busy={busy} onRun={async () => onSubmit(await sampleInput(s))} />
+            ))}
+            <li className="lg:col-span-2">
+              <Card className="overflow-hidden transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-px hover:border-brand hover:shadow-lift">
+                <button type="button" disabled={busy} onClick={onReplay} data-sample="replay" className="flex w-full items-center gap-3 p-2.5 text-left disabled:opacity-60">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white" style={{ background: "var(--accent-gradient)" }} aria-hidden="true">
+                    ↺
+                  </span>
+                  <span className="wrap-words flex-1 text-[15px] font-semibold leading-snug">{t(lang, "replayTitle")}</span>
+                </button>
+              </Card>
+            </li>
+          </ul>
+        </section>
+      ) : (
+        <Card className="rise p-4">
+          <p className="t-caption rounded-xl bg-caution-bg p-3 text-caution">
+            {t(lang, "ownHelper")} {t(lang, "noRealData")}
+          </p>
+
+          {/* Desktop: upload and paste lead; camera and voice are secondary. Phone: all three in one row. */}
+          <div className="mt-3 grid grid-cols-3 gap-2 lg:hidden">
+            <Button variant="secondary" size="sm" disabled={busy} onClick={() => camera.current?.click()} className="flex-col gap-0.5! rounded-2xl! py-2">
+              <CameraIcon className="h-5 w-5" />
+              {t(lang, "cameraShort")}
+            </Button>
+            <Button variant="secondary" size="sm" disabled={busy} onClick={() => upload.current?.click()} className="flex-col gap-0.5! rounded-2xl! py-2">
+              <ImageIcon className="h-5 w-5" />
+              {t(lang, "uploadShort")}
+            </Button>
+            <VoiceButton lang={lang} busy={busy} compact onAudio={(audio) => onSubmit({ audio })} />
+          </div>
+          <div className="mt-3 hidden lg:block">
+            <Button variant="primary" size="lg" disabled={busy} onClick={() => upload.current?.click()} className="w-full">
+              <ImageIcon className="h-5 w-5" />
+              {t(lang, "uploadLong")}
+            </Button>
+          </div>
           <input ref={camera} type="file" accept="image/*" capture="environment" className="hidden" onChange={pick} />
           <input ref={upload} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={pick} />
-        </div>
 
-        <div className="my-4 flex items-center gap-3 text-sm font-semibold uppercase tracking-wide text-muted">
-          <span className="h-px flex-1 bg-line" />
-          {t(lang, "or")}
-          <span className="h-px flex-1 bg-line" />
-        </div>
+          <label htmlFor="message" className="mb-1.5 mt-4 block text-[15px] font-semibold">
+            {t(lang, "pasteLabel")}
+          </label>
+          <textarea
+            id="message"
+            rows={4}
+            value={text}
+            maxLength={4000}
+            onChange={(e) => setText(e.target.value)}
+            placeholder={t(lang, "pastePlaceholder")}
+            className="w-full resize-y rounded-2xl border border-line bg-paper p-3 text-[15px] leading-relaxed transition-colors focus:border-brand focus:bg-card"
+          />
+          <Button variant="primary" size="lg" disabled={busy || !text.trim()} onClick={() => onSubmit({ text: text.trim() })} className="mt-2 w-full" data-testid="check-message">
+            <MessageIcon className="h-5 w-5" />
+            {t(lang, "checkMessage")}
+          </Button>
 
-        <label htmlFor="message" className="mb-2 block font-semibold">
-          {t(lang, "pasteLabel")}
-        </label>
-        <textarea
-          id="message"
-          rows={4}
-          value={text}
-          maxLength={4000}
-          onChange={(e) => setText(e.target.value)}
-          placeholder={t(lang, "pastePlaceholder")}
-          className="w-full resize-y rounded-xl border-2 border-line bg-paper p-3 text-base leading-relaxed focus:border-brand"
-        />
-        <button
-          type="button"
-          disabled={busy || !text.trim()}
-          onClick={() => onSubmit({ text: text.trim() })}
-          className="mt-3 flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-ink px-4 text-lg font-bold text-white active:translate-y-px disabled:opacity-40"
-        >
-          <MessageIcon className="h-6 w-6" />
-          {t(lang, "checkMessage")}
-        </button>
-        <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl bg-paper p-3">
-          <input type="checkbox" checked={privacy} onChange={(e) => onPrivacy(e.target.checked)} className="mt-1 h-5 w-5 shrink-0 accent-brand" />
-          <span>
-            <span className="block font-bold">{t(lang, "privacyToggle")}</span>
-            <span className="block text-sm leading-snug text-muted">{t(lang, "privacyHelp")}</span>
-          </span>
-        </label>
-      </section>
-
-      <section className="lg:order-first">
-        <div className="mb-2 px-1">
-          <h2 id="samples" className="scroll-mt-20 text-xl font-extrabold">
-            {t(lang, "samplesTitle")}
-          </h2>
-          <p className="text-sm text-muted">{t(lang, "samplesNote")}</p>
-        </div>
-        <ul className="grid gap-2 lg:grid-cols-2">
-          {samples.map((s) => (
-            <li key={s.id} className="lg:first:col-span-2">
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => trySample(s)}
-                className="flex h-full w-full items-center gap-3 rounded-xl border border-line bg-card p-3 text-left shadow-sm transition-colors hover:border-brand active:translate-y-px disabled:opacity-60 lg:gap-2.5 lg:p-2.5"
-              >
-                {s.kind === "image" ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={s.src} alt="" className="h-14 w-14 shrink-0 rounded-lg border border-line object-cover object-top lg:h-11 lg:w-11" />
-                ) : (
-                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand lg:h-11 lg:w-11">
-                    <MessageIcon className="h-7 w-7" />
-                  </span>
-                )}
-                <span className="flex-1 font-semibold leading-snug lg:text-[15px]">{s.title[lang]}</span>
-                <span className="shrink-0 rounded-md bg-paper px-2 py-1 text-xs font-bold uppercase text-muted lg:hidden">
-                  {s.kind === "image" ? <BillIcon className="h-4 w-4" /> : s.language}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </section>
+          <div className="mt-3 hidden grid-cols-2 gap-2 lg:grid">
+            <Button variant="secondary" disabled={busy} onClick={() => camera.current?.click()}>
+              <CameraIcon className="h-5 w-5" />
+              {t(lang, "cameraShort")}
+            </Button>
+            <VoiceButton lang={lang} busy={busy} onAudio={(audio) => onSubmit({ audio })} />
+          </div>
+        </Card>
+      )}
+      {extra}
     </div>
   );
 }

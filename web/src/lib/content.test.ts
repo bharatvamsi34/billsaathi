@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import replay from "@/replay.generated.json";
 import samples from "@/samples.generated.json";
 import { KNOWN_CODES } from "./codes";
 import { LANGS, STRINGS } from "./i18n";
@@ -18,17 +19,42 @@ describe("sample gallery", () => {
       .map((l) => [l.id, l]),
   );
 
-  it("has 4 to 7 samples, all from the DEV split (never test items)", () => {
+  it("has 4 to 10 samples, each from the DEV split or demo-only (never test items)", () => {
     expect(samples.length).toBeGreaterThanOrEqual(4);
-    expect(samples.length).toBeLessThanOrEqual(7);
-    for (const s of samples) expect(labels.get(s.id)?.split, s.id).toBe("dev");
+    expect(samples.length).toBeLessThanOrEqual(10);
+    for (const s of samples) {
+      if ("demoOnly" in s && s.demoOnly) expect(labels.has(s.id), s.id).toBe(false);
+      else expect(labels.get(s.id)?.split, s.id).toBe("dev");
+    }
   });
 
-  it("ships the image files and a title in every language", () => {
+  it("the genuine and tampered demo bills are the same account", () => {
+    expect(samples.map((s) => s.id)).toEqual(expect.arrayContaining(["photo_genuine_demo", "demo_tampered_same_account", "demo_voice_note"]));
+    expect(labels.get("photo_genuine_demo").expected.extracted.consumer_number).toBe("DP-4410-882761");
+  });
+
+  it("ships the image and audio files and a title in every language", () => {
     for (const s of samples) {
-      if (s.kind === "image") expect(existsSync(join(__dirname, "..", "..", "public", s.src!)), s.id).toBe(true);
+      if (s.kind !== "text") expect(existsSync(join(__dirname, "..", "..", "public", s.src!)), s.id).toBe(true);
       for (const { code } of LANGS) expect(s.title[code], `${s.id} ${code}`).toBeTruthy();
     }
+  });
+});
+
+describe("judge-catch replay", () => {
+  it("is copied from the recorded run, not written by hand", () => {
+    const file = readFileSync(join(ROOT, replay.file), "utf8");
+    expect(replay.attempts.length).toBe(2);
+    expect(replay.attempts[0].accepted).toBe(false);
+    expect(replay.attempts[1].accepted).toBe(true);
+    for (const attempt of replay.attempts) for (const r of attempt.reasons) expect(file).toContain(r.reason);
+  });
+});
+
+describe("wording", () => {
+  it("says synthetic, never made-up", () => {
+    for (const [key, text] of Object.entries(STRINGS)) expect(text.en, key).not.toMatch(/made[- ]up/i);
+    for (const s of samples) expect(s.title.en).not.toMatch(/made[- ]up/i);
   });
 });
 

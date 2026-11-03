@@ -2,13 +2,48 @@
   {
     "id": "scam_en_known_vpa",
     "title": {
-      "en": "English SMS: “pay now or power cut”",
-      "te": "ఇంగ్లీష్ SMS: “ఇప్పుడే చెల్లించండి, లేకపోతే కరెంట్ కట్”",
-      "hi": "अंग्रेज़ी SMS: “अभी भुगतान करें, वरना बिजली कटेगी”"
+      "en": "Scam SMS: “pay now or power cut”",
+      "te": "మోసం SMS: “ఇప్పుడే చెల్లించండి, లేకపోతే కరెంట్ కట్” (ఇంగ్లీష్)",
+      "hi": "धोखे का SMS: “अभी भुगतान करें, वरना बिजली कटेगी” (अंग्रेज़ी)"
     },
     "language": "en",
     "kind": "text",
     "text": "Electricity Office: Pending bill Rs 3,150. Pay immediately to UPI electricityofficer@okdemo or your power supply will be cut."
+  },
+  {
+    "id": "demo_tampered_same_account",
+    "title": {
+      "en": "Tampered bill: one amount changed",
+      "te": "మార్చిన బిల్లు: ఒక్క మొత్తం మారింది",
+      "hi": "बदला हुआ बिल: सिर्फ़ राशि बदली"
+    },
+    "kind": "image",
+    "src": "/samples/demo_tampered_same_account.jpg",
+    "language": "en",
+    "demoOnly": true
+  },
+  {
+    "id": "photo_genuine_demo",
+    "title": {
+      "en": "Genuine demo bill: same account, phone photo",
+      "te": "నిజమైన డెమో బిల్లు: అదే ఖాతా, ఫోన్ ఫోటో",
+      "hi": "असली डेमो बिल: वही खाता, फ़ोन फ़ोटो"
+    },
+    "language": "en",
+    "kind": "image",
+    "src": "/samples/photo_genuine_demo.jpg"
+  },
+  {
+    "id": "demo_voice_note",
+    "title": {
+      "en": "Voice note about a power-cut threat (synthetic voice, English)",
+      "te": "కరెంట్ కట్ బెదిరింపు వాయిస్ నోట్ (సింథటిక్ వాయిస్, ఇంగ్లీష్)",
+      "hi": "बिजली कटने की धमकी का वॉइस नोट (सिंथेटिक आवाज़, अंग्रेज़ी)"
+    },
+    "kind": "audio",
+    "src": "/samples/demo_voice_note.wav",
+    "language": "en",
+    "demoOnly": true
   },
   {
     "id": "scam_te_known_vpa",
@@ -33,17 +68,6 @@
     "text": "Demo Power: आपका KYC अपडेट नहीं हुआ है। तुरंत ऐप डाउनलोड करें वरना बिजली सप्लाई बंद हो जाएगी: demopower-kyc.example/DemoPower_KYC.apk"
   },
   {
-    "id": "bill_tampered_demo",
-    "title": {
-      "en": "Electricity bill with a changed amount",
-      "te": "మొత్తం మార్చిన కరెంట్ బిల్లు",
-      "hi": "बदली हुई राशि वाला बिजली बिल"
-    },
-    "language": "en",
-    "kind": "image",
-    "src": "/samples/bill_tampered_demo.png"
-  },
-  {
     "id": "bill_swapped_vpa_dgas",
     "title": {
       "en": "Gas bill with a different UPI ID",
@@ -55,25 +79,15 @@
     "src": "/samples/bill_swapped_vpa_dgas.png"
   },
   {
-    "id": "photo_genuine_demo",
+    "id": "demo_missing_account",
     "title": {
-      "en": "Phone photo of a real-looking bill",
-      "te": "ఫోన్‌తో తీసిన బిల్లు ఫోటో",
-      "hi": "फ़ोन से खींची बिल की फ़ोटो"
+      "en": "Reminder with no account number: the agent may ask you",
+      "te": "ఖాతా సంఖ్య లేని గుర్తుచేత: ఏజెంట్ మిమ్మల్ని అడగవచ్చు",
+      "hi": "बिना खाता संख्या की याद-दिहानी: एजेंट आपसे पूछ सकता है"
     },
-    "language": "en",
-    "kind": "image",
-    "src": "/samples/photo_genuine_demo.jpg"
-  },
-  {
-    "id": "reminder_en_dmob_polite_disconnect",
-    "title": {
-      "en": "Polite reminder from the biller",
-      "te": "బిల్లర్ నుండి మర్యాదపూర్వక గుర్తుచేత",
-      "hi": "बिलर की ओर से विनम्र याद-दिहानी"
-    },
-    "language": "en",
     "kind": "text",
-    "text": "Demo Mobile: Bill Rs 448.00 for account DM952392098 is due on 31-Oct-2026. Please pay by the due date to avoid disconnection. Pay at demomobile.example"
+    "language": "en",
+    "text": "SkyDemo: Your DTH recharge of Rs 599 is due on 01-Nov-2026. Recharge at skydemo.example/pay or UPI skydemo.recharge@demobank.",
+    "demoOnly": true
   }
 ]

@@ -6,6 +6,16 @@ export interface EvidenceItem {
   evidence_id: string;
   code: string;
   summary: string;
+  detail?: Record<string, unknown>; // real values for the screen, masked by the API
+}
+
+export interface BillerRecord {
+  name?: string;
+  domains?: string[];
+  vpas?: string[];
+  phones?: string[];
+  amount?: number;
+  due_date?: string | null;
 }
 
 export interface CheckRow {
@@ -16,6 +26,7 @@ export interface CheckRow {
   ok: boolean;
   error: string | null;
   evidence: EvidenceItem[];
+  record: BillerRecord | null;
 }
 
 export interface Field<T> {
@@ -37,6 +48,7 @@ export interface VerdictView {
   facts: { key: string; label: string; value: string; source: string }[];
   forced: boolean;
   forced_reason: string | null;
+  floor: Verdict | null;
 }
 
 export interface Box {
@@ -48,18 +60,26 @@ export interface Box {
   h: number;
 }
 
+export interface JudgeReason {
+  reason: string;
+  supported: boolean;
+  why: string;
+  evidence_ids: string[];
+}
+
 export interface Timeline {
   received: boolean;
   input: string | null;
   privacy: boolean;
-  times: Partial<Record<string, number>>; // when each event type last arrived (client clock, ms)
+  times: Partial<Record<string, number>>; // when each event type last happened, by the server's clock (ms)
+  skew: number; // browser clock minus server clock, so a running timer can tick on the server's clock
   heard: string | null;
   early: "scam_signals" | "checking" | null;
   isolated: { box: Box | null; cropped: boolean } | null;
   extracted: Extracted | null;
   checks: CheckRow[];
   agentTurns: { turn: number; tool_calls: string[] }[];
-  judge: { accepted: boolean }[];
+  judge: { accepted: boolean; reasons: JudgeReason[] }[];
   refusals: { rule: string; message: string }[];
   question: { field: string; question: string } | null;
   verdict: VerdictView | null;
@@ -74,6 +94,7 @@ export const emptyTimeline: Timeline = {
   input: null,
   privacy: false,
   times: {},
+  skew: 0,
   heard: null,
   early: null,
   isolated: null,
@@ -93,9 +114,24 @@ export const emptyTimeline: Timeline = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ApiEvent = { seq: number; type: string } & Record<string, any>;
 
+/**
+ * Step times come from the server's stamp, not from when the browser received the event: a
+ * proxy can deliver several events at once, which made finished steps show 0.0 s.
+ */
+function stamp(state: Timeline, e: ApiEvent): Pick<Timeline, "times" | "skew"> {
+  const at = typeof e.at === "string" ? Date.parse(e.at) : NaN;
+  const when = Number.isNaN(at) ? e.receivedAt : at;
+  if (when == null) return { times: state.times, skew: state.skew };
+  const firstStamp = Object.keys(state.times).length === 0;
+  return {
+    times: { ...state.times, [e.type]: when },
+    skew: firstStamp && e.receivedAt != null ? e.receivedAt - when : state.skew,
+  };
+}
+
 export function reduce(state: Timeline, e: ApiEvent): Timeline {
   if (e.seq <= state.lastSeq) return state; // duplicates after a reconnect
-  const next = { ...state, lastSeq: e.seq, times: e.receivedAt != null ? { ...state.times, [e.type]: e.receivedAt } : state.times };
+  const next = { ...state, lastSeq: e.seq, ...stamp(state, e) };
   switch (e.type) {
     case "received":
       return { ...next, received: true, input: e.input ?? null, privacy: !!e.privacy };
@@ -110,7 +146,7 @@ export function reduce(state: Timeline, e: ApiEvent): Timeline {
         ...next,
         checks: [
           ...state.checks,
-          { seq: e.seq, origin: e.origin, tool: e.tool, args: e.args ?? {}, ok: e.ok, error: e.error, evidence: e.evidence },
+          { seq: e.seq, origin: e.origin, tool: e.tool, args: e.args ?? {}, ok: e.ok, error: e.error, evidence: e.evidence, record: e.record ?? null },
         ],
       };
     case "early":
@@ -118,7 +154,7 @@ export function reduce(state: Timeline, e: ApiEvent): Timeline {
     case "agent_turn":
       return { ...next, agentTurns: [...state.agentTurns, { turn: e.turn, tool_calls: e.tool_calls }] };
     case "judge":
-      return { ...next, judge: [...state.judge, { accepted: e.accepted }] };
+      return { ...next, judge: [...state.judge, { accepted: e.accepted, reasons: e.reasons ?? [] }] };
     case "refusal":
       return { ...next, refusals: [...state.refusals, { rule: e.rule, message: e.message }] };
     case "question":
@@ -129,7 +165,7 @@ export function reduce(state: Timeline, e: ApiEvent): Timeline {
       return {
         ...next,
         question: null,
-        verdict: { verdict: e.verdict, reasons: e.reasons, facts: e.facts, forced: e.forced, forced_reason: e.forced_reason },
+        verdict: { verdict: e.verdict, reasons: e.reasons, facts: e.facts, forced: e.forced, forced_reason: e.forced_reason, floor: e.floor ?? null },
       };
     case "explanation":
       return { ...next, explanation: { text: e.text, source: e.source } };
@@ -152,3 +188,19 @@ export function lowConfidence(field: Field<unknown> | undefined): boolean {
 }
 
 export const money = (n: number) => `₹${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+/** The biller's record found in this check, if any. */
+export function billerRecord(state: Timeline): BillerRecord | null {
+  return state.checks.find((c) => c.tool === "lookup_biller" && c.record)?.record ?? null;
+}
+
+/** Models actually used in this run, for the trace footer. */
+export function modelsUsed(state: Timeline, warningCard: boolean): string[] {
+  if (state.privacy) return ["Muse Spark Open"];
+  const used: string[] = [];
+  if (state.input === "audio") used.push("Muse Voice Transcribe");
+  if (state.isolated) used.push("SAM 3.1");
+  used.push("Muse Spark 1.3");
+  if (warningCard) used.push("Muse Image");
+  return used;
+}

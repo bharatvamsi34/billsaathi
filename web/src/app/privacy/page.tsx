@@ -33,7 +33,7 @@ export default function Privacy() {
         <p>
           BillSaathi is a sandbox demo, built by Bharat Vamsi Chillimunta (Ireesha Infosol Pvt Ltd) for the Meta Global AI Developer
           Hackathon. It checks a bill or payment message for signs of a scam and explains the result. All billers and bills in it are
-          made up, its bill-payment service (BBPS) is a mock, and no real money ever moves.
+          synthetic, its bill-payment service (BBPS) is a mock, and no real money ever moves.
         </p>
         <p className="rounded-xl bg-caution-bg p-3 font-semibold text-caution">
           Please do not send real bills or anything with personal details. Use the samples in the app.
@@ -56,8 +56,8 @@ export default function Privacy() {
             contains your data).
           </li>
           <li>
-            <strong>Privacy Mode</strong> sends it to the open-weight Muse Spark Open model on Baseten or Fireworks instead of Meta&apos;s
-            Model API.
+            <strong>Privacy Mode</strong> sends it to the open-weight Muse Spark Open model on an external host (Baseten or Fireworks) instead of Meta&apos;s
+            Model API. It does not run on your device. Photo cropping is skipped and the warning card has no generated picture on this path.
           </li>
           <li>
             <strong>WhatsApp (Meta)</strong> carries your messages if you use the WhatsApp number, under WhatsApp&apos;s own terms.
@@ -68,7 +68,7 @@ export default function Privacy() {
         </ul>
         <p>
           This demo runs on free developer credits, and content sent through them may be used by Meta to improve its products. That is
-          another reason to send only made-up data.
+          another reason to send only synthetic data.
         </p>
       </Section>
 

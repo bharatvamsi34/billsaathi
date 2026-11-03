@@ -3,25 +3,17 @@
 import { useEffect, useState } from "react";
 import { t, type Lang } from "@/lib/i18n";
 import { speak, speechSupported, stopSpeaking } from "@/lib/speech";
-import { SpeakerIcon, Spinner } from "./icons";
+import { SpeakerIcon } from "./icons";
+import { Button, Skeleton } from "./ui";
 
-/** The verdict explained in the user's language, with a "Listen" button. */
-export default function Explanation({ text, headline, lang }: { text: string | null; headline: string; lang: Lang }) {
+/** Read the explanation aloud, in the actions row. */
+export function ListenButton({ text, headline, lang }: { text: string | null; headline: string; lang: Lang }) {
   const [playing, setPlaying] = useState(false);
   const [noVoice, setNoVoice] = useState(false);
-
   useEffect(() => stopSpeaking, []); // stop reading when the card goes away
-
-  if (!text) {
-    return (
-      <p className="flex items-center gap-2 rounded-xl bg-brand-soft p-3 font-semibold text-brand" aria-live="polite">
-        <Spinner className="h-5 w-5" />
-        {t(lang, "explaining")}
-      </p>
-    );
-  }
-
+  if (!speechSupported()) return null;
   const listen = () => {
+    if (!text) return;
     if (playing) {
       stopSpeaking();
       setPlaying(false);
@@ -33,24 +25,31 @@ export default function Explanation({ text, headline, lang }: { text: string | n
     setPlaying(started);
     setNoVoice(!started);
   };
-
   return (
-    <div className="rise rounded-xl bg-brand-soft p-3">
-      <p lang={lang} className="text-[17px] leading-relaxed">
-        {text}
-      </p>
-      {speechSupported() && (
-        <button
-          type="button"
-          onClick={listen}
-          aria-pressed={playing}
-          className="mt-2 inline-flex min-h-11 items-center gap-2 rounded-lg border-2 border-brand bg-card px-3 font-bold text-brand active:translate-y-px"
-        >
-          <SpeakerIcon className="h-5 w-5" />
-          {t(lang, playing ? "stopListening" : "listen")}
-        </button>
+    <div className="min-w-0">
+      <Button variant="secondary" disabled={!text} onClick={listen} aria-pressed={playing} className="w-full">
+        <SpeakerIcon className="h-5 w-5" />
+        {t(lang, playing ? "stopListening" : "listen")}
+      </Button>
+      {noVoice && <p className="t-caption mt-1 text-muted">{t(lang, "noVoice")}</p>}
+    </div>
+  );
+}
+
+/** The verdict explained in the user's language. Its height is reserved so nothing jumps. */
+export default function Explanation({ text, lang }: { text: string | null; lang: Lang }) {
+  return (
+    <div className="min-h-[6.25rem] rounded-2xl bg-brand-soft/60 p-3.5" aria-live="polite" data-testid="explanation">
+      {text ? (
+        <p lang={lang} className="wrap-words rise text-[15px] leading-relaxed">
+          {text}
+        </p>
+      ) : (
+        <>
+          <p className="t-caption mb-2 font-semibold text-brand">{t(lang, "explaining")}</p>
+          <Skeleton lines={3} />
+        </>
       )}
-      {noVoice && <p className="mt-1 text-sm text-muted">{t(lang, "noVoice")}</p>}
     </div>
   );
 }
