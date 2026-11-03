@@ -70,6 +70,18 @@ Measured numbers come from our Day 1 model spike (`api/spike/results/`). Items m
 - **Result:** with `languageBias: ["Telugu", "English"]` the transcript was exact; without it, "కరెంట్ బిల్లు" came back as "current bill" in Latin letters and one word was misheard. ~3 s, about $0.0004 for the clip.
 - **Suggestion:** recommend `languageBias` in the docs for Indian languages, and consider auto-detecting code-mixed speech.
 
+### 14. Only WAV worked, so WhatsApp voice notes need decoding first
+- **Reproduce:** send a valid OGG/Opus file with `audioEncoding` set to `OGG_OPUS`, `OGG` or `OPUS`.
+- **Result:** HTTP 400 "Malformed request" each time; the same audio as WAV works. We decode WhatsApp notes on our server first.
+- **Suggestion:** accept OGG/Opus, the format of Meta's own WhatsApp voice notes, and list the supported encodings in the docs.
+
+## Muse Image
+
+### 15. Tool-off flags are strings, and no per-image price is listed
+- **Reproduce:** set `metadata.enable_image_search` to the boolean `false`.
+- **Result:** HTTP 400, "invalid type: boolean `false`, expected a string". As top-level parameters they are "unknown parameter". The strings `"false"` work.
+- **Suggestion:** document the flags, accept booleans, and list a price per image.
+
 ## Baseten (Muse Spark Open)
 
 ### 11. No price listed for `meta-models/muse-spark-open-1026`

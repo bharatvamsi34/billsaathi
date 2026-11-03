@@ -1,0 +1,136 @@
+# BillSaathi: submission form answers (draft)
+
+Draft for BV to review and paste. The form's exact fields aren't visible without signing in, so these follow the topics we expect. **Fill in the `[BV: …]` items before submitting.** Figures are from `web/src/eval.generated.json` and `CLAUDE.md` §11.
+
+## Basics
+
+- **Project:** BillSaathi
+- **Track:** Startup
+- **Team:** Bharat Vamsi Chillimunta (Ireesha Infosol Pvt Ltd), solo
+- **Live app:** https://zealous-coast-09279dd00.1.azurestaticapps.net
+- **Evaluation:** https://zealous-coast-09279dd00.1.azurestaticapps.net/eval
+- **Repository:** https://github.com/bharatvamsi34/billsaathi
+- **WhatsApp test number:** +1 555-659-7481 `[BV: confirm whether to publish it, and whether numbers other than yours can message it]`
+- **Demo video:** `[BV: link]`
+- **X post:** `[BV: link]`
+
+**One line:** BillSaathi is an AI agent that checks an Indian bill or payment request before you pay: it verifies it against the biller's records, catches scams before money moves, and explains the verdict in your language.
+
+**Built during the event:** Everything was built during the hackathon, Oct 26 to Nov 4, 2026, in a public repository created for it; the commit history shows this. Nothing pre-existing was used apart from public libraries. All billers, bills and test data are synthetic, BBPS is a mock we built, and no real money moves. The code was written with Claude Code as a coding assistant, which the commit trailers show. `[BV: check whether the rules ask for AI-assistant disclosure elsewhere]`
+
+## Project description
+
+"Your electricity will be cut tonight. Pay now." Messages like this reach Indian families, including people new to digital payments who may not read English. The Ministry of Home Affairs told the Lok Sabha that Indians lost ₹22,845 crore to cyber fraud in 2024, up 206% in a year. That figure covers all cyber fraud, and fake bills are one common route.
+
+You send BillSaathi a bill photo, a screenshot, a message or a voice note, on the web or on WhatsApp. It answers SAFE, CAUTION or SCAM, cites the evidence for each reason, and explains in English, Telugu or Hindi, which it can read aloud.
+
+The product is the verification, not the reading. Code runs fixed checks first: is the biller registered, is every link and UPI ID official or a lookalike, does the wording match known scams, does the biller's own amount match, is it normal for this account? A tool-calling agent reviews that evidence and may investigate further or ask one question. Its verdict then has to pass deterministic rules and an independent check of every reason against its evidence. No model can turn a risk into SAFE: anything uncertain ends as CAUTION.
+
+On SAFE, the user can pay in a sandbox after an explicit confirmation, with an idempotency key, a receipt and an append-only audit log. On SCAM or CAUTION, they get a warning card to forward to family, and SCAM replies give the national helpline 1930.
+
+**Measured:** on 21 synthetic test items held out from all tuning: 21/21 correct, 0/13 risky requests called SAFE, 0/8 false alarms, median 10.9 s to the verdict, p90 17.2 s, about $0.024 per check. The set is small and written by the builder, so 0/13 still allows a true rate up to about 23%. The evaluation page says this too.
+
+**Limits:** billers are mock, so a real bill ends as CAUTION by design. Runtime state is in memory on one replica. The next step is real biller data, which needs a partner.
+
+## Use of Meta products
+
+| Meta product | What it does in BillSaathi |
+|---|---|
+| **Muse Spark 1.3** (Model API) | Reads bills and messages into validated JSON, copies all visible text for a cross-check, runs the tool-calling agent, judges each reason, and writes the explanation in the user's language |
+| **SAM 3.1** | Crops the bill out of a phone photo (concept "document"), with the box shown in the timeline. Field reading uses the crop; the verbatim transcription still reads the original image, so cropping can't hide a link |
+| **Muse Voice Transcribe** | Voice input on the web and WhatsApp voice notes, always with `languageBias` |
+| **Muse Spark Open** (open weights) | Privacy Mode: the whole pipeline, including speech and tool calling, with no call to Meta's Model API |
+| **Muse Image** | Background of the family warning card, from a fixed prompt with no user data, with shell, web search and image search off. Our code draws the text, so Telugu and Hindi stay exact |
+| **WhatsApp Cloud API** | A second channel on the same pipeline: text, photos and voice notes, tested live from the builder's phone |
+
+Every step in the web timeline carries a badge naming the model doing it, so judges can see this working.
+
+## Why Meta's models matter to this solution
+
+- **Native tool calling makes it an agent, not a classifier.** Muse Spark 1.3 calls tools in parallel and works with refusals fed back to it, so verification can sit in code at fixed points while the model investigates and explains.
+- **One family covers every input a real user has.** A tilted phone photo, an SMS, a Telugu voice note: SAM, Spark and Voice Transcribe let one pipeline take all of them.
+- **Indian languages are the point.** Spark 1.3 writes usable Telugu and Hindi explanations (the builder, a native Telugu speaker, rated early samples Telugu 4/5 and Hindi about 4/5), and `languageBias` got a code-mixed Telugu clip exact where it otherwise slipped into Latin letters. Someone who can't read an English warning isn't protected by it.
+- **Effort control and caching let us tune cost and latency.** The judge moved to `minimal` after dev-set testing: about half the latency, and it accepted no bad reason in 24 adversarial judgments.
+- **Open weights give a real privacy option.** The same agent, tools and checks run on Muse Spark Open by swapping one client.
+- **It's cheap enough for the audience.** About $0.024 per check at measured token use is close to viable for a free public-interest tool.
+
+## Feedback on Meta products
+
+The full list, with steps to reproduce, is in `FEEDBACK.md`.
+
+**Developer platform**
+- **Billing popup:** with India and Indian Rupee selected, the Continue button only appeared after zooming out to about 67%. Make the dialog scrollable.
+- **Card hold:** the $20 hold failed on an Indian Mastercard, with international transactions enabled, and the message read "Your account is restricted". Support Indian cards or UPI, let credit-funded accounts skip the hold, and say what actually failed.
+- **"Get code" gaps:** none on the audio page, and no image-input snippet for chat. Add them, and say which input path stores files.
+- **`/v1/models`:** lists `-contributor` variants beside normal models with nothing saying they train on inputs. Add a `trains_on_inputs` field.
+- **Zero Data Retention:** we couldn't tell if it was available for our account. Show the status per key.
+
+**Muse Spark**
+- **Reasoning can use the whole output budget:** at `medium` with 2048 tokens, a Tamil explanation came back `incomplete` with 134 characters. Offer a separate reasoning budget or document the headroom non-Latin scripts need.
+- **Streaming doesn't help short answers:** the first text token arrived at about 90% of total latency. Stream reasoning summaries or progress events.
+- **Self-reported confidence isn't calibrated:** 0.90–0.98 on wrong fields. We verify with tools instead.
+- **Worked well:** the `openai` SDK works unchanged, native tool calling passed, and reading synthetic bills was accurate, including a tilted photo and a changed amount.
+
+**SAM 3.1**
+- **Concept wording matters and isn't documented:** "document" found the bill (box IoU 0.98); "bill" found nothing. The output token grammar and mask encoding are undocumented too. Publish the grammar, a decoder snippet and recommended concepts.
+
+**Muse Voice Transcribe**
+- **`languageBias` is essential for code-mixed speech, so recommend it in the docs.** Also, only WAV worked in our tests: `OGG_OPUS`, `OGG` and `OPUS` returned "Malformed request", so WhatsApp voice notes need decoding first. Supporting WhatsApp's own format natively would help.
+
+**Muse Image**
+- **The tool-off flags are strings, not booleans:** `metadata.enable_shell` must be `"false"`, and a boolean is refused. This should be documented. We also found no per-image price.
+
+**WhatsApp Cloud API**
+- **A verified webhook can silently receive nothing:** after verifying the webhook, subscribing to "messages" and publishing, no POST arrived and no error appeared, until `POST /{waba-id}/subscribed_apps`. Show that state on the webhook page, or subscribe automatically.
+
+## Feedback on partners
+
+**Baseten (Muse Spark Open)**
+- **Worked well:** OpenAI-compatible endpoint, native tool calling, image input by data URL, near-exact Telugu–English audio, and reasoning returned separately. The full agent loop ran unchanged and scored 21/21 on the test split.
+- **Improve:** no per-token price is listed for `meta-models/muse-spark-open-1026`, so we can't budget it; we estimate at Spark 1.3 rates. Indian-language output had less native script than Spark 1.3 (share of native-script letters: Tamil 0.81 and Hindi 0.88, against 0.99).
+
+**Fireworks and Modal:** not used live. A Fireworks fallback is implemented and unit-tested but has never run against the real service, as we have no key set. `[BV: remove this line if the form only wants partners you used]`
+
+## Bonus prizes
+
+### Best Agentic Use-Case
+BillSaathi is a real agent under real constraints, in a domain where a wrong answer costs someone money.
+
+- **Plans and acts with tools:** five verification tools, several per turn in parallel, plus `ask_user` for one missing value, resumed across a pause (over chat too, with a 10-minute expiry).
+- **"The model proposes, the code verifies":** mandatory checks at fixed points before its first turn; a milestone check so a missed link still gets checked; `submit_verdict` enforces citations from this run, the risk floor, and SAFE only if every check passed.
+- **An independent LLM judge** can only refuse, and fails closed. Refusals go back to the agent; after three, or any outage or limit, the result is forced CAUTION or the stricter floor.
+- **Everything is an audit trail:** every tool result, refusal and verdict is in an append-only evidence record that also drives the live timeline.
+- **Tested against its failures:** a scripted fake model covers invented citations, skipped destinations, lowered verdicts and judge outages. 614 API tests in total.
+
+### Best Build on Open Weights
+Privacy Mode runs the whole pipeline on **Muse Spark Open** through Baseten: reading, tool-calling agent, judge, explanation and speech.
+
+- **Not a demo of a prompt:** the same agent loop, tools, deterministic checks and evidence record, behind one client interface.
+- **Measured side by side on the held-out set:** 21/21 correct, 0/13 false SAFE, 0/8 false alarms, median 19.1 s (Spark 1.3: 10.9 s), about 2 agent turns (Spark 1.3: 1), with cost estimated at about $0.033 per check because no price is listed.
+- **Fails safe:** if no open-weight provider is available, the check is refused rather than quietly sent to Meta's API. SAM isn't used on this path, because it's on Meta's API.
+- **Honest about privacy:** this means no call to Meta's Model API. The model still runs at Baseten, so it isn't on-device.
+
+### Most Viral
+**Why it can spread:** the warning card is made to be forwarded, in Telugu, Hindi or English, on the app people already use for family messages. The message itself is instantly recognisable.
+
+**Draft X post:** (attach the 30-second cut of Scenes 1 and 2)
+> "Your power will be cut tonight. Pay now."
+>
+> If your parents got this message, would they know it's fake?
+>
+> I built BillSaathi for @[BV: hackathon handle]: an AI agent that checks a bill before you pay, and answers in Telugu, Hindi or English. Built on Meta's Muse models.
+>
+> Try a scam sample: https://zealous-coast-09279dd00.1.azurestaticapps.net
+
+`[BV: submit the post through the platform; it counts until Nov 8 EOD]`
+
+### Community Vote
+> **Would your parents spot a fake electricity bill?** BillSaathi checks it for them. Forward a bill or a message on WhatsApp, or send a voice note in Telugu, and get SAFE, CAUTION or SCAM in your language, with the evidence. Try it in ten seconds with a one-tap scam sample, no sign-up. All the data is made up, so it's safe to play with. If you know someone who has nearly paid one of these, give it a vote.
+
+## Fill in before submitting
+
+- [ ] Video and X post links
+- [ ] User testing: **no sessions are recorded in `CLAUDE.md` §11.** If you run them, add one honest line to the description, for example how many people, and what changed. If not, say nothing about users.
+- [ ] Whether to publish the WhatsApp number
+- [ ] Anything from your Telugu and Hindi review
+- [ ] Check spend on dev.meta.ai and Baseten
