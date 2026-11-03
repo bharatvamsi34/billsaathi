@@ -96,7 +96,7 @@ The real pipeline on the **21 held-out test items**, which were never used for t
 - Checks, open questions, rate limits and the daily spend cap live in one process's memory, so the API runs at max 1 replica and a restart loses them. The audit log is on the container's disk and is lost on redeploy.
 - Privacy Mode skips SAM, because SAM is on Meta's API. It is slower, and "private" here means no call to Meta's Model API; the open model still runs at Baseten or Fireworks.
 - Scam patterns and the known-scam list are small and synthetic. New wording is left to the agent and the other checks.
-- WhatsApp replies come only for numbers Meta allows on the test number until the app is published. English reasons are shown as translated labels in Telugu and Hindi; the explanation itself is in the user's language.
+- WhatsApp has been tested end to end from the builder's phone only, with a text message; images and voice notes there are tested with a mocked Graph API. English reasons are shown as translated labels in Telugu and Hindi; the explanation itself is in the user's language.
 - Telugu has been rated by a native speaker on earlier samples (4/5); Hindi is approximate. Marathi and Tamil are not shipped.
 - Free Meta credits may let Meta use submitted content to improve its products: send only made-up data.
 

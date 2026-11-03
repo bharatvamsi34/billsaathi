@@ -170,7 +170,7 @@ export default function Eval() {
         <section className="space-y-3">
           <h2 className="text-2xl font-extrabold">Reasoning effort on Muse Spark 1.3</h2>
           <p>
-            The same test set at four effort levels, applied to reading and the agent. Accuracy did not separate them on this set. Minimal looks fastest and cheapest, but the product stays at low: moving it because of this table would be tuning on the test set. The independent judge stayed
+            The same test set at four effort levels, applied to reading and the agent. Accuracy did not separate them on this set. Minimal looks fastest and cheapest here, but the product stays at low: a separate run on the development set was not faster and raised one false alarm (38/39, against 39/39 at low), so this table alone is not a reason to switch. The independent judge stayed
             at <code>low</code> in the other rows; the product row uses the shipped setting, <code>minimal</code>, which was chosen on the development set.
           </p>
           <Table

@@ -39,6 +39,7 @@ CONFIGS = {
     "spark-high": ("muse-spark-1.3", "high"),
     "open": (MODEL_LABEL, "default"),
     "judge-minimal": ("muse-spark-1.3", "low"),  # only used on the dev split, to choose the judge
+    "all-minimal": ("muse-spark-1.3", "minimal"),  # dev split: reading, agent and judge at minimal
 }
 
 
@@ -60,7 +61,7 @@ def clients_for(name: str) -> pipeline.Clients:
         sam=MetaSam(settings),
         model=model,
         effort=effort,
-        judge_effort="minimal" if name in ("judge-minimal", "spark-low") else "low",
+        judge_effort="minimal" if name in ("judge-minimal", "all-minimal", "spark-low") else "low",
     )
 
 

@@ -79,3 +79,10 @@ Measured numbers come from our Day 1 model spike (`api/spike/results/`). Items m
 ### 12. Indian-language output uses less native script than Spark 1.3
 - **Measured:** share of native-script letters in 3–5 sentence explanations — Tamil 0.81, Hindi 0.88 for Spark Open vs 0.99 for Spark 1.3 (domain names counted against both).
 - **What worked well:** OpenAI-compatible endpoint, native tool calling passed, image input by data URL, Telugu–English audio transcribed almost exactly, reasoning returned separately from the answer.
+
+## WhatsApp Cloud API
+
+### 13. A verified webhook can still receive nothing
+- **Reproduce:** verify the webhook and subscribe to the "messages" field in the app dashboard, publish the app, then message the number.
+- **Result:** no POST ever arrives and no error appears anywhere. The Business Account also has to be subscribed to the app (`POST /{waba-id}/subscribed_apps`); before that call, `GET` listed only "WA DevX Webhook Events 1P App".
+- **Suggestion:** show the Business Account's subscription state on the webhook page, or subscribe it when the webhook is configured.

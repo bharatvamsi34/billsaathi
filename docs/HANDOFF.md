@@ -109,3 +109,4 @@ cd web;  npm run lint; npm run typecheck; npm test
 - (j) Speed: **done**. 6 live checks, median before -> after: verdict 12.4 -> 12.1 s (no real change), first signal none -> 6.8 s, explanation shown 17.0 -> 15.7 s. Early event, judge at minimal, prompt cache keys, live step timers.
 - (k) Desktop redesign: **done**, 3 review passes, same URL. Hero with cited stat, Meta models at work, guide, badges, Motion, reduced-motion respected.
 - (h) README: **done**, https://github.com/bharatvamsi34/billsaathi
+- WhatsApp end to end: **working** after subscribing the Business Account to our app (POST subscribed_apps); text tested from BV's phone. Effort test on dev: all-minimal 38/39, not faster; product stays at low.
