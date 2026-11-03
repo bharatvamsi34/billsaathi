@@ -225,3 +225,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Design-review screenshots: local only (never committed)
+docs/screenshots/review/

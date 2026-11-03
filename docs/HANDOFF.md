@@ -112,3 +112,16 @@ cd web;  npm run lint; npm run typecheck; npm test
 - WhatsApp end to end: **working** after subscribing the Business Account to our app (POST subscribed_apps); text tested from BV's phone. Effort test on dev: all-minimal 38/39, not faster; product stays at low.
 - WhatsApp live test by BV: text, photo and Telugu voice note all **working**; nothing to fix.
 - Demo video prep: `docs/DEMO_SCRIPT.md`, `docs/SUBMISSION.md`. No feature changes.
+
+## Latest status (Nov 4)
+
+Read this section first; the sections above describe Oct 30 unless a build-log line says otherwise.
+
+- **Live:** API image `32357ac`; web app deployed after `7e326c4`. Later commits only touch docs. Rollback tag: `demo-ready-v1` (`7cecfef`).
+- **WhatsApp subscription fix:** no reply came because the WhatsApp Business Account (`1802037777798003`) was not subscribed to our app (`BillSaathi`, `1839271813880516`); only Meta's "WA DevX Webhook Events 1P App" was. Verifying the webhook and ticking "messages" does not do this. Fixed with `POST /{waba-id}/subscribed_apps`; no code change. If replies stop, `GET` that endpoint first.
+- **WhatsApp status:** BV's live tests of text, a sample bill photo and a Telugu voice note all worked. Numbers other than BV's are untested.
+- **Effort test (dev split, 39 items):** reading, agent and judge all at `minimal` scored 38/39 (one false alarm, one question asked), p50 13.8 s, $0.016 per check. The product (`low`, judge `minimal`) scored 39/39, p50 10.6 s, $0.020. **The product stays at `low`.** The runs were hours apart, so the speed gap is weak evidence. Results: `eval/results/dev_*.jsonl`.
+- **Design review set:** `docs/screenshots/review/` on BV's machine, gitignored, not in the repo: 111 PNGs (16 states at 1440x900, 1280x800 and 390x844, above the fold and full page), `desktop_full_check.webm` (30 s) and `INDEX.md`. Costs about $0.70 per full capture; the scripts were in the session scratchpad and are not in the repo.
+- **Open UI bug (not fixed):** on the phone pay-confirm and receipt screens, the biller name breaks mid-word ("Demo Power Distributio / n Co. Ltd"). The cause is `break-all` on the row value in `web/src/components/SandboxPay.tsx`.
+- **Demo and submission:** `docs/DEMO_SCRIPT.md`, `docs/SUBMISSION.md` (its `[BV: …]` items are open). Still to rehearse: the Telugu line spoken aloud, the sample photo through a camera, and Listen in Telugu. Do not deploy between warming the warning card and recording.
+- **Other open items:** BV's review of Telugu and Hindi text; user tests (none recorded in §11); `docs/TESTING.md` still uses the plausible number `9123456780`, while the demo uses `9000000003`; Fireworks fallback untested live; set min replicas to 0 after Nov 8.
