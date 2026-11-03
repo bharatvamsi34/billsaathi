@@ -1,7 +1,8 @@
 """Public, masked events for the live step-by-step stream.
 
 Built from EvidenceRecord entries (and a few pipeline steps). Nothing here may carry a raw
-image, the raw message text, or a full consumer or phone number.
+image, the whole message text, or a full consumer or phone number. A short matched scam phrase
+may appear, masked, because the screen quotes it.
 """
 
 from typing import Any
@@ -50,6 +51,46 @@ def extracted_event(output: ExtractionOutput, attempts: int, latency_ms: float) 
     }  # fmt: skip
 
 
+# Evidence values safe to show, so the screen can quote real values instead of restating a badge.
+# An allowlist: a new detail key stays private until it is added here. Display only: nothing
+# here feeds the risk engine, the agent or the judge.
+_DETAIL_KEYS = (
+    "biller_amount",
+    "claimed_amount",
+    "usual_amount",
+    "current_amount",
+    "ratio",
+    "host",
+    "vpa",
+    "lookalike_of",
+    "phone_masked",
+    "query",
+)
+
+
+def _public_detail(detail: dict[str, Any], secrets: list[str]) -> dict[str, Any]:
+    out = {k: detail[k] for k in _DETAIL_KEYS if k in detail}
+    if isinstance(out.get("query"), str):
+        out["query"] = scrub(out["query"], secrets)
+    if "matches" in detail:  # the scam wording that matched: a short phrase, never the message
+        out["phrases"] = [scrub(m["match"], secrets) for m in detail["matches"]]
+    return out
+
+
+def _biller_record(tool: str, data: dict[str, Any]) -> dict[str, Any] | None:
+    """What the (mock) biller's record says, for the comparison on the screen. Synthetic data."""
+    if tool == "lookup_biller" and data.get("matched"):
+        return {
+            "name": data["official_name"],
+            "domains": data.get("official_domains", []),
+            "vpas": data.get("official_vpas", []),
+            "phones": data.get("official_phones", []),
+        }
+    if tool == "fetch_bill" and data.get("found"):
+        return {"amount": data["biller_amount"], "due_date": data.get("due_date")}
+    return None
+
+
 def public_event(entry: RecordEntry, secrets: list[str] = ()) -> dict[str, Any] | None:
     p, kind = entry.payload, entry.kind
     if kind == "tool_result":
@@ -60,11 +101,13 @@ def public_event(entry: RecordEntry, secrets: list[str] = ()) -> dict[str, Any] 
             "ok": p["ok"],
             "error": scrub(p.get("error"), secrets),
             "args": _args(p["tool"], p.get("args", {})),
+            "record": _biller_record(p["tool"], p.get("data") or {}),
             "evidence": [
                 {
                     "evidence_id": e["evidence_id"],
                     "code": e["code"],
                     "summary": scrub(e["summary"], secrets),
+                    "detail": _public_detail(e.get("detail") or {}, secrets),
                 }
                 for e in p.get("evidence", [])
             ],

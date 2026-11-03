@@ -228,3 +228,5 @@ __marimo__/
 
 # Design-review screenshots: local only (never committed)
 docs/screenshots/review/
+docs/screenshots/testing/
+docs/screenshots/demo/
