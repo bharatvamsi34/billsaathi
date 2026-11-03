@@ -16,7 +16,7 @@ import { Button, Card } from "@/components/ui";
 import VerdictCard from "@/components/VerdictCard";
 import samples from "@/samples.generated.json";
 import { ApiError, followEvents, sendAnswer, startCheck } from "@/lib/api";
-import { useDemoMode } from "@/lib/demo";
+import { scrollBehavior, useDemoMode } from "@/lib/demo";
 import { t, type Key } from "@/lib/i18n";
 import { prepareImage } from "@/lib/image";
 import { useLang } from "@/lib/useLang";
@@ -35,7 +35,7 @@ const ERRORS: Record<string, Key> = {
 };
 
 function scrollToResults() {
-  requestAnimationFrame(() => document.getElementById("results-top")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  requestAnimationFrame(() => document.getElementById("results-top")?.scrollIntoView({ behavior: scrollBehavior(), block: "start" }));
 }
 
 export default function Home() {
@@ -170,14 +170,14 @@ export default function Home() {
     setTraceOpen(false);
     setLastInput(null);
     showImage(null);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: scrollBehavior() });
   };
 
   const showEvidence = (seq: number) => {
     setHighlight(seq);
     setTraceOpen(true);
     // After the trace has opened.
-    setTimeout(() => document.getElementById(`check-${seq}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 260);
+    setTimeout(() => document.getElementById(`check-${seq}`)?.scrollIntoView({ behavior: scrollBehavior(), block: "center" }), 260);
   };
 
   const startReplay = () => {

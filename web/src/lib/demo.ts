@@ -21,6 +21,11 @@ export function demoConsumer(biller: string | null | undefined): string {
   return hit ? hit[1] : DEMO_CONSUMERS[0][1];
 }
 
+/** Respect prefers-reduced-motion for scrolling done from code, which CSS does not cover. */
+export function scrollBehavior(): ScrollBehavior {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+}
+
 const noSubscribe = () => () => {};
 
 /** ?demo=1, for recording the video: bigger type and no first-visit hint. No behaviour change. */

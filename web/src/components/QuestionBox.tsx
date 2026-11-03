@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { demoConsumer, WRONG_CONSUMER } from "@/lib/demo";
+import { useEffect, useRef, useState } from "react";
+import { demoConsumer, scrollBehavior, WRONG_CONSUMER } from "@/lib/demo";
 import { t, type Lang } from "@/lib/i18n";
 import { Button, Card, Chip } from "./ui";
 
@@ -20,21 +20,29 @@ export default function QuestionBox({
 }) {
   const [answer, setAnswer] = useState("");
   const [sent, setSent] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  const input = useRef<HTMLInputElement>(null);
+  // Focus without letting the browser scroll the question itself out of view.
+  useEffect(() => {
+    input.current?.focus({ preventScroll: true });
+    box.current?.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
+  }, []);
   const send = (value: string) => {
     setSent(true);
     onAnswer(value);
   };
   return (
+    <div ref={box} className="scroll-mt-[calc(var(--topbar-h)+0.75rem)]">
     <Card className="gradient-ring rise p-4" data-testid="question">
       <h2 className="t-title">{t(lang, "questionTitle")}</h2>
       <p className="wrap-words mt-1 text-[15px]">{question}</p>
       <input
+        ref={input}
         value={answer}
         maxLength={200}
         aria-label={question}
         onChange={(e) => setAnswer(e.target.value)}
         className="mt-3 w-full rounded-2xl border border-line bg-paper p-3 text-[15px] transition-colors focus:border-brand focus:bg-card"
-        autoFocus
       />
       {field === "consumer_number" && (
         <div className="mt-2 flex flex-wrap gap-1.5">
@@ -55,5 +63,6 @@ export default function QuestionBox({
         </Button>
       </div>
     </Card>
+    </div>
   );
 }

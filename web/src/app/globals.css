@@ -53,10 +53,7 @@ body {
 
 /* ?demo=1, for recording: bigger type, no behaviour change. */
 html[data-demo="1"] {
-  font-size: 125%;
-}
-html[data-demo="1"] body {
-  font-size: 20px;
+  zoom: 1.25;
 }
 
 /* Telugu and Devanagari need a little more line height to stay readable. */
