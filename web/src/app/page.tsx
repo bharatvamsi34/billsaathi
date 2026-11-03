@@ -23,6 +23,7 @@ import { useLang } from "@/lib/useLang";
 import { emptyTimeline, reduce, type Timeline as TL } from "@/lib/timeline";
 
 const GUTTER = "lg:px-[max(2rem,calc(50%-38rem))]";
+const STALL_MS = 90_000;
 const TEST_GUIDE = "https://github.com/bharatvamsi34/billsaathi/blob/main/docs/TESTING.md";
 
 const ERRORS: Record<string, Key> = {
@@ -53,6 +54,7 @@ export default function Home() {
   const [lastInput, setLastInput] = useState<CaptureInput | null>(null);
   const stop = useRef<(() => void) | null>(null);
   const lastSeq = useRef(-1);
+  const lastEventAt = useRef(0);
 
   useEffect(() => {
     document.documentElement.lang = lang; // right fonts and line height for Telugu / Hindi
@@ -68,12 +70,28 @@ export default function Home() {
     if (hasVerdict) scrollToResults();
   }, [hasVerdict]);
 
+  // A slow or lost connection must not leave a spinner forever: after this long with no event,
+  // show the friendly error with a retry. A check normally takes well under a minute.
+  useEffect(() => {
+    if (!busy || !checkId) return;
+    const id = setInterval(() => {
+      if (Date.now() - lastEventAt.current > STALL_MS) {
+        stop.current?.();
+        setError("errNetwork");
+        setBusy(false);
+      }
+    }, 2000);
+    return () => clearInterval(id);
+  }, [busy, checkId]);
+
   const follow = (id: string, after: number) => {
     stop.current?.();
+    lastEventAt.current = Date.now();
     stop.current = followEvents(
       id,
       after,
       (e) => {
+        lastEventAt.current = Date.now();
         lastSeq.current = Math.max(lastSeq.current, e.seq);
         const receivedAt = Date.now();
         setTl((prev) => reduce(prev, { ...e, receivedAt }));

@@ -77,3 +77,23 @@ def test_unknown_detail_keys_stay_private():
         },
     )
     assert "Secret Person" not in str(public_event(entry))
+
+
+def test_judge_events_name_the_evidence_and_verdicts_the_floor():
+    judge = RecordEntry(
+        seq=0,
+        kind="judge",
+        at=datetime.now(UTC),
+        payload={
+            "accepted": True,
+            "reasons": [{"reason": "r", "supported": True, "why": "w", "evidence_ids": ["ev_1"]}],
+        },
+    )
+    assert public_event(judge)["reasons"][0]["evidence_ids"] == ["ev_1"]
+    verdict = RecordEntry(
+        seq=1,
+        kind="verdict",
+        at=datetime.now(UTC),
+        payload={"verdict": "SCAM", "reasons": [], "floor": {"verdict": "SCAM", "rule": "x"}},
+    )
+    assert public_event(verdict)["floor"] == "SCAM"

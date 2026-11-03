@@ -2,7 +2,7 @@
 
 A plain-language guide for trying the live app: https://zealous-coast-09279dd00.1.azurestaticapps.net
 
-> **Everything here is made up.** The 8 billers, their websites, UPI IDs and consumer numbers are
+> **Everything here is synthetic.** The 8 billers, their websites, UPI IDs and consumer numbers are
 > fictional (websites end in `.example`, UPI IDs in `@demobank`). BBPS is a mock we built. No real
 > money moves.
 
@@ -20,7 +20,7 @@ A plain-language guide for trying the live app: https://zealous-coast-09279dd00.
 4. **Independent check.** Code checks the citations and the rules (the AI can never turn a risk into
    SAFE); then a second model call checks that each reason says only what its evidence says.
 5. **Verdict.** **SAFE** only if *every* check passed. **SCAM** for clear scam signals.
-   **CAUTION** for everything else, including anything we could not verify. Then: pay (sandbox, coming)
+   **CAUTION** for everything else, including anything we could not verify. Then: simulate a payment (sandbox)
    or warn your family.
 
 ## 2. The mock billers
@@ -45,7 +45,7 @@ own amount matches, but the jump from their history makes the verdict **CAUTION*
 
 ## 3. Twelve messages to paste
 
-Open the app, paste a message into **"Or paste the SMS / WhatsApp message"**, tap **Check this
+Open the app, open **Check your own**, paste a message into **"Or paste the SMS / WhatsApp message"**, tap **Check this
 message**. Choose the app language first if you want the result in Telugu or Hindi.
 
 Every expected verdict below was reproduced by running the real tools and risk engine on the
@@ -153,7 +153,7 @@ Dear consumer, your electricity power will be cut tonight at 9:30 PM because las
 ```
 
 Why: a personal mobile number is never an official biller channel, combined with a "cut tonight"
-threat. (`9123456780` is a made-up number.)
+threat. (`9123456780` is a synthetic number.)
 
 **12. Telugu, known scam UPI ID** — expected **SCAM**
 
@@ -187,6 +187,6 @@ Meta's Model API for reading. Use the samples in the app, or the messages above.
 
 ## 6. Where to look if something seems wrong
 
-- The **How we checked** list under the verdict shows every check and its result; tap a reason in the
-  verdict to jump to the evidence it cites.
+- **View trace** under the verdict shows every check and its result; tap a reason in the verdict to
+  jump to the evidence it cites.
 - Note the time, the message and the verdict, and add it to the findings log in `CLAUDE.md` §11.

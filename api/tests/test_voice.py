@@ -217,7 +217,7 @@ def test_voice_note_is_transcribed_then_checked(wa):  # noqa: F811
     assert speech.languages == [None]  # no language chosen yet: listens for all three
     assert graph.bodies[0].startswith("🎤 I heard: ")
     assert graph.bodies[1] == texts.t("en", "checking")
-    assert graph.bodies[2].startswith("✅ *SAFE*")
+    assert graph.bodies[2].startswith("*✅ SAFE")
     assert graph.sent[0]["to"] == PHONE
 
 

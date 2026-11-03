@@ -25,7 +25,7 @@
   {
     "id": "photo_genuine_demo",
     "title": {
-      "en": "Genuine demo bill: same account, phone photo",
+      "en": "Genuine demo bill: same account",
       "te": "నిజమైన డెమో బిల్లు: అదే ఖాతా, ఫోన్ ఫోటో",
       "hi": "असली डेमो बिल: वही खाता, फ़ोन फ़ोटो"
     },
@@ -36,9 +36,9 @@
   {
     "id": "demo_voice_note",
     "title": {
-      "en": "Voice note about a power-cut threat (synthetic voice, English)",
-      "te": "కరెంట్ కట్ బెదిరింపు వాయిస్ నోట్ (సింథటిక్ వాయిస్, ఇంగ్లీష్)",
-      "hi": "बिजली कटने की धमकी का वॉइस नोट (सिंथेटिक आवाज़, अंग्रेज़ी)"
+      "en": "Voice note: power-cut threat (synthetic English voice)",
+      "te": "వాయిస్ నోట్: కరెంట్ కట్ బెదిరింపు (సింథటిక్ ఇంగ్లీష్ వాయిస్)",
+      "hi": "वॉइस नोट: बिजली कटने की धमकी (सिंथेटिक अंग्रेज़ी आवाज़)"
     },
     "kind": "audio",
     "src": "/samples/demo_voice_note.wav",
@@ -81,7 +81,7 @@
   {
     "id": "demo_missing_account",
     "title": {
-      "en": "Reminder with no account number: the agent may ask you",
+      "en": "No account number: the agent may ask you",
       "te": "ఖాతా సంఖ్య లేని గుర్తుచేత: ఏజెంట్ మిమ్మల్ని అడగవచ్చు",
       "hi": "बिना खाता संख्या की याद-दिहानी: एजेंट आपसे पूछ सकता है"
     },

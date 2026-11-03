@@ -146,6 +146,8 @@ def _run(state: CheckState, check: CheckInput, clients: Clients, spend: SpendMet
         event = public_event(entry, state.secrets)
         if event is not None:
             state.emit(event)
+            if event["type"] == "early" and event["signal"] == "scam_signals":
+                _start_early_explanation(state)
 
     session = start(
         clients.agent,
@@ -218,14 +220,53 @@ def _after_agent(state: CheckState, session: AgentSession, spend: SpendMeter) ->
     _complete(state, "done")
 
 
+# Findings that say nothing is wrong: left out of an early scam explanation.
+_NOT_RISK = {"BILLER_VERIFIED", "DESTINATION_OFFICIAL", "AMOUNT_MATCHES_BILLER", "AMOUNT_WITHIN_HISTORY"}  # fmt: skip
+
+
+def _start_early_explanation(state: CheckState) -> None:
+    """The deterministic floor is already SCAM, and nothing can lower it, so the explanation can
+    start while the agent and judge work. It is written from the code's findings only, never from
+    the agent's unjudged reasons, and it is shown only after the verdict."""
+    clients = state.clients
+    if clients is None or clients.explain is None:
+        return
+    events = state.events_after(-1)
+    reasons = [
+        {"text": ev["summary"], "evidence_ids": [ev["evidence_id"]]}
+        for e in events
+        if e["type"] == "check"
+        for ev in e.get("evidence", [])
+        if ev["code"] not in _NOT_RISK
+    ]
+    assumed = {"type": "verdict", "verdict": "SCAM", "reasons": reasons, "forced": False}
+    pool = ThreadPoolExecutor(max_workers=1)
+    state.early_explanation = pool.submit(
+        explain, clients.explain, clients.model, [*events, assumed], state.language
+    )
+    pool.shutdown(wait=False)
+
+
 def _explain(state: CheckState, spend: SpendMeter | None) -> None:
     clients = state.clients
-    result = explain(
-        clients.explain if clients else None,
-        clients.model if clients else "",
-        state.events_after(-1),
-        state.language,
-    )
+    events = state.events_after(-1)
+    verdict = next(e for e in reversed(events) if e["type"] == "verdict")
+    early = state.early_explanation
+    result = None
+    if early is not None:
+        try:
+            result = early.result()
+        except Exception:  # the normal path below still gives an explanation or a template
+            log.exception("early explanation failed check_id=%s", state.check_id)
+    if result is None or verdict["verdict"] != "SCAM" or verdict.get("forced"):
+        spent = result.usage.cost_usd if result else 0.0
+        result = explain(
+            clients.explain if clients else None,
+            clients.model if clients else "",
+            events,
+            state.language,
+        )
+        result.usage.cost_usd += spent
     state.explanation_ms, state.explanation_cost = result.latency_ms, result.usage.cost_usd
     if spend is not None:
         spend.add(result.usage.cost_usd)

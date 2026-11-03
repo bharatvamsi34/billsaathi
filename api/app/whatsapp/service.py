@@ -29,6 +29,7 @@ log = logging.getLogger("billsaathi.whatsapp")
 
 SEEN_TTL_SECONDS = 24 * 3600  # Meta retries for up to a day
 SEEN_MAX = 20_000
+LAST_MAX = 1_000
 
 
 def sender_hash(phone: str, key: str) -> str:
@@ -64,6 +65,8 @@ class WhatsAppService:
         self._seen: OrderedDict[str, float] = OrderedDict()
         self._lang: dict[str, Lang] = {}
         self._pending: dict[str, Pending] = {}
+        # Each sender's last finished check, for DETAILS. Masked events, same expiry as a check.
+        self._last: OrderedDict[str, tuple[float, list[dict[str, Any]]]] = OrderedDict()
         self._lock = threading.Lock()
 
     # --- webhook side (fast, in the request) ---
@@ -105,6 +108,9 @@ class WhatsAppService:
             return
 
         pending = self._take_pending(sid)
+        if pending is None and texts.is_details(text):
+            self._send_details(phone, sid, msg_id)
+            return
         if pending is not None:
             if kind == "text" and time.monotonic() - pending.asked <= self._question_ttl:
                 reply = "" if text.lower() in texts.SKIP_WORDS else text[:200]
@@ -153,6 +159,13 @@ class WhatsAppService:
 
         self._send(phone, texts.t(lang, "checking"), msg_id)
         state = CheckState(check_id=uuid.uuid4().hex, language=lang, input_kind=kind)
+
+        def on_event(event: dict[str, Any]) -> None:
+            # Only says risk was found so far. The verdict still comes from submit_verdict.
+            if event["type"] == "early" and event["signal"] == "scam_signals":
+                self._send(phone, texts.t(lang, "early_scam"))
+
+        state.on_emit = on_event
         self.store.add(state)
         pipeline.run_check(state, check, self.clients(), self.spend)
         self._finish(phone, sid, state, lang)
@@ -185,7 +198,29 @@ class WhatsAppService:
             self._send(phone, texts.question_message(question["question"], lang))
             return
         log.info("whatsapp verdict sender=%s check=%s status=%s", sid, state.check_id, state.status)
+        self._remember(sid, state)
         self._send(phone, texts.verdict_message(state.events, lang, self.settings.web_app_url))
+
+    def _remember(self, sid: str, state: CheckState) -> None:
+        with self._lock:
+            self._last[sid] = (time.monotonic(), list(state.events))
+            self._last.move_to_end(sid)
+            while len(self._last) > LAST_MAX:
+                self._last.popitem(last=False)
+
+    def _send_details(self, phone: str, sid: str, msg_id: str | None) -> None:
+        ttl = self.settings.check_ttl_seconds
+        with self._lock:
+            kept = self._last.get(sid)
+        lang = self._language(sid, None)
+        if kept is None or time.monotonic() - kept[0] > ttl:
+            self._send(phone, texts.t(lang, "no_details"), msg_id)
+            return
+        events = kept[1]
+        language = next((e.get("language") for e in events if e["type"] == "received"), lang)
+        self._send(
+            phone, texts.details_message(events, language, self.settings.web_app_url), msg_id
+        )
 
     def expire(self, sid: str, check_id: str) -> None:
         """Called when the question timer runs out: close the check as CAUTION if still open."""
@@ -198,6 +233,7 @@ class WhatsAppService:
 
     def _close(self, phone: str, pending: Pending, *, expired: bool) -> None:
         pipeline.answer(pending.state, "", self.spend)  # no model call: forced CAUTION or floor
+        self._remember(sender_hash(phone, self._key), pending.state)
         self._send(
             phone,
             texts.verdict_message(

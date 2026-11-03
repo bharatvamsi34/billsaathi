@@ -103,7 +103,7 @@ function CheckLine({ row, lang, highlighted }: { row: CheckRow; lang: Lang; high
         ) : row.evidence.length ? (
           row.evidence.map((e) => <EvidencePill key={e.evidence_id} code={e.code} lang={lang} />)
         ) : (
-          <span className="t-caption text-muted">—</span>
+          <span className="t-caption text-muted">{t(lang, "noneFound")}</span>
         )}
       </div>
     </motion.li>
@@ -180,7 +180,7 @@ function JudgeDetail({ tl, lang }: { tl: TL; lang: Lang }) {
       {last && (
         <ul className="space-y-1.5">
           {last.reasons.map((r, i) => {
-            const cited = r.evidence_ids.map((id) => index.get(id)).filter((e) => !!e);
+            const cited = (r.evidence_ids ?? []).map((id) => index.get(id)).filter((e) => !!e);
             return (
               <motion.li {...rise} key={i} lang="en" className="rounded-xl border border-line bg-card p-2.5">
                 <p className="wrap-words text-[13px] font-semibold leading-snug">
@@ -202,7 +202,7 @@ function JudgeDetail({ tl, lang }: { tl: TL; lang: Lang }) {
       )}
       {v && !v.forced && (
         <div className="flex flex-wrap gap-1">
-          {v.floor && <Badge tone="info">{t(lang, "floorEnforced", { v: v.floor })}</Badge>}
+          {v.floor && v.floor !== "SAFE" && <Badge tone="info">{t(lang, "floorEnforced", { v: v.floor })}</Badge>}
           <Badge tone="good">{t(lang, "noInvented")}</Badge>
         </div>
       )}

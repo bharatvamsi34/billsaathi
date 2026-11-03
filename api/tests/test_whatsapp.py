@@ -214,11 +214,11 @@ def test_text_message_gets_checking_then_the_verdict(wa, caplog):
     assert checking["to"] == PHONE and checking["context"] == {"message_id": msg["id"]}
     assert checking["text"]["body"] == texts.t("en", "checking")
     body = verdict["text"]["body"]
-    assert body.startswith("✅ *SAFE*\nChecks passed. Pay only after you confirm.")
-    assert "• Finding 1 from the checks." in body
+    assert body.startswith("*✅ SAFE — matches the demo biller record*\n• ")
+    assert "matches the biller record" in body  # a real value, not the agent's wording
     assert "1930" not in body  # helpline only on SCAM
-    assert "https://zealous-coast-09279dd00.1.azurestaticapps.net" in body
-    assert body.endswith("_Sandbox demo — billers are mock; no real payment._")
+    assert body.endswith(texts.t("en", "details_hint"))
+    assert len(body) <= texts.MAX_REPLY_CHARS
     assert PHONE not in caplog.text and sender_hash(PHONE, SECRET) in caplog.text
 
 
@@ -226,13 +226,14 @@ def test_telugu_scam_message_gets_a_telugu_scam_verdict(wa):
     client, install, graph, _ = wa
     install(SCAM_TE, [cite_all("SCAM")])
     post(client, payload(message(SCAM_TE.input.text)))
-    checking, verdict = graph.bodies
+    checking, early, verdict = graph.bodies
     assert checking == texts.t("te", "checking")
-    assert verdict.startswith("⛔ *మోసం*\nఇది మోసంలా ఉంది. చెల్లించవద్దు.")
-    assert "📞 మోసాన్ని ఫిర్యాదు చేయండి: 1930 కు కాల్ చేయండి" in verdict
-    assert texts.CODE_LABELS["KNOWN_SCAM_DESTINATION"]["te"] in verdict  # cited evidence, in Telugu
-    assert "Finding" not in verdict  # English agent text is not shown in Telugu
-    assert "electricityofficer@okdemo" not in verdict
+    assert early == texts.t("te", "early_scam")  # the floor is SCAM: said at once, not a verdict
+    assert verdict.startswith("*⛔ మోసం (SCAM) — డబ్బు చెల్లించవద్దు*\n• ")
+    assert "1930 కు కాల్ చేయండి" in verdict
+    assert "“electricityofficer@okdemo” తెలిసిన మోసాల జాబితాలో ఉంది" in verdict  # real value, kept exact
+    assert "Finding" not in verdict  # English agent text is not shown
+    assert len(verdict) <= texts.MAX_REPLY_CHARS
 
 
 def test_image_message_is_downloaded_and_checked(wa):
@@ -241,7 +242,7 @@ def test_image_message_is_downloaded_and_checked(wa):
     post(client, payload(message(image="MEDIA1")))
     assert graph.media_auth == ["Bearer test-access-token"]
     assert graph.bodies[0] == texts.t("en", "checking")
-    assert graph.bodies[1].startswith("✅ *SAFE*")
+    assert graph.bodies[1].startswith("*✅ SAFE")
     check = app.state.check_store.get(next(iter(app.state.check_store._checks)))
     assert check.input_kind == "image"
 
@@ -265,7 +266,7 @@ def test_language_switch_is_remembered_per_sender(wa):
     assert graph.bodies == [texts.t("hi", "switched")]
     post(client, payload(message(GENUINE.input.text)))  # English text, Hindi preference
     assert graph.bodies[1] == texts.t("hi", "checking")
-    assert graph.bodies[2].startswith("✅ *सुरक्षित*")
+    assert graph.bodies[2].startswith("*✅ सुरक्षित (SAFE)")
     post(client, payload(message("English")))
     assert graph.bodies[-1] == texts.t("en", "switched")
 
@@ -312,10 +313,10 @@ def test_question_is_sent_and_the_next_message_answers_it(wa):
     assert [d for d, _ in timers] == [600]
 
     post(client, payload(message("DP-4410-882761")))
-    assert graph.bodies[-1].startswith("✅ *SAFE*")
+    assert graph.bodies[-1].startswith("*✅ SAFE")
     assert not any("DP-4410-882761" in b for b in graph.bodies)
     timers[0][1]()  # the timer fires later: the check is already closed, nothing more is sent
-    assert graph.bodies[-1].startswith("✅ *SAFE*")
+    assert graph.bodies[-1].startswith("*✅ SAFE")
 
 
 def test_unanswered_question_expires_as_caution(wa):
@@ -325,7 +326,7 @@ def test_unanswered_question_expires_as_caution(wa):
     turns_before = len(agent.conversations)
     timers[0][1]()  # 10 minutes pass
     body = graph.bodies[-1]
-    assert body.startswith("⚠️ *CAUTION*") and texts.t("en", "no_answer") in body
+    assert body.startswith("*⚠️ CAUTION") and texts.t("en", "no_answer") in body
     assert len(agent.conversations) == turns_before  # closing costs no model call
     post(client, payload(message("DP-4410-882761")))  # a late answer is a new check, not an answer
     assert graph.bodies[-2] == texts.t("en", "checking")
@@ -336,4 +337,68 @@ def test_skip_closes_the_question_as_caution(wa):
     _question_flow(install)
     post(client, payload(message(QUESTION_TEXT)))
     post(client, payload(message("skip")))
-    assert graph.bodies[-1].startswith("⚠️ *CAUTION*")
+    assert graph.bodies[-1].startswith("*⚠️ CAUTION")
+
+
+def test_details_sends_every_finding_of_the_last_check(wa):
+    client, install, graph, _ = wa
+    install(SCAM_TE, [cite_all("SCAM")])
+    post(client, payload(message(SCAM_TE.input.text)))
+    short = graph.bodies[-1]
+    post(client, payload(message("DETAILS")))
+    details = graph.bodies[-1]
+    assert details != short and details.startswith(texts.t("te", "details_title"))
+    assert details.count("•") >= short.count("•")
+    assert "1930" in details and texts.t("te", "footer") in details
+
+
+def test_details_with_no_recent_check_says_so(wa):
+    client, install, graph, _ = wa
+    install(GENUINE, [cite_all("SAFE")])
+    post(client, payload(message("details")))
+    assert graph.bodies == [texts.t("en", "no_details")]
+
+
+def test_details_is_an_answer_when_a_question_is_open(wa):
+    client, install, graph, _ = wa
+    _question_flow(install)
+    post(client, payload(message(QUESTION_TEXT)))
+    post(client, payload(message("details")))  # goes to the agent as the answer, not to DETAILS
+    assert texts.t("en", "no_details") not in graph.bodies
+
+
+def test_unreadable_photo_asks_for_a_better_one_and_never_says_safe(wa):
+    events = [
+        {"type": "received", "input": "image"},
+        {"type": "verdict", "verdict": "CAUTION", "reasons": [], "forced": True},
+    ]
+    body = texts.verdict_message(events, "en", "https://x.example")
+    assert body.startswith("*⚠️ CAUTION") and "closer, straight photo" in body
+    assert "Don't pay until it's verified" in body
+
+
+def test_a_readable_scam_photo_keeps_its_scam_reply():
+    events = [
+        {"type": "received", "input": "image"},
+        {"type": "extracted", "fields": {"biller_name": {"value": None, "confidence": 0.1}}},
+        {"type": "verdict", "verdict": "SCAM", "reasons": [], "forced": False},
+    ]
+    assert not texts.unclear_photo(events)
+
+
+@pytest.mark.parametrize("lang", ["en", "te", "hi"])
+@pytest.mark.parametrize("verdict", ["SAFE", "CAUTION", "SCAM"])
+def test_short_reply_stays_short_with_long_values(lang, verdict):
+    long_upi = "a-very-long-looking-payment-address-for-this-biller@okdemo"
+    evidence = [
+        {"evidence_id": "a", "code": "LOOKALIKE_VPA", "summary": "s", "detail": {"vpa": long_upi, "lookalike_of": "demopower.bill@demobank"}},
+        {"evidence_id": "b", "code": "AMOUNT_MISMATCH", "summary": "s", "detail": {"biller_amount": 1240.0, "claimed_amount": 4240.0}},
+    ]  # fmt: skip
+    events = [
+        {"type": "received", "input": "text"},
+        {"type": "check", "tool": "check_payment_destination", "args": {"value": long_upi}, "evidence": evidence},
+        {"type": "verdict", "verdict": verdict, "reasons": [{"text": "x", "evidence_ids": ["a", "b"]}], "forced": False},
+    ]  # fmt: skip
+    body = texts.verdict_message(events, lang, "https://x.example")
+    assert len(body) <= texts.MAX_REPLY_CHARS
+    assert long_upi in body and "₹1,240" in body  # exact values survive

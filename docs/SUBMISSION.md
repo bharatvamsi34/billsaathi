@@ -10,7 +10,7 @@ Draft for BV to review and paste. The form's exact fields aren't visible without
 - **Live app:** https://zealous-coast-09279dd00.1.azurestaticapps.net
 - **Evaluation:** https://zealous-coast-09279dd00.1.azurestaticapps.net/eval
 - **Repository:** https://github.com/bharatvamsi34/billsaathi
-- **WhatsApp test number:** +1 555-659-7481 `[BV: confirm whether to publish it, and whether numbers other than yours can message it]`
+- **WhatsApp test number:** +1 555-659-7481 `[BV: confirm whether to publish it, and whether numbers other than yours can message it]`. Text, photo and voice note were tested live by BV on 2026-11-03.
 - **Demo video:** `[BV: link]`
 - **X post:** `[BV: link]`
 
@@ -22,15 +22,15 @@ Draft for BV to review and paste. The form's exact fields aren't visible without
 
 "Your electricity will be cut tonight. Pay now." Messages like this reach Indian families, including people new to digital payments who may not read English. The Ministry of Home Affairs told the Lok Sabha that Indians lost ₹22,845 crore to cyber fraud in 2024, up 206% in a year. That figure covers all cyber fraud, and fake bills are one common route.
 
-You send BillSaathi a bill photo, a screenshot, a message or a voice note, on the web or on WhatsApp. It answers SAFE, CAUTION or SCAM, cites the evidence for each reason, and explains in English, Telugu or Hindi, which it can read aloud.
+You send BillSaathi a bill photo, a screenshot, a message or a voice note, on the web or on WhatsApp. It answers SAFE, CAUTION or SCAM, shows what the message says next to what the demo biller record says, quotes the real values behind each reason, and explains in English, Telugu or Hindi, which it can read aloud.
 
 The product is the verification, not the reading. Code runs fixed checks first: is the biller registered, is every link and UPI ID official or a lookalike, does the wording match known scams, does the biller's own amount match, is it normal for this account? A tool-calling agent reviews that evidence and may investigate further or ask one question. Its verdict then has to pass deterministic rules and an independent check of every reason against its evidence. No model can turn a risk into SAFE: anything uncertain ends as CAUTION.
 
-On SAFE, the user can pay in a sandbox after an explicit confirmation, with an idempotency key, a receipt and an append-only audit log. On SCAM or CAUTION, they get a warning card to forward to family, and SCAM replies give the national helpline 1930.
+On SAFE, the user can simulate a payment after an explicit confirmation, with an idempotency key, a receipt and an append-only audit log. No real money moves. On SCAM or CAUTION, they get a warning card to forward to family, and SCAM replies give the national helpline 1930.
 
 **Measured:** on 21 synthetic test items held out from all tuning: 21/21 correct, 0/13 risky requests called SAFE, 0/8 false alarms, median 10.9 s to the verdict, p90 17.2 s, about $0.024 per check. The set is small and written by the builder, so 0/13 still allows a true rate up to about 23%. The evaluation page says this too.
 
-**Limits:** billers are mock, so a real bill ends as CAUTION by design. Runtime state is in memory on one replica. The next step is real biller data, which needs a partner.
+**Limits:** biller records are simulated, not the live BBPS network, so a real bill ends as CAUTION by design. Runtime state is in memory on one replica. The next step is real biller data, which needs a partner.
 
 ## Use of Meta products
 
@@ -39,11 +39,11 @@ On SAFE, the user can pay in a sandbox after an explicit confirmation, with an i
 | **Muse Spark 1.3** (Model API) | Reads bills and messages into validated JSON, copies all visible text for a cross-check, runs the tool-calling agent, judges each reason, and writes the explanation in the user's language |
 | **SAM 3.1** | Crops the bill out of a phone photo (concept "document"), with the box shown in the timeline. Field reading uses the crop; the verbatim transcription still reads the original image, so cropping can't hide a link |
 | **Muse Voice Transcribe** | Voice input on the web and WhatsApp voice notes, always with `languageBias` |
-| **Muse Spark Open** (open weights) | Privacy Mode: the whole pipeline, including speech and tool calling, with no call to Meta's Model API |
+| **Muse Spark Open** (open weights, on an external host) | Privacy Mode: the whole pipeline, including speech and tool calling, with no call to Meta's Model API. Not offline |
 | **Muse Image** | Background of the family warning card, from a fixed prompt with no user data, with shell, web search and image search off. Our code draws the text, so Telugu and Hindi stay exact |
 | **WhatsApp Cloud API** | A second channel on the same pipeline: text, photos and voice notes, tested live from the builder's phone |
 
-Every step in the web timeline carries a badge naming the model doing it, so judges can see this working.
+Every step carries a badge naming the model and its job (for example "Muse Spark 1.3 · independent judge"), each result lists only the models used in that run, and in Privacy Mode the badges switch to Muse Spark Open.
 
 ## Why Meta's models matter to this solution
 
@@ -100,6 +100,7 @@ BillSaathi is a real agent under real constraints, in a domain where a wrong ans
 - **"The model proposes, the code verifies":** mandatory checks at fixed points before its first turn; a milestone check so a missed link still gets checked; `submit_verdict` enforces citations from this run, the risk floor, and SAFE only if every check passed.
 - **An independent LLM judge** can only refuse, and fails closed. Refusals go back to the agent; after three, or any outage or limit, the result is forced CAUTION or the stricter floor.
 - **Everything is an audit trail:** every tool result, refusal and verdict is in an append-only evidence record that also drives the live timeline.
+- **See it catch itself:** the app replays a real recorded run in which the judge refused a reason that said "tonight" when the evidence did not, and the agent corrected it.
 - **Tested against its failures:** a scripted fake model covers invented citations, skipped destinations, lowered verdicts and judge outages. 614 API tests in total.
 
 ### Best Build on Open Weights
@@ -108,7 +109,7 @@ Privacy Mode runs the whole pipeline on **Muse Spark Open** through Baseten: rea
 - **Not a demo of a prompt:** the same agent loop, tools, deterministic checks and evidence record, behind one client interface.
 - **Measured side by side on the held-out set:** 21/21 correct, 0/13 false SAFE, 0/8 false alarms, median 19.1 s (Spark 1.3: 10.9 s), about 2 agent turns (Spark 1.3: 1), with cost estimated at about $0.033 per check because no price is listed.
 - **Fails safe:** if no open-weight provider is available, the check is refused rather than quietly sent to Meta's API. SAM isn't used on this path, because it's on Meta's API.
-- **Honest about privacy:** this means no call to Meta's Model API. The model still runs at Baseten, so it isn't on-device.
+- **Honest about privacy:** this means no call to Meta's Model API. The model still runs on an external host (Baseten), so it isn't offline or on-device. The Fireworks fallback is built but untested live.
 
 ### Most Viral
 **Why it can spread:** the warning card is made to be forwarded, in Telugu, Hindi or English, on the app people already use for family messages. The message itself is instantly recognisable.
@@ -125,7 +126,7 @@ Privacy Mode runs the whole pipeline on **Muse Spark Open** through Baseten: rea
 `[BV: submit the post through the platform; it counts until Nov 8 EOD]`
 
 ### Community Vote
-> **Would your parents spot a fake electricity bill?** BillSaathi checks it for them. Forward a bill or a message on WhatsApp, or send a voice note in Telugu, and get SAFE, CAUTION or SCAM in your language, with the evidence. Try it in ten seconds with a one-tap scam sample, no sign-up. All the data is made up, so it's safe to play with. If you know someone who has nearly paid one of these, give it a vote.
+> **Would your parents spot a fake electricity bill?** BillSaathi checks it for them. Forward a bill or a message on WhatsApp, or send a voice note in Telugu, and get SAFE, CAUTION or SCAM in your language, with the evidence. Try it in ten seconds with a one-tap scam sample, no sign-up. All the data is synthetic, so it's safe to play with. If you know someone who has nearly paid one of these, give it a vote.
 
 ## Fill in before submitting
 

@@ -2,11 +2,11 @@
 
 **An AI agent that checks an Indian bill or payment request before you pay: it verifies it against the biller's records, catches scams before money moves, and explains the verdict in your language.**
 
-Built solo for the Meta Global AI Developer Hackathon, Startup track, "Build for Your World".
+Built from scratch Oct 26 – Nov 4, 2026 for the Meta Global AI Developer Hackathon (Startup track, "Build for Your World"), solo; not affiliated with any other product using a similar name.
 
 > **Built during the hackathon.** Everything in this repository was built during the event, Oct 26 to Nov 4, 2026. Nothing pre-existing was used apart from public libraries. See the commit history.
 >
-> **Sandbox demo.** All billers, bills and test data are made up. BBPS is a mock we built; this is not connected to the real BBPS network, and no real money moves.
+> **Sandbox demo.** See [exactly what is simulated](#exactly-what-is-simulated). All billers, bills and test data are synthetic, and no real money moves.
 
 ## Live links
 
@@ -19,11 +19,21 @@ Built solo for the Meta Global AI Developer Hackathon, Startup track, "Build for
 
 ## How to test, in 30 seconds
 
-1. Open the [web app](https://zealous-coast-09279dd00.1.azurestaticapps.net) and press **Try a scam sample**.
-2. Watch each step arrive with its model and timer: the fixed checks raise "Scam signals found" first, then the agent and the independent check finish. You get **SCAM**, the reasons with their evidence, an explanation you can **Listen** to, and a warning card to send your family.
-3. Press **Try a genuine bill**: SAM finds the bill in a phone photo, the biller's amount matches, you get **SAFE**, and you can pay in the sandbox after confirming.
+1. Open the [web app](https://zealous-coast-09279dd00.1.azurestaticapps.net) and press **Watch a scam get blocked**. The steps stream in with their model and timer, an amber "Possible fraud found" appears, then a red **SCAM**. The panel compares what the message says with what the demo biller record says.
+2. Press **Try a genuine demo bill**: SAM 3.1 finds the bill in a phone photo, every row matches, you get **SAFE**, and you can simulate a payment after confirming.
+3. In **Try a sample**, pick **Tampered bill**: the same account with one changed amount, so exactly one row differs and the verdict is **CAUTION**. Then try the voice note, or **See the judge catch an over-claim**, a replay of a real recorded run.
 
-Then switch to తెలుగు or हिंदी, tap **Speak the message**, or tick **Privacy Mode**. More messages to paste are in [docs/TESTING.md](docs/TESTING.md). Please send only made-up data: a real bill ends as CAUTION by design, because every biller here is a mock.
+Switch to తెలుగు or हिंदी, or turn on **Privacy Mode** in the top bar. More messages to paste are in [docs/TESTING.md](docs/TESTING.md). Please send only synthetic data: a real bill ends as CAUTION by design.
+
+![The comparison panel: what the bill says against the demo biller record, with the one changed amount marked](docs/screenshots/comparison.png)
+
+## Exactly what is simulated
+
+| Real | Simulated |
+|---|---|
+| Every Meta model call, the agent loop, the verification layers, the deployed web app and API, the WhatsApp number | The biller registry, bills and history: 8 synthetic billers in a mock we built. **We are not connected to the real BBPS network** (India's national bill-payment network) |
+| The risk rules and the evidence record | Payments: sandbox only, no real money moves. The receipt and audit row are real records of a simulated payment |
+| The measured evaluation, on real runs | The test data: 60 labelled synthetic items. The known-scam list and scam patterns are small and synthetic |
 
 ## The problem
 
@@ -59,7 +69,7 @@ FastAPI on Azure Container Apps (Central India); Next.js static site on Azure St
 | **Muse Spark 1.3** | Reads bills and messages, runs the tool-calling agent, judges its reasons, explains the verdict |
 | **SAM 3.1** | Crops the bill out of a phone photo (concept "document"); falls back to the original image |
 | **Muse Voice Transcribe** | Voice input, always with `languageBias` for the user's language |
-| **Muse Spark Open** (open weights, on Baseten, with Fireworks as fallback) | Privacy Mode: the whole pipeline with no call to Meta's Model API |
+| **Muse Spark Open** (open weights, hosted on Baseten, with Fireworks as fallback) | Privacy Mode: the whole pipeline with no call to Meta's Model API. It runs on an external host, so it is not offline or on-device |
 | **Muse Image** | Background of the warning card, from a fixed prompt with no user data and all tools off; our code draws the text |
 
 Contributor models, which train on inputs, are refused in code.
@@ -78,7 +88,7 @@ Contributor models, which train on inputs, are refused in code.
 
 ## Evaluation
 
-The real pipeline on the **21 held-out test items**, which were never used for tuning. Graders are deterministic code. Full tables, method and results files: [/eval](https://zealous-coast-09279dd00.1.azurestaticapps.net/eval), [eval/](eval/).
+The real pipeline on the **test split: 21 held-out synthetic items** never used for tuning. Prompts and rules were tuned on the separate dev split (39 items). Graders are deterministic code. Full tables, method and results files: [/eval](https://zealous-coast-09279dd00.1.azurestaticapps.net/eval), [eval/](eval/).
 
 | | Correct | False SAFE | False alarms | p50 to verdict | p90 | Cost per check |
 |---|---|---|---|---|---|---|
@@ -94,11 +104,11 @@ The real pipeline on the **21 held-out test items**, which were never used for t
 
 - All billers are mock, so **a real bill ends as CAUTION** by design. BillSaathi proves the method; it is not connected to real biller data.
 - Checks, open questions, rate limits and the daily spend cap live in one process's memory, so the API runs at max 1 replica and a restart loses them. The audit log is on the container's disk and is lost on redeploy.
-- Privacy Mode skips SAM, because SAM is on Meta's API. It is slower, and "private" here means no call to Meta's Model API; the open model still runs at Baseten or Fireworks.
+- Privacy Mode means open weights on an external host (Baseten; the Fireworks fallback is built but untested live), with no call to Meta's Model API. It is not offline. It skips SAM and the generated card picture, because both are on Meta's API, and it is slower.
 - Scam patterns and the known-scam list are small and synthetic. New wording is left to the agent and the other checks.
-- WhatsApp has been tested end to end from the builder's phone only, with a text message; images and voice notes there are tested with a mocked Graph API. English reasons are shown as translated labels in Telugu and Hindi; the explanation itself is in the user's language.
+- WhatsApp text, photo and voice note were tested live by the builder on 2026-11-03, from the builder's phone only; other numbers are untested.
 - Telugu has been rated by a native speaker on earlier samples (4/5); Hindi is approximate. Marathi and Tamil are not shipped.
-- Free Meta credits may let Meta use submitted content to improve its products: send only made-up data.
+- Free Meta credits may let Meta use submitted content to improve its products: send only synthetic data.
 
 ## Run it yourself
 

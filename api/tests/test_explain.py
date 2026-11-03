@@ -103,3 +103,10 @@ def test_no_client_or_forced_verdict_makes_no_model_call():
 def test_template_uses_only_labels_never_evidence_text():
     out = template(EVENTS, EVENTS[1], "hi")
     assert "pay-demo.example" not in out.text and CODE_LABELS["LOOKALIKE_DOMAIN"]["hi"] in out.text
+
+
+def test_the_prompt_asks_for_the_native_verdict_word():
+    from app.explain import _VERDICT_WORDS
+
+    assert _VERDICT_WORDS["SCAM"]["te"] == "మోసం"
+    assert _VERDICT_WORDS["SCAM"]["hi"] == "धोखा"

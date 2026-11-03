@@ -508,6 +508,11 @@ export const STRINGS = {
     te: "{n} తనిఖీలు",
     hi: "{n} जाँचें",
   },
+  noneFound: {
+    en: "Nothing found",
+    te: "ఏమీ కనబడలేదు",
+    hi: "कुछ नहीं मिला",
+  },
   traceTurn: {
     en: "{n} agent turn",
     te: "{n} ఏజెంట్ మలుపు",

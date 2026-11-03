@@ -125,3 +125,26 @@ Read this section first; the sections above describe Oct 30 unless a build-log l
 - **Open UI bug (not fixed):** on the phone pay-confirm and receipt screens, the biller name breaks mid-word ("Demo Power Distributio / n Co. Ltd"). The cause is `break-all` on the row value in `web/src/components/SandboxPay.tsx`.
 - **Demo and submission:** `docs/DEMO_SCRIPT.md`, `docs/SUBMISSION.md` (its `[BV: …]` items are open). Still to rehearse: the Telugu line spoken aloud, the sample photo through a camera, and Listen in Telugu. Do not deploy between warming the warning card and recording.
 - **Other open items:** BV's review of Telugu and Hindi text; user tests (none recorded in §11); `docs/TESTING.md` still uses the plausible number `9123456780`, while the demo uses `9000000003`; Fireworks fallback untested live; set min replicas to 0 after Nov 8.
+
+## Overnight build log (Nov 4, unattended)
+
+One line per item: item, status, commit.
+
+- 0 Orient: **done**. 614 API + 19 web tests green, live healthy. Tag `pre-overnight` pushed at `062565b`.
+- API evidence values in live events: **done**, `1375aae`.
+- 1, 2 Visual system and results panel: **done**, `297bc0d`. Live smoke: SCAM 18.9 s, SAFE 26.7 s.
+
+## Overnight decisions
+
+- The pending `.gitignore` change was already committed (`062565b`). I also ignored `docs/screenshots/testing/` and `docs/screenshots/demo/`, because an untracked file marks every image tag `-dirty`.
+- I grouped sub-items into deploy batches rather than deploying each of 2.1-2.14 alone: they share one screen and each deploy restarts the API. Tests, screenshots and a live smoke check ran per batch.
+- Screens were reviewed against recorded real event streams replayed in the browser, to save model spend. Live smoke checks ran on the deployed site.
+- **Voice sample (2.11) is English, not Telugu.** This machine has only English Windows voices. `api/spike/inputs/voice_te.*` is BV's real voice and is deliberately kept out of git, so I did not publish it. Online voices would mean new Azure terms or a service whose output rights are unclear (rules §3), so I did neither. The sample is labelled "synthetic English voice" and runs through Muse Voice Transcribe. Telugu voice stays in the demo as BV speaking live.
+- **Spoken digits come back as words** ("nine zero zero…"), so the voice sample's number is not read as a number; its verdict is still SCAM from the unknown biller, non-official channel and threat. **Scene 5's Telugu line may do the same: rehearse it.**
+- Same-account tampered bill (2.11): `labels.jsonl` may not change, so I added demo-only samples that are in no split (`data/generators/make_demo_samples.py`): the genuine photo's account and framing with only the amount changed to ₹4,240 (biller ₹1,240). The old `bill_tampered_demo` sample remains in the dataset.
+- Judge-catch replay (2.13) replays `eval/results/agent_live_2026-10-29_2355.jsonl`, item `scam_te_known_vpa`: a real refusal ("tonight" not in the evidence). It is copied at build time and a test checks it against the file. Nothing fabricated.
+- Comparison order (2.4): actions, comparison, explanation, reasons, trace. The explanation sits below the comparison so the centrepiece stays near the first screen.
+- Early explanation (6.1) is written from the code's findings only, never from the agent's unjudged reasons, and shown only after the verdict. That keeps judge-refused wording off the screen.
+- Privacy Mode no longer requests the Muse Image picture: the card is a plain gradient on that path, because the picture is on Meta's API. The old flow contradicted "no call to Meta's Model API".
+- New Telugu and Hindi strings tonight were written by me, not reviewed by a native speaker. **BV should read them** (`web/src/lib/i18n.ts`, `api/app/whatsapp/texts.py`, `web/src/lib/reasons.ts`).
+- WhatsApp changes were tested with the mocked Graph API only; I sent nothing to any real number.

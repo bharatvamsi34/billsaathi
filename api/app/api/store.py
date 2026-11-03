@@ -7,6 +7,8 @@ restart and not shared between replicas (the app runs with max 1 replica).
 import threading
 import time
 from collections import deque
+from collections.abc import Callable
+from concurrent.futures import Future
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
@@ -36,6 +38,9 @@ class CheckState:
     clients: Any = None  # the model clients of this check (web/WhatsApp, normal/privacy)
     finished: float | None = None
     error: str | None = None
+    # An explanation started early, from the evidence alone (see pipeline._start_early_explanation).
+    early_explanation: Future | None = None
+    on_emit: Callable[[dict[str, Any]], None] | None = None  # e.g. WhatsApp's early message
     lock: threading.Lock = field(default_factory=threading.Lock)
 
     def emit(self, event: dict[str, Any]) -> None:
@@ -48,6 +53,8 @@ class CheckState:
                 }
             )
             self.touched = time.monotonic()
+        if self.on_emit is not None:
+            self.on_emit(event)
 
     def events_after(self, seq: int) -> list[dict[str, Any]]:
         with self.lock:

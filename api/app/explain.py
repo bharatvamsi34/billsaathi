@@ -25,6 +25,11 @@ MAX_ATTEMPTS = 2
 MAX_CHARS = 700
 _NAMES = {"en": "simple English", "te": "simple Telugu (తెలుగు)", "hi": "simple Hindi (हिंदी)"}
 _SCRIPTS = {"te": re.compile(r"[ఀ-౿]"), "hi": re.compile(r"[ऀ-ॿ]")}
+_VERDICT_WORDS = {
+    "SAFE": {"en": "safe", "te": "సురక్షితం", "hi": "सुरक्षित"},
+    "CAUTION": {"en": "caution", "te": "జాగ్రత్త", "hi": "सावधान"},
+    "SCAM": {"en": "scam", "te": "మోసం", "hi": "धोखा"},
+}
 _LINK = re.compile(r"(?:https?://)?[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}(?:/\S*)?")
 _UPI = re.compile(r"[A-Za-z0-9._-]+@[A-Za-z0-9]+")
 _NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?")
@@ -33,7 +38,9 @@ SYSTEM = """\
 You explain the result of a bill-payment safety check to an ordinary person in India who may be \
 new to digital payments.
 Write 2 to 4 short, plain sentences in {language}. Say what was found and what the person should \
-do next. Common English words such as UPI, KYC, OTP and link may stay in English.
+do next. Common English words such as UPI, KYC, OTP and link may stay in English. Call the \
+verdict by its own word in that language: {verdict_word}. Keep every UPI ID and link exactly as \
+it is in the evidence.
 Rules:
 - Use ONLY the verdict and evidence given below. Never add a number, amount, date, name, link, \
 UPI ID or phone number that is not in the evidence.
@@ -134,7 +141,9 @@ def explain(
     for attempt in range(1, MAX_ATTEMPTS + 1):
         try:
             resp = client.respond(
-                system=SYSTEM.format(language=_NAMES[lang]),
+                system=SYSTEM.format(
+                    language=_NAMES[lang], verdict_word=_VERDICT_WORDS[verdict["verdict"]][lang]
+                ),
                 messages=messages,
                 model=model,
                 effort="low",
