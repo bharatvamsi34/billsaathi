@@ -4,8 +4,9 @@ A payment needs a SAFE, unforced verdict, the user's explicit confirmation and a
 key. Every attempt, allowed or refused, is one row in an append-only audit log; triggers make
 the database itself refuse any update or delete, and each row carries a hash of the one before.
 
-Known limit (CLAUDE.md §11): the database file lives on the container's disk, so it is lost
-when a new revision starts.
+In production the database file is on an Azure Files share (infra/deploy.ps1 step 13), so a restart
+or a new revision keeps the audit history. SQLite on a network share needs one writer at a time:
+the app stays at max 1 replica.
 """
 
 import hashlib
@@ -15,6 +16,7 @@ import threading
 import uuid
 from collections.abc import Callable
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 from app.agent.loop import AgentSession
@@ -56,7 +58,9 @@ class PaymentRefused(Exception):
 
 class PaymentStore:
     def __init__(self, path: str):
-        self._db = sqlite3.connect(path, check_same_thread=False)
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        # A network share can be slow to hand over its lock after a restart.
+        self._db = sqlite3.connect(path, check_same_thread=False, timeout=30)
         self._db.executescript(_SCHEMA)
         self._lock = threading.Lock()
 

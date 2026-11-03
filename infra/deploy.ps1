@@ -9,7 +9,8 @@
   Steps: 0 subscription, 1 CLI extension + providers, 2 region check, 3 resource group + budget,
   4 container registry, 5 image build, 6 pull identity, 7 environment, 8 container app, 9 health check,
   10 model API keys + WhatsApp secrets as Container Apps secrets (read from api\.env, never printed),
-  11 web app on Azure Static Web Apps (Free), 12 API CORS for the web app's origin.
+  11 web app on Azure Static Web Apps (Free), 12 API CORS for the web app's origin,
+  13 durable audit log (SQLite on an Azure Files share).
   Every step can be re-run safely. Secret values are never printed or put in the image.
 #>
 param(
@@ -28,6 +29,8 @@ $Identity = 'id-billsaathi-pull'
 $Image = 'billsaathi-api'
 $Swa = 'swa-billsaathi'
 $SwaLocation = 'eastasia'   # nearest Static Web Apps region to India
+$Storage = 'stbillsaathicin'
+$Share = 'audit'
 $BudgetName = 'budget-billsaathi-cin'
 $BudgetAmount = 1000          # in the subscription's billing currency (INR expected)
 $BudgetEmail = 'ch.bharat34@gmail.com'
@@ -245,7 +248,39 @@ function Step12 {
     Write-Host "API CORS origins: https://$swaHost, http://localhost:3000"
 }
 
-$steps = @{ '0' = 'Step0'; '1' = 'Step1'; '2' = 'Step2'; '3' = 'Step3'; '4' = 'Step4'; '5' = 'Step5'; '6' = 'Step6'; '7' = 'Step7'; '8' = 'Step8'; '9' = 'Step9'; '10' = 'Step10'; '11' = 'Step11'; '12' = 'Step12' }
+function Step13 {
+    # Durable audit log: SQLite on an Azure Files share, so a restart or a new revision keeps it.
+    # Max replicas stays 1. The storage key goes through the CLI's own storage definition and is
+    # never printed.
+    $exists = Find-Az storage account show --name $Storage --resource-group $Rg --query name -o tsv
+    if (-not $exists) {
+        Invoke-Az storage account create --name $Storage --resource-group $Rg --location $Location --sku Standard_LRS --kind StorageV2 --min-tls-version TLS1_2 --allow-blob-public-access false --only-show-errors -o none
+    }
+    Invoke-Az storage share-rm create --storage-account $Storage --resource-group $Rg --name $Share --quota 1 --only-show-errors -o none
+    $key = az storage account keys list --account-name $Storage --resource-group $Rg --query "[0].value" -o tsv
+    & az containerapp env storage set --name $CaEnv --resource-group $Rg --storage-name $Share --azure-file-account-name $Storage --azure-file-account-key $key --azure-file-share-name $Share --access-mode ReadWrite --only-show-errors -o none
+    if ($LASTEXITCODE -ne 0) { throw 'could not define the storage on the environment' }
+    Remove-Variable key
+
+    # Add the volume to the app's template; everything else in the template stays as it is.
+    $current = az containerapp show --name $App --resource-group $Rg -o json | ConvertFrom-Json
+    $template = $current.properties.template
+    $template | Add-Member -NotePropertyName volumes -NotePropertyValue @(@{ name = 'audit'; storageType = 'AzureFile'; storageName = $Share; mountOptions = 'nobrl,cache=none' }) -Force
+    $container = $template.containers[0]
+    $container | Add-Member -NotePropertyName volumeMounts -NotePropertyValue @(@{ volumeName = 'audit'; mountPath = '/mnt/audit' }) -Force
+    $variables = @($container.env | Where-Object { $_.name -ne 'AUDIT_DB_PATH' }) + [pscustomobject]@{ name = 'AUDIT_DB_PATH'; value = '/mnt/audit/audit.sqlite' }
+    $container.env = $variables
+    $file = Join-Path ([IO.Path]::GetTempPath()) 'billsaathi-template.yaml'
+    @{ properties = @{ template = $template } } | ConvertTo-Json -Depth 20 | Set-Content -Path $file -Encoding ascii
+    try {
+        Invoke-Az containerapp update --name $App --resource-group $Rg --yaml $file --only-show-errors -o none
+    } finally {
+        Remove-Item $file -ErrorAction SilentlyContinue
+    }
+    Write-Host "Audit log on Azure Files: share $Share of $Storage, mounted at /mnt/audit"
+}
+
+$steps = @{ '0' = 'Step0'; '1' = 'Step1'; '2' = 'Step2'; '3' = 'Step3'; '4' = 'Step4'; '5' = 'Step5'; '6' = 'Step6'; '7' = 'Step7'; '8' = 'Step8'; '9' = 'Step9'; '10' = 'Step10'; '11' = 'Step11'; '12' = 'Step12'; '13' = 'Step13' }
 $order = if ($Step -eq 'all') { 0..12 | ForEach-Object { "$_" } } else { @($Step) }
 foreach ($s in $order) {
     if (-not $steps.ContainsKey($s)) { throw "Unknown step '$s' (use 0-9 or all)" }

@@ -103,7 +103,7 @@ The real pipeline on the **test split: 21 held-out synthetic items** never used 
 ## Known limits
 
 - All billers are mock, so **a real bill ends as CAUTION** by design. BillSaathi proves the method; it is not connected to real biller data.
-- Checks, open questions, rate limits and the daily spend cap live in one process's memory, so the API runs at max 1 replica and a restart loses them. The audit log is on the container's disk and is lost on redeploy.
+- Checks, open questions, rate limits and the daily spend cap live in one process's memory, so the API runs at max 1 replica and a restart loses them. The sandbox audit log is durable: SQLite on an Azure Files share, kept across restarts and new revisions.
 - Privacy Mode means open weights on an external host (Baseten; the Fireworks fallback is built but untested live), with no call to Meta's Model API. It is not offline. It skips SAM and the generated card picture, because both are on Meta's API, and it is slower.
 - Scam patterns and the known-scam list are small and synthetic. New wording is left to the agent and the other checks.
 - WhatsApp text, photo and voice note were tested live by the builder on 2026-11-03, from the builder's phone only; other numbers are untested.

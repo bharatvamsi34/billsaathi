@@ -119,3 +119,16 @@ def test_the_database_refuses_changes_to_the_audit_log():
         store._db.execute("DELETE FROM audit_log")
     rows = store.audit_rows()
     assert rows[0]["prev_hash"] == "genesis" and rows[1]["prev_hash"] == rows[0]["hash"]
+
+
+def test_audit_history_survives_a_restart(tmp_path):
+    """A new process on the same file (a restart, a new revision) keeps every row and the chain."""
+    path = str(tmp_path / "share" / "audit.sqlite")  # the folder is created if it is missing
+    first = PaymentStore(path)
+    first.refuse("check-1", "key-1", "not_safe")
+    first.refuse("check-2", "key-2", "not_safe")
+    second = PaymentStore(path)
+    second.refuse("check-3", "key-3", "not_safe")
+    rows = second.audit_rows()
+    assert [r["check_id"] for r in rows] == ["check-1", "check-2", "check-3"]
+    assert rows[2]["prev_hash"] == rows[1]["hash"]

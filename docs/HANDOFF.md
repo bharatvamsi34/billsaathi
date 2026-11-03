@@ -133,6 +133,8 @@ One line per item: item, status, commit.
 - 0 Orient: **done**. 614 API + 19 web tests green, live healthy. Tag `pre-overnight` pushed at `062565b`.
 - API evidence values in live events: **done**, `1375aae`.
 - 1, 2 Visual system and results panel: **done**, `297bc0d`. Live smoke: SCAM 18.9 s, SAFE 26.7 s.
+- 3 Phone, 4 WhatsApp, 5 /eval and docs, 6.1 early explanation, 6.3 stalled-stream watchdog: **done**, `b42d3df`. Live smoke passed. WhatsApp tested with the mocked Graph API only.
+- 6.1 result, 6 live scam checks, same items, before -> after: verdict median 19.3 -> 21.1 s, p90 25.0 -> 26.9 s (no real change); explanation shown median 33.3 -> 21.1 s, p90 35.8 -> 26.9 s. It now appears with the verdict. SCAM only; other verdicts unchanged.
 
 ## Overnight decisions
 

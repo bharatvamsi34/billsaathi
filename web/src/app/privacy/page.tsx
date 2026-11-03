@@ -88,8 +88,8 @@ export default function Privacy() {
             kept in memory against a keyed hash of your number. Logs contain only that hash, never the number.
           </li>
           <li>
-            <strong>Sandbox payments:</strong> an audit record (masked consumer number, amount, time) is kept on the server&apos;s disk
-            until the service is next redeployed.
+            <strong>Sandbox payments:</strong> an audit record (masked consumer number, amount, time) is kept in a file on Azure Files in
+            Central India, and survives restarts. It holds no real payment: this is a sandbox.
           </li>
           <li>Server logs hold technical records with consumer and phone numbers masked.</li>
         </ul>
