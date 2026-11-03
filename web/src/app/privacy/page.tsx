@@ -26,7 +26,7 @@ export default function Privacy() {
           BillSaathi
         </Link>
         <h1 className="mt-2 text-3xl font-extrabold">Privacy policy</h1>
-        <p className="text-sm text-muted">Last updated: 2 November 2026</p>
+        <p className="text-sm text-muted">Last updated: 4 November 2026</p>
       </header>
 
       <Section title="What BillSaathi is">

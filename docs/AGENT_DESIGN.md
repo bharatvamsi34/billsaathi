@@ -238,3 +238,4 @@ The loop is provider-neutral. Privacy Mode swaps the Meta client for the Baseten
 - **Explanation:** after the verdict, the model rewords only the cited evidence. Code rejects any number, link or
   UPI ID not in the evidence, and any reply not in the user's script; then a template from evidence labels.
 - **Privacy Mode:** the same loop and checks on Muse Spark Open; refused, never downgraded, if no provider is up.
+- **Early explanation (Nov 4):** when the evidence floor is already SCAM, nothing can lower it, so the explanation starts while the agent and judge work. It is written from the code's findings only, never from the agent's unjudged reasons, and shown only after the verdict. A forced verdict still uses the template.

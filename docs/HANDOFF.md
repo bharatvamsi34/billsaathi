@@ -1,6 +1,34 @@
-# BillSaathi — handoff (2026-10-30)
+# BillSaathi — handoff
 
-Read with `CLAUDE.md` (brief, schedule §8, decisions §11) and `docs/AGENT_DESIGN.md` (agent design).
+## Overnight report (Nov 4, finished about 02:45 IST)
+
+**Everything in the overnight list shipped except where noted below. Nothing weakened a safety rule:** verdict logic, risk rules, the judge's refusal rules, `facts.py`, eval data and labels are unchanged.
+
+- **Live:** web https://zealous-coast-09279dd00.1.azurestaticapps.net · API code `05a1e5f`. Tags: `demo-ready-v2` (final), `overnight-good`, `pre-overnight` (rollback, `062565b`).
+- **Shipped:** new visual system; input under review with values marked in place; message-vs-biller-record comparison; reasons with real values; amber early signal; one-line trace with step timers fixed; models named at each step and per run; same-account tampered bill; judge-catch replay; demo chips for the agent's question; phone layout and the mid-word break fixed; short WhatsApp replies with DETAILS and an early scam message; `/eval` redesign; README and submission answers; early explanation; durable audit log; stalled-stream error with retry; `?demo=1`; demo script; raw footage.
+- **Tests:** 638 API + 31 web, lint clean. Live browser checks passed: scam SMS, genuine photo with simulated payment, question answered with valid number (SAFE) and wrong number (CAUTION), Telugu scam, Hindi tampered bill, Privacy Mode.
+- **Screenshots:** before `docs/screenshots/final/` · after `docs/screenshots/overnight/` · comparison `docs/screenshots/comparison.png`.
+- **Footage:** `docs/screenshots/demo/` on this machine, gitignored, seven silent 1920×1080 scenes starting at the click. Some run 40-50 s because they include the real wait (the brief asked for 10-30 s); trim or speed up in the edit.
+- **Live spend tonight:** about **$1.70 by my estimate** (about 60 checks), against the $15 limit. Check dev.meta.ai and Baseten for the real figure.
+
+**Skipped or partial**
+- **Telugu voice sample (2.11):** the sample is a synthetic **English** voice. See Overnight decisions.
+- **Durable check state (6.2):** only the audit log is durable. Checks, open questions, rate limits and the spend meter stay in memory, so a restart still loses checks in progress.
+- **Item-by-item deploys:** grouped into batches; see Overnight decisions.
+
+**Know this before recording**
+1. **WhatsApp's new replies have never run on a real phone.** They passed with a mocked Graph API only. Send one text, DETAILS and one photo first. The short reply no longer carries the web link or sandbox footer; those moved to DETAILS.
+2. **Checks are slower than yesterday's numbers:** 15-30 s to the verdict tonight, against about 12 s measured earlier and the 10.9 s on `/eval`. Nothing tonight touches the steps before the verdict, and the 6 baseline scam checks were already at 19.3 s, so I suspect the time of day, but I did not prove it. Re-time in your recording window. Don't quote a live speed that the video contradicts.
+3. **Rehearse the spoken Telugu line.** Digits may come back as words, so the number may not be read as a number.
+4. **Privacy Mode occasionally stops without a verdict:** 1 of my 4 runs, and 1 of 21 in the eval file. It ends safely (the floor verdict, "Some checks could not be completed"). Retake if it happens.
+5. **Read the new Telugu and Hindi text.** I wrote it and no native speaker has checked it: `web/src/lib/i18n.ts`, `web/src/lib/reasons.ts`, `api/app/whatsapp/texts.py`, sample titles in `web/scripts/build-samples.mjs`.
+6. **Not tested by me:** a real phone (only Chrome's phone emulation), a real microphone, Listen's audio output, the Fireworks fallback.
+7. **`/eval` numbers were not re-run tonight.** Verdict logic did not change; the explanation prompt and timing did.
+8. **Warm the warning card after any API restart.** First picture per verdict takes about 15 s.
+9. **User tests:** still none recorded. Say nothing about users unless you run some.
+10. **After Nov 8:** set min replicas to 0, and delete the new storage account `stbillsaathicin` if you no longer need the audit log.
+
+Read with `CLAUDE.md` (brief, schedule §8, decisions §11) and `docs/AGENT_DESIGN.md` (agent design). Sections below "What is built and deployed" describe Oct 30 unless a line says otherwise.
 
 ## What is built and deployed
 
@@ -122,7 +150,7 @@ Read this section first; the sections above describe Oct 30 unless a build-log l
 - **WhatsApp status:** BV's live tests of text, a sample bill photo and a Telugu voice note all worked. Numbers other than BV's are untested.
 - **Effort test (dev split, 39 items):** reading, agent and judge all at `minimal` scored 38/39 (one false alarm, one question asked), p50 13.8 s, $0.016 per check. The product (`low`, judge `minimal`) scored 39/39, p50 10.6 s, $0.020. **The product stays at `low`.** The runs were hours apart, so the speed gap is weak evidence. Results: `eval/results/dev_*.jsonl`.
 - **Design review set:** `docs/screenshots/review/` on BV's machine, gitignored, not in the repo: 111 PNGs (16 states at 1440x900, 1280x800 and 390x844, above the fold and full page), `desktop_full_check.webm` (30 s) and `INDEX.md`. Costs about $0.70 per full capture; the scripts were in the session scratchpad and are not in the repo.
-- **Open UI bug (not fixed):** on the phone pay-confirm and receipt screens, the biller name breaks mid-word ("Demo Power Distributio / n Co. Ltd"). The cause is `break-all` on the row value in `web/src/components/SandboxPay.tsx`.
+- **Fixed overnight:** the biller name breaking mid-word on the phone pay-confirm and receipt screens.
 - **Demo and submission:** `docs/DEMO_SCRIPT.md`, `docs/SUBMISSION.md` (its `[BV: …]` items are open). Still to rehearse: the Telugu line spoken aloud, the sample photo through a camera, and Listen in Telugu. Do not deploy between warming the warning card and recording.
 - **Other open items:** BV's review of Telugu and Hindi text; user tests (none recorded in §11); `docs/TESTING.md` still uses the plausible number `9123456780`, while the demo uses `9000000003`; Fireworks fallback untested live; set min replicas to 0 after Nov 8.
 
@@ -135,6 +163,9 @@ One line per item: item, status, commit.
 - 1, 2 Visual system and results panel: **done**, `297bc0d`. Live smoke: SCAM 18.9 s, SAFE 26.7 s.
 - 3 Phone, 4 WhatsApp, 5 /eval and docs, 6.1 early explanation, 6.3 stalled-stream watchdog: **done**, `b42d3df`. Live smoke passed. WhatsApp tested with the mocked Graph API only.
 - 6.1 result, 6 live scam checks, same items, before -> after: verdict median 19.3 -> 21.1 s, p90 25.0 -> 26.9 s (no real change); explanation shown median 33.3 -> 21.1 s, p90 35.8 -> 26.9 s. It now appears with the verdict. SCAM only; other verdicts unchanged.
+- 6.2 Durable audit log: **done**, `05a1e5f`. SQLite on Azure Files (`stbillsaathicin`, share `audit`, deploy step 13), max replicas still 1. Tested live: audit rows 1 and 2, API restart, next payment got row 3.
+- 2.12 question chips kept in view on phones, 7.2 `?demo=1`: **done**, `05daac3`. Live smoke passed.
+- 7.1 demo script, 7.3 footage: **done**. 8 final tag: **done**.
 
 ## Overnight decisions
 
@@ -150,3 +181,5 @@ One line per item: item, status, commit.
 - Privacy Mode no longer requests the Muse Image picture: the card is a plain gradient on that path, because the picture is on Meta's API. The old flow contradicted "no call to Meta's Model API".
 - New Telugu and Hindi strings tonight were written by me, not reviewed by a native speaker. **BV should read them** (`web/src/lib/i18n.ts`, `api/app/whatsapp/texts.py`, `web/src/lib/reasons.ts`).
 - WhatsApp changes were tested with the mocked Graph API only; I sent nothing to any real number.
+- Durable storage: I created a small Standard LRS storage account for the audit share, as the brief allowed. Standard file storage for a tiny file should cost very little, but I did not price it exactly. The share's key is in the Container Apps environment's storage definition and was never printed.
+- Privacy Mode's forced run is a safe outcome and changing it would touch agent behaviour, so I left it and logged it.

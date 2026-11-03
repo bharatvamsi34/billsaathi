@@ -101,7 +101,7 @@ BillSaathi is a real agent under real constraints, in a domain where a wrong ans
 - **An independent LLM judge** can only refuse, and fails closed. Refusals go back to the agent; after three, or any outage or limit, the result is forced CAUTION or the stricter floor.
 - **Everything is an audit trail:** every tool result, refusal and verdict is in an append-only evidence record that also drives the live timeline.
 - **See it catch itself:** the app replays a real recorded run in which the judge refused a reason that said "tonight" when the evidence did not, and the agent corrected it.
-- **Tested against its failures:** a scripted fake model covers invented citations, skipped destinations, lowered verdicts and judge outages. 614 API tests in total.
+- **Tested against its failures:** a scripted fake model covers invented citations, skipped destinations, lowered verdicts and judge outages. 638 API tests in total.
 
 ### Best Build on Open Weights
 Privacy Mode runs the whole pipeline on **Muse Spark Open** through Baseten: reading, tool-calling agent, judge, explanation and speech.
