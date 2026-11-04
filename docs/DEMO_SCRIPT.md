@@ -15,9 +15,9 @@ Updated for the Nov 4 interface. Live app: https://zealous-coast-09279dd00.1.azu
 |---|---|---|---|---|---|
 | 0 | 0:00–0:07 | Built-during-hackathon line | Title card | — | — |
 | 1 | 0:07–0:20 | The problem | Phone, then hero | Message A, stat | — |
-| 2 | 0:20–0:50 | Scam blocked; comparison | Laptop | **Watch a scam get blocked** | `a_scam_blocked` |
-| 3 | 0:50–1:05 | The judge catches an over-claim | Laptop | **See the judge catch an over-claim** | `d_judge_replay` |
-| 4 | 1:05–1:30 | Genuine bill, SAM crop, simulated payment | Laptop | **Try a genuine demo bill** | `c_genuine_pay_receipt` |
+| 2 | 0:20–0:50 | Scam blocked; comparison | Laptop | **Watch BillSaathi catch a scam** | `a_scam_blocked` |
+| 3 | 0:50–1:05 | The second AI check catches an unsupported claim | Laptop | **Replay: a second AI catches an unsupported claim** | `d_judge_replay` |
+| 4 | 1:05–1:30 | Genuine bill, SAM crop, simulated payment | Laptop | **or try a genuine demo bill** | `c_genuine_pay_receipt` |
 | 5 | 1:30–1:42 | One changed amount | Laptop | **Tampered bill** sample | `b_tampered_caution` |
 | 6 | 1:42–1:58 | Voice in Telugu | Phone browser | Line V, spoken | `e_voice_sample` is a fallback |
 | 7 | 1:58–2:18 | WhatsApp | Phone WhatsApp | W1, P1, Line V | — |
@@ -43,25 +43,25 @@ Voiceover is written for about 2.3 words a second. Trim the voiceover before you
 
 ### Scene 2, 0:20–0:50: scam blocked
 **Clicks**
-1. Click **Watch a scam get blocked**. The input appears as a chat bubble with the UPI ID and threat marked.
-2. Hold on the amber **"Possible fraud found — running final checks…"** and the fixed checks, with their **Code** badges and timers.
-3. The red **SCAM** arrives, with **Do not pay**, **Report fraud: call 1930**, **Warn my family** and the card preview.
-4. Scroll to **Does it match the biller's record?** Zoom: the UPI ID is **"On the known-scam list"**, and the biller is **"not in registry"**.
+1. Click **Watch BillSaathi catch a scam**. The input appears as a chat bubble with the UPI ID and threat marked.
+2. Hold on the amber **"Possible scam signs found. Checking the evidence…"** and the fixed checks, with their **Code** badges and timers.
+3. The red **SCAM** band says **Do not pay**. The comparison sits directly under it with the deciding row first, then **Report fraud: call 1930**, **Listen**, **Warn my family** and a small card preview.
+4. Hold on **What the message says vs. the demo biller record**, no scroll needed. Zoom: the UPI ID is **"On the known-scam list"**, and the biller is **"not in registry"**.
 5. Show **Why**: the two real values.
 
 > "This isn't a bill scanner. It's an agent that verifies. Code runs fixed checks first, so you see an early warning, in amber, not a verdict. Then the agent reviews the evidence, and only then is it called a scam. Here's what the message says, next to what the biller's record says. No model can turn a risk into SAFE."
 
-### Scene 3, 0:50–1:05: the judge catches an over-claim
-**Clicks:** in **Try a sample**, click **See the judge catch an over-claim**. Hold on the label **"Replay of a real run (recorded 2026-10-29)"**, then the amber row: **"Evidence shows cut threat and urgency but does not mention tonight."** Then **After correction**.
+### Scene 3, 0:50–1:05: the second AI check catches an unsupported claim
+**Clicks:** in **Try a sample**, click **Replay: a second AI catches an unsupported claim**. Hold on the label **"Replay of a real run (recorded 2026-10-29)"**, then the amber row: **"Evidence shows cut threat and urgency but does not mention tonight."** Then **After correction**.
 
-> "A second Muse Spark call checks every claim against the evidence. In this real recorded run, the agent said 'tonight', and the evidence didn't. The judge sent it back, and the agent corrected itself."
+> "A second Muse Spark call checks every claim against the evidence. In this real recorded run, the agent said 'tonight', and the evidence didn't. The second AI check sent it back, and the agent corrected itself."
 
 ### Scene 4, 1:05–1:30: genuine bill and simulated payment
 **Clicks**
-1. Scroll up, click **Try a genuine demo bill**.
+1. Scroll up, click **or try a genuine demo bill**.
 2. Hold on **Finding the bill in the photo**, badge **SAM 3.1 · photo cropping**: the photo, the box, the cropped bill.
 3. The green **SAFE**: **"Verified against the demo biller record"**, every comparison row ticked at ₹1,240.00.
-4. Click **Simulate payment (sandbox — no real money)**, then **Yes, pay in the sandbox**.
+4. Click **Simulate payment (sandbox — no real money)**, then **Confirm simulation**.
 5. Hold on the receipt: `SBX-…`, audit entry, "Sandbox: no real money moves".
 
 > "Now a phone photo of a genuine demo bill. SAM 3.1 finds the bill. Muse Spark reads it. Every value matches the simulated biller record, so it's SAFE, and you still decide. One confirmation, a sandbox receipt, and an audit entry the database won't let anyone change. No real money moves."
@@ -115,9 +115,9 @@ All inputs are synthetic. The samples and the text of W1, H1 and Line V gave the
 | Scene | Input | Exactly what | Expected |
 |---|---|---|---|
 | 1 | **Message A** (shown only, not checked) | The text below | — |
-| 2 | Sample `scam_en_known_vpa`, via **Watch a scam get blocked** in the English UI | Electricity Office, ₹3,150, `electricityofficer@okdemo` | SCAM |
+| 2 | Sample `scam_en_known_vpa`, via **Watch BillSaathi catch a scam** in the English UI | Electricity Office, ₹3,150, `electricityofficer@okdemo` | SCAM |
 | 3 | The replay sample, `eval/results/agent_live_2026-10-29_2355.jsonl` | Telugu scam SMS; "tonight" refused | SCAM (recorded) |
-| 4 | Sample `photo_genuine_demo`, via **Try a genuine demo bill** | Demo Power, consumer ending 2761, ₹1,240.00 | SAFE |
+| 4 | Sample `photo_genuine_demo`, via **or try a genuine demo bill** | Demo Power, consumer ending 2761, ₹1,240.00 | SAFE |
 | 5 | Sample `demo_tampered_same_account`, tile "Tampered bill" | Same account, biller ₹1,240.00, bill ₹4,240.00 | CAUTION |
 | 6 | **Line V**, spoken in the Telugu UI | Below | SCAM |
 | 7 | **W1**, then **DETAILS**, **P1** (`bill_swapped_vpa_dgas`), **Line V** as a voice note | Below | SCAM |
@@ -158,7 +158,7 @@ It's a DemoGas bill with UPI ID `demogas.billing@okdemo` instead of the official
 1. **API awake:** https://ca-billsaathi-api.orangeocean-70e70440.centralindia.azurecontainerapps.io/api/v1/health returns `ok` (min replicas is 1).
 2. **Laptop browser:** open the `?demo=1` address at 1440 px or larger. It hides the first-visit hint and enlarges the type.
 3. **Warm the warning card:** the first picture per verdict takes about 15 seconds and is then cached until the API restarts. Run one SCAM and one CAUTION check before the real take. **Do not deploy after this.** The card preview is 120 px beside **Warn my family**.
-4. **SAM box:** the blue box and cropped thumbnail were reviewed on a recorded live run. Expand **View trace** after a genuine-bill check to see them again; during the check they appear in the live steps.
+4. **SAM box:** the blue box and cropped thumbnail were reviewed on a recorded live run. Expand **See verification steps** after a genuine-bill check to see them again; during the check they appear in the live steps.
 5. **Listen:** test it on the phone in Telugu. Audio playback has not been tested by me and depends on the device having a Telugu voice; if it says there is none, install one or record this moment on another device.
 6. **Microphone:** tap Speak once on the phone beforehand, so the permission prompt isn't in the take.
 7. **WhatsApp language:** the reply language sticks once you choose one, and it overrides what you say.

@@ -45,7 +45,7 @@ own amount matches, but the jump from their history makes the verdict **CAUTION*
 
 ## 3. Twelve messages to paste
 
-Open the app, open **Check your own**, paste a message into **"Or paste the SMS / WhatsApp message"**, tap **Check this
+Open the app, open **Try your own example**, paste a message into **"Or paste the SMS / WhatsApp message"**, tap **Check this
 message**. Choose the app language first if you want the result in Telugu or Hindi.
 
 Every expected verdict below was reproduced by running the real tools and risk engine on the
@@ -187,6 +187,6 @@ Meta's Model API for reading. Use the samples in the app, or the messages above.
 
 ## 6. Where to look if something seems wrong
 
-- **View trace** under the verdict shows every check and its result; tap a reason in the verdict to
+- **See verification steps** under the verdict shows every check and its result; tap a reason in the verdict to
   jump to the evidence it cites.
 - Note the time, the message and the verdict, and add it to the findings log in `CLAUDE.md` §11.

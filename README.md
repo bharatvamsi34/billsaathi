@@ -19,9 +19,9 @@ Built from scratch Oct 26 – Nov 4, 2026 for the Meta Global AI Developer Hacka
 
 ## How to test, in 30 seconds
 
-1. Open the [web app](https://zealous-coast-09279dd00.1.azurestaticapps.net) and press **Watch a scam get blocked**. The steps stream in with their model and timer, an amber "Possible fraud found" appears, then a red **SCAM**. The panel compares what the message says with what the demo biller record says.
-2. Press **Try a genuine demo bill**: SAM 3.1 finds the bill in a phone photo, every row matches, you get **SAFE**, and you can simulate a payment after confirming.
-3. In **Try a sample**, pick **Tampered bill**: the same account with one changed amount, so exactly one row differs and the verdict is **CAUTION**. Then try the voice note, or **See the judge catch an over-claim**, a replay of a real recorded run.
+1. Open the [web app](https://zealous-coast-09279dd00.1.azurestaticapps.net) and press **Watch BillSaathi catch a scam**. The steps stream in with their model and timer, an amber "Possible scam signs found" appears, then a red **SCAM**. The panel compares what the message says with what the demo biller record says.
+2. Press **or try a genuine demo bill**: SAM 3.1 finds the bill in a phone photo, every row matches, you get **SAFE**, and you can simulate a payment after confirming.
+3. In **Try a sample**, pick **Tampered bill**: the same account with one changed amount, so exactly one row differs and the verdict is **CAUTION**. Then try the voice note, or **Replay: a second AI catches an unsupported claim**, a replay of a real recorded run.
 
 Switch to తెలుగు or हिंदी, or turn on **Privacy Mode** in the top bar. More messages to paste are in [docs/TESTING.md](docs/TESTING.md). Please send only synthetic data: a real bill ends as CAUTION by design.
 
