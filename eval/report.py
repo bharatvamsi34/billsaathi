@@ -17,7 +17,7 @@ OUT = ROOT / "web" / "src" / "eval.generated.json"
 ORDER = ["spark-minimal", "spark-low", "spark-medium", "spark-high", "open"]
 TITLES = {
     "spark-minimal": "Spark 1.3, minimal",
-    "spark-low": "Spark 1.3, low; judge minimal (the product)",
+    "spark-low": "Spark 1.3, low (the product)",
     "spark-medium": "Spark 1.3, medium",
     "spark-high": "Spark 1.3, high",
     "open": "Muse Spark Open (Privacy Mode)",

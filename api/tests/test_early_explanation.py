@@ -52,3 +52,16 @@ def test_other_verdicts_use_the_normal_path():
     assert state.early_explanation is None
     assert len(explainer.calls) == 1
     assert "Finding" in explainer.calls[0]  # the judged reasons
+
+
+def test_the_pipeline_passes_its_judge_effort_to_the_agent(monkeypatch):
+    seen = {}
+    real = pipeline.start
+
+    def spy(*args, config, **kwargs):
+        seen["effort"] = config.judge_effort
+        return real(*args, config=config, **kwargs)
+
+    monkeypatch.setattr(pipeline, "start", spy)
+    _run(BY_ID["scam_en_known_vpa"], [cite_all("SCAM")])
+    assert seen["effort"] == pipeline.Clients.judge_effort == "low"

@@ -34,7 +34,7 @@ class Clients:
     sam: Segmenter | None = None  # None: no isolation step (Privacy Mode stays off Meta's API)
     model: str = "muse-spark-1.3"
     effort: str = "low"
-    judge_effort: str = "minimal"  # as accurate as low on the dev set, about twice as fast
+    judge_effort: str = "low"  # every published result used low; minimal gained nothing on dev
     privacy: bool = False  # open-weight model; no Meta API call anywhere on this path
 
 
@@ -153,7 +153,12 @@ def _run(state: CheckState, check: CheckInput, clients: Clients, spend: SpendMet
         clients.agent,
         agent_input,
         judge=clients.judge,
-        config=AgentConfig(model=clients.model, judge_model=clients.model, effort=clients.effort),
+        config=AgentConfig(
+            model=clients.model,
+            judge_model=clients.model,
+            effort=clients.effort,
+            judge_effort=clients.judge_effort,
+        ),
         run_id=state.check_id,
         listener=on_entry,
     )

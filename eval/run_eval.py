@@ -61,7 +61,7 @@ def clients_for(name: str) -> pipeline.Clients:
         sam=MetaSam(settings),
         model=model,
         effort=effort,
-        judge_effort="minimal" if name in ("judge-minimal", "all-minimal", "spark-low") else "low",
+        judge_effort="minimal" if name in ("judge-minimal", "all-minimal") else "low",
     )
 
 
