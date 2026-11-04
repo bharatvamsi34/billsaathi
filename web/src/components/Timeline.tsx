@@ -39,7 +39,7 @@ function Timer({ start, end, stage, skew }: { start?: number; end?: number; stag
   const until = end ?? (running ? now : undefined);
   const seconds = start != null && until != null ? Math.max(until - start, 0) / 1000 : null;
   // Code-only steps finish in milliseconds; "0.0 s" read like a step that never ran.
-  const text = seconds == null ? "" : end != null && seconds < 0.05 ? "< 0.1 s" : `${seconds.toFixed(1)} s`;
+  const text = seconds == null ? "" : end != null && seconds < 0.05 ? "<0.1 s" : `${seconds.toFixed(1)} s`;
   return <span className="t-caption ml-auto min-w-11 shrink-0 whitespace-nowrap text-right font-semibold tabular-nums text-muted">{text}</span>;
 }
 
@@ -48,7 +48,7 @@ export function currentStep(tl: TL): Key | null {
   if (!tl.input) return null;
   if (tl.input === "audio" && !tl.heard) return "stepHear";
   if (tl.input === "image" && !tl.isolated && !tl.extracted && !tl.privacy) return "stepIsolate";
-  if (!tl.extracted) return tl.input === "image" ? "stepReading" : "stepReadingMsg";
+  if (!tl.extracted) return tl.input === "image" ? "stepReading" : tl.input === "audio" ? "stepReadingVoice" : "stepReadingMsg";
   if (judgePending(tl)) return "stepJudge";
   return tl.early || tl.agentTurns.length ? "stepAgent" : "stepFixed";
 }
@@ -70,6 +70,8 @@ export function Elapsed({ start, skew, label }: { start?: number; skew: number; 
 }
 
 function StepRow({
+  preview,
+  tag,
   stage,
   title,
   model,
@@ -82,6 +84,8 @@ function StepRow({
   lang,
   children,
 }: {
+  preview?: number; // the idle panel: a numbered preview, no live state
+  tag?: string;
   stage: Stage;
   title: string;
   model?: Model;
@@ -97,7 +101,11 @@ function StepRow({
   return (
     <motion.li layout="position" transition={{ duration: 0.2, ease: "easeOut" }} className={`rounded-2xl p-3 transition-colors duration-200 ${stage === "active" ? "gradient-ring bg-card" : ""}`}>
       <div className="flex items-start gap-2.5">
-        {stage === "done" ? (
+        {preview != null ? (
+          <span aria-hidden="true" className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#eef1f5] text-[11px] font-semibold text-muted">
+            {preview}
+          </span>
+        ) : stage === "done" ? (
           <Check className="h-5 w-5 shrink-0 text-brand" />
         ) : stage === "active" ? (
           <Spinner className="h-5 w-5 shrink-0 text-brand" />
@@ -106,10 +114,15 @@ function StepRow({
         )}
         <div className="min-w-0 flex-1">
           <div className="flex items-start gap-2">
-            <h3 className={`wrap-words text-[15px] font-semibold leading-snug ${stage === "waiting" ? "text-muted" : ""}`}>{title}</h3>
+            <h3 className={`wrap-words text-[15px] font-semibold leading-snug ${preview != null ? "text-ink-soft" : stage === "waiting" ? "text-muted" : ""}`}>{title}</h3>
+            {tag && (
+              <Badge tone="neutral" className="shrink-0 text-[11px]">
+                {tag}
+              </Badge>
+            )}
             <Timer start={start} end={end} stage={stage} skew={skew} />
           </div>
-          <div className="mt-1">
+          <div className={`mt-1 ${preview != null ? "grayscale" : ""}`}>
             <ModelBadge model={model} job={job} code={code} privacy={privacy} lang={lang} />
           </div>
         </div>
@@ -270,11 +283,15 @@ export default function Timeline({
   const showVoice = idle || tl.input === "audio";
   const f = tl.extracted;
   const common = { privacy, skew, lang };
+  const readingTitle: Key = idle ? "stepReadingMsg" : tl.input === "image" ? "stepReading" : tl.input === "audio" ? "stepReadingVoice" : "stepReadingMsg";
+  const readingJob: Key | undefined = idle ? undefined : tl.input === "image" ? "jobVision" : "jobText";
+  let number = 0;
+  const preview = () => (idle ? ++number : undefined);
 
   return (
     <ol className="space-y-1">
       {showVoice && (
-        <StepRow {...common} stage={idle ? "waiting" : tl.heard || tl.verdict ? "done" : "active"} title={t(lang, "stepHear")} model="voice" start={when.received} end={when.transcribed}>
+        <StepRow {...common} preview={preview()} tag={idle ? t(lang, "tagVoiceOnly") : undefined} stage={idle ? "waiting" : tl.heard || tl.verdict ? "done" : "active"} title={t(lang, "stepHear")} model="voice" start={when.received} end={when.transcribed}>
           {!idle &&
             (tl.heard ? (
               <motion.blockquote {...rise} lang={lang} className="wrap-words rounded-xl border border-line bg-card p-2.5 text-[15px]">
@@ -287,11 +304,11 @@ export default function Timeline({
         </StepRow>
       )}
       {showIsolate && (
-        <StepRow {...common} privacy={false} stage={idle ? "waiting" : tl.isolated || tl.extracted || tl.verdict ? "done" : "active"} title={t(lang, "stepIsolate")} model="sam" job="jobCrop" start={when.received} end={when.isolated}>
+        <StepRow {...common} preview={preview()} tag={idle ? t(lang, "tagPhotoOnly") : undefined} privacy={false} stage={idle ? "waiting" : tl.isolated || tl.extracted || tl.verdict ? "done" : "active"} title={t(lang, "stepIsolate")} model="sam" job="jobCrop" start={when.received} end={when.isolated}>
           {imageUrl && <IsolatedImage src={imageUrl} tl={tl} lang={lang} />}
         </StepRow>
       )}
-      <StepRow {...common} stage={reading} title={t(lang, idle || tl.input === "image" ? "stepReading" : "stepReadingMsg")} model="spark" job={idle || tl.input === "image" ? "jobVision" : undefined} start={when.isolated ?? when.transcribed ?? when.received} end={when.extracted}>
+      <StepRow {...common} preview={preview()} stage={reading} title={t(lang, readingTitle)} model="spark" job={readingJob} start={when.isolated ?? when.transcribed ?? when.received} end={when.extracted}>
         {f ? (
           <motion.dl {...rise} className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-0.5 rounded-xl border border-line bg-card p-2.5 text-[13px]">
             {[
@@ -320,7 +337,7 @@ export default function Timeline({
         )}
       </StepRow>
 
-      <StepRow {...common} stage={fixedStage} title={t(lang, "stepFixed")} code start={when.extracted} end={when.early}>
+      <StepRow {...common} preview={preview()} stage={fixedStage} title={t(lang, "stepFixed")} code start={when.extracted} end={when.early}>
         {fixed.length > 0 ? (
           <ul className="space-y-1.5">
             {fixed.map((row) => (
@@ -332,7 +349,7 @@ export default function Timeline({
         )}
       </StepRow>
 
-      <StepRow {...common} stage={agentStage} title={t(lang, "stepAgent")} model="spark" job="jobAgent" start={when.early != null ? when.early + waitMs(tl) : undefined} end={agentStage === "done" ? when.agent_turn : undefined}>
+      <StepRow {...common} preview={preview()} stage={agentStage} title={t(lang, "stepAgent")} model="spark" job="jobAgent" start={when.early != null ? when.early + waitMs(tl) : undefined} end={agentStage === "done" ? when.agent_turn : undefined}>
         {tl.agentTurns.length > 0 && <p className="t-caption rise text-ink-soft">{t(lang, "agentDecided")}</p>}
         {extra.length > 0 && (
           <ul className="space-y-1.5">
@@ -343,11 +360,11 @@ export default function Timeline({
         )}
       </StepRow>
 
-      <StepRow {...common} stage={judgeStage} title={t(lang, "stepJudge")} model="spark" job="jobJudge" code start={when.agent_turn} end={when.verdict}>
+      <StepRow {...common} preview={preview()} stage={judgeStage} title={t(lang, "stepJudge")} model="spark" job="jobJudge" code start={when.agent_turn} end={when.verdict}>
         {judgeStage !== "waiting" && <JudgeDetail tl={tl} lang={lang} />}
       </StepRow>
 
-      <StepRow {...common} stage={explainStage} title={t(lang, "stepExplain")} model="spark" job="jobExplain" start={when.verdict} end={when.explanation} />
+      <StepRow {...common} preview={preview()} stage={explainStage} title={t(lang, "stepExplain")} model="spark" job="jobExplain" start={when.verdict} end={when.explanation} />
     </ol>
   );
 }
