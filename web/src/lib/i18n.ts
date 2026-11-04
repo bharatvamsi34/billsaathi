@@ -261,7 +261,7 @@ export const STRINGS = {
     hi: "गृह मंत्रालय, लोकसभा में उत्तर, जुलाई 2025",
   },
   statCorrect: { en: "correct verdicts", te: "సరైన తీర్పులు", hi: "सही फ़ैसले" },
-  statFalseSafe: { en: "risky called SAFE", te: "ప్రమాదకరమైనవి సురక్షితం అన్నవి", hi: "जोखिम को सुरक्षित कहा" },
+  statBlocked: { en: "scams & risky bills blocked", te: "మోసాలు, ప్రమాదకర బిల్లులు అడ్డుకున్నవి", hi: "धोखे और जोखिम वाले बिल रोके" },
   statLatency: { en: "median to verdict", te: "తీర్పుకు మధ్యస్థ సమయం", hi: "फ़ैसले का औसत समय" },
   statMore: {
     en: "{n} synthetic, held-out test items · How we measured",

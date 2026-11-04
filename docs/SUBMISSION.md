@@ -28,7 +28,7 @@ The product is the verification, not the reading. Code runs fixed checks first: 
 
 On SAFE, the user can simulate a payment after an explicit confirmation, with an idempotency key, a receipt and an append-only audit log. No real money moves. On SCAM or CAUTION, they get a warning card to forward to family, and SCAM replies give the national helpline 1930.
 
-**Measured:** on 21 synthetic test items held out from all tuning: 21/21 correct, 0/13 risky requests called SAFE, 0/8 false alarms, median 10.9 s to the verdict, p90 17.2 s, about $0.024 per check. The set is small and written by the builder, so 0/13 still allows a true rate up to about 23%. The evaluation page says this too.
+**Measured:** on 21 synthetic test items held out from all tuning: 21/21 correct, 13/13 risky requests not called SAFE (0 dangerous mistakes), 8/8 genuine bills passed (0 false alarms), median 10.9 s to the verdict, p90 17.2 s, about $0.024 per check. The set is small and written by the builder, so 13/13 still allows a true miss rate up to about 23%. The evaluation page says this too.
 
 **Limits:** biller records are simulated, not the live BBPS network, so a real bill ends as CAUTION by design. Runtime state is in memory on one replica. The next step is real biller data, which needs a partner.
 
@@ -107,7 +107,7 @@ BillSaathi is a real agent under real constraints, in a domain where a wrong ans
 Privacy Mode runs the whole pipeline on **Muse Spark Open** through Baseten: reading, tool-calling agent, judge, explanation and speech.
 
 - **Not a demo of a prompt:** the same agent loop, tools, deterministic checks and evidence record, behind one client interface.
-- **Measured side by side on the held-out set:** 21/21 correct, 0/13 false SAFE, 0/8 false alarms, median 19.1 s (Spark 1.3: 10.9 s), about 2 agent turns (Spark 1.3: 1), with cost estimated at about $0.033 per check because no price is listed.
+- **Measured side by side on the held-out set:** 21/21 correct, 13/13 risky not called SAFE, 8/8 genuine bills passed, median 19.1 s (Spark 1.3: 10.9 s), about 2 agent turns (Spark 1.3: 1), with cost estimated at about $0.033 per check because no price is listed.
 - **Fails safe:** if no open-weight provider is available, the check is refused rather than quietly sent to Meta's API. SAM isn't used on this path, because it's on Meta's API.
 - **Honest about privacy:** this means no call to Meta's Model API. The model still runs on an external host (Baseten), so it isn't offline or on-device. The Fireworks fallback is built but untested live.
 

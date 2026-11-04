@@ -61,6 +61,17 @@ def main() -> None:
                 for r in rows
                 if r["got"] != r["expected"]
             ],
+            "evidence_gaps": [
+                {
+                    "id": r["id"],
+                    "lang": r["lang"],
+                    "got": r["got"],
+                    "missing": sorted(set(r["expected_codes"]) - set(r["codes"])),
+                    "codes": r["codes"],
+                }
+                for r in rows
+                if not set(r["expected_codes"]) <= set(r["codes"])
+            ],
             "explanation_cost_per_check_usd": sum(r["costs"].get("explanation", 0) for r in rows) / len(rows),
         }  # fmt: skip
     OUT.write_text(

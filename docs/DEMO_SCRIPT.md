@@ -122,7 +122,7 @@ All inputs are synthetic. The samples and the text of W1, H1 and Line V gave the
 | 6 | **Line V**, spoken in the Telugu UI | Below | SCAM |
 | 7 | **W1**, then **DETAILS**, **P1** (`bill_swapped_vpa_dgas`), **Line V** as a voice note | Below | SCAM |
 | 8 | Scam SMS sample with Privacy Mode on (or **H1** in the Hindi UI) | Below | SCAM |
-| 9 | https://zealous-coast-09279dd00.1.azurestaticapps.net/eval | 21/21, 19/21 findings, 0/13, 0/8, 10.9 s | — |
+| 9 | https://zealous-coast-09279dd00.1.azurestaticapps.net/eval | 21/21, 19/21 findings, 13/13, 8/8, 10.9 s | — |
 
 **Message A (the hook, on the phone)**
 ```

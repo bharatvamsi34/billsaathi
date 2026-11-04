@@ -90,15 +90,15 @@ Contributor models, which train on inputs, are refused in code.
 
 The real pipeline on the **test split: 21 held-out synthetic items** never used for tuning. Prompts and rules were tuned on the separate dev split (39 items). Graders are deterministic code. Full tables, method and results files: [/eval](https://zealous-coast-09279dd00.1.azurestaticapps.net/eval), [eval/](eval/).
 
-| | Correct | False SAFE | False alarms | p50 to verdict | p90 | Cost per check |
+| | Correct | Risky not called SAFE | Genuine bills passed | p50 to verdict | p90 | Cost per check |
 |---|---|---|---|---|---|---|
-| **Spark 1.3, low; judge minimal (the product)** | 21/21 | 0/13 | 0/8 | 10.9 s | 17.2 s | $0.024 |
-| Spark 1.3, minimal | 21/21 | 0/13 | 0/8 | 8.5 s | 12.9 s | $0.016 |
-| Spark 1.3, medium | 21/21 | 0/13 | 0/8 | 14.3 s | 19.7 s | $0.023 |
-| Spark 1.3, high | 21/21 | 0/13 | 0/8 | 16.3 s | 21.5 s | $0.026 |
-| Muse Spark Open (Privacy Mode) | 21/21 | 0/13 | 0/8 | 19.1 s | 23.7 s | ~$0.033 (estimate) |
+| **Spark 1.3, low (the product)** | 21/21 | 13/13 | 8/8 | 10.9 s | 17.2 s | $0.024 |
+| Spark 1.3, minimal | 21/21 | 13/13 | 8/8 | 8.5 s | 12.9 s | $0.016 |
+| Spark 1.3, medium | 21/21 | 13/13 | 8/8 | 14.3 s | 19.7 s | $0.023 |
+| Spark 1.3, high | 21/21 | 13/13 | 8/8 | 16.3 s | 21.5 s | $0.026 |
+| Muse Spark Open (Privacy Mode) | 21/21 | 13/13 | 8/8 | 19.1 s | 23.7 s | ~$0.033 (estimate) |
 
-**Read these honestly.** The set is small, synthetic and written by the builder, so 0/13 false SAFE still allows a true rate up to about 23% (95%, rule of three). The checks recorded every expected finding on 19 of 21 items, though all verdicts were right. Only the product row includes explanation cost, and in the other rows the judge stayed at `low`. Times are from a developer machine running three checks at once. Spark Open has no listed price, so its cost is estimated at Spark 1.3 rates.
+**Read these honestly.** The set is small, synthetic and written by the builder, so 13/13 risky items not called SAFE (0 dangerous mistakes) still allows a true miss rate up to about 23% (95%, rule of three). The checks recorded every expected finding on 19 of 21 items; on the other 2 the biller check answered UNKNOWN_BILLER, stricter than the label expected, and the verdict was still right ([details on `/eval`](https://zealous-coast-09279dd00.1.azurestaticapps.net/eval)). Only the product row includes explanation cost. The judge ran at `low` in every row. Times are from a developer machine running three checks at once. Spark Open has no listed price, so its cost is estimated at Spark 1.3 rates.
 
 ## Known limits
 

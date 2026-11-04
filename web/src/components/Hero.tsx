@@ -39,7 +39,7 @@ function EvalProof({ lang }: { lang: Lang }) {
       <span className="grid grid-cols-3 gap-2">
         {[
           [`${best.correct}/${best.n}`, "statCorrect"],
-          [`${best.false_safe}/${best.risky}`, "statFalseSafe"],
+          [`${best.risky - best.false_safe}/${best.risky}`, "statBlocked"],
           [`${best.latency_p50_s.toFixed(1)} s`, "statLatency"],
         ].map(([value, label]) => (
           <span key={label}>

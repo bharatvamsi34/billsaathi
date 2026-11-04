@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-02",
+  "generated": "2026-11-04",
   "n_test": 21,
   "configs": {
     "spark-minimal": {
@@ -184,10 +184,27 @@
         }
       },
       "misses": [],
+      "evidence_gaps": [
+        {
+          "id": "scam_hi_cashback",
+          "lang": "hi",
+          "got": "SCAM",
+          "missing": [
+            "BILLER_VERIFIED"
+          ],
+          "codes": [
+            "DESTINATION_NOT_OFFICIAL",
+            "LOOKALIKE_DOMAIN",
+            "REFUND_LURE",
+            "UNKNOWN_BILLER",
+            "URGENCY_PRESSURE"
+          ]
+        }
+      ],
       "explanation_cost_per_check_usd": 0.0
     },
     "spark-low": {
-      "title": "Spark 1.3, low; judge minimal (the product)",
+      "title": "Spark 1.3, low (the product)",
       "file": "eval/results/test_spark-low_2026-11-03_0021.jsonl",
       "date": "2026-11-03",
       "n": 21,
@@ -368,6 +385,38 @@
         }
       },
       "misses": [],
+      "evidence_gaps": [
+        {
+          "id": "scam_hi_mobile_phone",
+          "lang": "hi",
+          "got": "SCAM",
+          "missing": [
+            "BILLER_VERIFIED"
+          ],
+          "codes": [
+            "DESTINATION_NOT_OFFICIAL",
+            "KYC_UPDATE_LURE",
+            "PERSONAL_PHONE_NUMBER",
+            "UNKNOWN_BILLER",
+            "URGENCY_PRESSURE"
+          ]
+        },
+        {
+          "id": "scam_hi_cashback",
+          "lang": "hi",
+          "got": "SCAM",
+          "missing": [
+            "BILLER_VERIFIED"
+          ],
+          "codes": [
+            "DESTINATION_NOT_OFFICIAL",
+            "LOOKALIKE_DOMAIN",
+            "REFUND_LURE",
+            "UNKNOWN_BILLER",
+            "URGENCY_PRESSURE"
+          ]
+        }
+      ],
       "explanation_cost_per_check_usd": 0.00452952380952381
     },
     "spark-medium": {
@@ -552,6 +601,23 @@
         }
       },
       "misses": [],
+      "evidence_gaps": [
+        {
+          "id": "scam_hi_cashback",
+          "lang": "hi",
+          "got": "SCAM",
+          "missing": [
+            "BILLER_VERIFIED"
+          ],
+          "codes": [
+            "DESTINATION_NOT_OFFICIAL",
+            "LOOKALIKE_DOMAIN",
+            "REFUND_LURE",
+            "UNKNOWN_BILLER",
+            "URGENCY_PRESSURE"
+          ]
+        }
+      ],
       "explanation_cost_per_check_usd": 0.0
     },
     "spark-high": {
@@ -736,6 +802,39 @@
         }
       },
       "misses": [],
+      "evidence_gaps": [
+        {
+          "id": "scam_te_fake_bill_vpa",
+          "lang": "te",
+          "got": "SCAM",
+          "missing": [
+            "DISCONNECTION_THREAT"
+          ],
+          "codes": [
+            "AMOUNT_MISMATCH",
+            "AMOUNT_SPIKE",
+            "BILLER_VERIFIED",
+            "DESTINATION_NOT_OFFICIAL",
+            "LOOKALIKE_VPA",
+            "URGENCY_PRESSURE"
+          ]
+        },
+        {
+          "id": "scam_hi_cashback",
+          "lang": "hi",
+          "got": "SCAM",
+          "missing": [
+            "BILLER_VERIFIED"
+          ],
+          "codes": [
+            "DESTINATION_NOT_OFFICIAL",
+            "LOOKALIKE_DOMAIN",
+            "REFUND_LURE",
+            "UNKNOWN_BILLER",
+            "URGENCY_PRESSURE"
+          ]
+        }
+      ],
       "explanation_cost_per_check_usd": 0.0
     },
     "open": {
@@ -920,6 +1019,23 @@
         }
       },
       "misses": [],
+      "evidence_gaps": [
+        {
+          "id": "scam_hi_cashback",
+          "lang": "hi",
+          "got": "SCAM",
+          "missing": [
+            "BILLER_VERIFIED"
+          ],
+          "codes": [
+            "DESTINATION_NOT_OFFICIAL",
+            "LOOKALIKE_DOMAIN",
+            "REFUND_LURE",
+            "UNKNOWN_BILLER",
+            "URGENCY_PRESSURE"
+          ]
+        }
+      ],
       "explanation_cost_per_check_usd": 0.0
     }
   }

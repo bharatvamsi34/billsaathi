@@ -6,7 +6,7 @@ import CountUp from "./CountUp";
 
 export const metadata: Metadata = {
   title: "Evaluation — BillSaathi",
-  description: "Accuracy, false-SAFE rate, latency and cost of BillSaathi on a small synthetic held-out test set.",
+  description: "Accuracy, risky items not called SAFE, latency and cost of BillSaathi on a small synthetic held-out test set.",
 };
 
 type Summary = {
@@ -35,6 +35,7 @@ type Config = Summary & {
   by_expected: Record<string, Summary>;
   confusion: Record<string, Record<string, number>>;
   misses: { id: string; lang: string; kind: string; expected: string; got: string }[];
+  evidence_gaps: { id: string; lang: string; got: string; missing: string[]; codes: string[] }[];
   explanation_cost_per_check_usd: number;
 };
 
@@ -43,6 +44,13 @@ const SWEEP = ["spark-minimal", "spark-low", "spark-medium", "spark-high"];
 const LANGUAGES: Record<string, string> = { en: "English", te: "Telugu", hi: "Hindi" };
 const KINDS: Record<string, string> = { text: "Text message", image: "Image" };
 const REPO = "https://github.com/bharatvamsi34/billsaathi/blob";
+
+const GAP_WHY: Record<string, string> = {
+  scam_hi_cashback:
+    "Mainly a labelling expectation, not a missing check. The message names SkyDemo but nothing says it is a DTH service, so reading files it under “other”, and the biller lookup only searches the category it is given. All 6 runs of this item on the test split got this result, and 3 of 3 re-reads on Nov 4 chose “other”. Our label assumed the biller would be recognised.",
+  scam_hi_mobile_phone:
+    "A one-off in this run. The other 5 test-split runs of this item recognised the biller, as did 3 of 3 re-reads on Nov 4. The results file does not store what was read, so the exact cause in this run is not known.",
+};
 
 const usd = (n: number) => `$${n.toFixed(3)}`;
 const secs = (n: number) => `${n.toFixed(1)} s`;
@@ -94,16 +102,20 @@ function Table({ head, rows, emphasis, caption }: { head: string[]; rows: (strin
   );
 }
 
+// Success counts, so nobody misreads 0/13 as a failure.
+const notSafe = (s: Summary) => `${s.risky - s.false_safe}/${s.risky}`;
+const passed = (s: Summary) => `${s.safe - s.false_alarm}/${s.safe}`;
+
 const row = (name: string, s: Summary) => [
   name,
   s.n,
   `${s.correct}/${s.n}`,
-  s.risky ? `${s.false_safe}/${s.risky}` : "—",
-  s.safe ? `${s.false_alarm}/${s.safe}` : "—",
+  s.risky ? notSafe(s) : "—",
+  s.safe ? passed(s) : "—",
   secs(s.latency_p50_s),
   secs(s.latency_p90_s),
 ];
-const HEAD = ["", "Items", "Correct", "False SAFE", "False alarms", "p50", "p90"];
+const HEAD = ["", "Items", "Correct", "Risky not called SAFE", "Genuine bills passed", "p50", "p90"];
 
 export default function Eval() {
   const main = configs["spark-low"];
@@ -130,7 +142,7 @@ export default function Eval() {
           {main.correct}/{main.n} correct on a small synthetic held-out set
         </h1>
         <p className="mt-2 max-w-3xl text-[15px] leading-relaxed text-white/85 lg:text-base">
-          A good sign, not proof: the {main.n} items were written by the builder, and 0 false SAFE out of {main.risky} still allows a true rate up to about {safeBound}% (95% confidence, rule of three).
+          A good sign, not proof: the {main.n} items were written by the builder, and {main.risky - main.false_safe} of {main.risky} risky items not called SAFE still allows a true miss rate up to about {safeBound}% (95% confidence, rule of three).
         </p>
       </section>
 
@@ -139,11 +151,33 @@ export default function Eval() {
           <SplitTag split="test" />
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
             <Tile value={main.correct} total={main.n} label="Verdict correct" note="SAFE, CAUTION or SCAM exactly as labelled" />
-            <Tile value={main.evidence_found} total={main.n} label="All expected findings present" note="On the rest the verdict held on the remaining evidence" />
-            <Tile value={main.false_safe} total={main.risky} label="False SAFE" note="Risky called SAFE: the failure we care about most" />
-            <Tile value={main.false_alarm} total={main.safe} label="False alarms" note="Genuine bills not called SAFE" />
+            <Tile value={main.evidence_found} total={main.n} label="All expected findings present" note={`The other ${main.n - main.evidence_found} are named below; each verdict was still correct`} />
+            <Tile value={main.risky - main.false_safe} total={main.risky} label="Risky items NOT called SAFE" note={`${main.false_safe} dangerous mistakes`} />
+            <Tile value={main.safe - main.false_alarm} total={main.safe} label="Genuine bills passed" note={`${main.false_alarm} false alarms`} />
             <Tile wide value={main.latency_p50_s} suffix=" s" label="Median to verdict" note={`p90 ${secs(main.latency_p90_s)}, ${usd(main.cost_per_check_usd)} per check`} />
           </div>
+          {main.evidence_gaps.length > 0 && (
+            <div className="rounded-[18px] border border-line bg-card p-4 shadow-soft">
+              <h2 className="t-title">
+                The {main.evidence_gaps.length} items without every expected finding
+              </h2>
+              <p className="mt-1 text-[15px]">No check was skipped. The biller check ran on both and answered UNKNOWN_BILLER, which is stricter than the BILLER_VERIFIED the label expected. No tool or label was changed because of this.</p>
+              <ul className="mt-3 grid gap-3 lg:grid-cols-2">
+                {main.evidence_gaps.map((g) => (
+                  <li key={g.id} className="rounded-2xl bg-paper p-3 text-[14px] leading-relaxed">
+                    <code className="wrap-value font-semibold">{g.id}</code> ({LANGUAGES[g.lang] ?? g.lang})
+                    <p className="mt-1">
+                      <strong>Missing:</strong> {g.missing.join(", ")}
+                    </p>
+                    <p className="mt-1">{GAP_WHY[g.id]}</p>
+                    <p className="mt-1">
+                      <strong>Still {g.got} because of:</strong> {g.codes.filter((c) => c !== "UNKNOWN_BILLER").join(", ")}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </section>
 
         <div className="grid gap-5 lg:grid-cols-2">
@@ -153,18 +187,18 @@ export default function Eval() {
               <SplitTag split="test" />
               <Table
                 caption="Reasoning effort sweep"
-                head={["Effort", "Correct", "False SAFE", "p50", "Cost"]}
+                head={["Effort", "Correct", "Risky not called SAFE", "p50", "Cost"]}
                 emphasis={sweep.indexOf("spark-low")}
                 rows={sweep.map((k) => {
                   const c = configs[k];
-                  return [c.title.replace("Spark 1.3, ", ""), `${c.correct}/${c.n}`, `${c.false_safe}/${c.risky}`, secs(c.latency_p50_s), usd(c.cost_per_check_usd)];
+                  return [c.title.replace("Spark 1.3, ", ""), `${c.correct}/${c.n}`, notSafe(c), secs(c.latency_p50_s), usd(c.cost_per_check_usd)];
                 })}
               />
               <div className="t-caption space-y-1.5 text-ink-soft">
-                <p>Accuracy did not separate the levels on this set. Effort applied to reading and the agent; the highlighted product row uses the shipped judge setting (minimal), the others used low.</p>
+                <p>Accuracy did not separate the levels on this set. Effort applied to reading and the agent; the judge ran at low in every row.</p>
                 <p className="flex flex-wrap items-center gap-1.5">
                   <SplitTag split="dev" />
-                  <span>Why minimal was not adopted: all-minimal scored 38/39 with one false alarm and was not faster (p50 13.8 s); the product scored 39/39 (p50 10.6 s). Those runs were hours apart, so the speed gap is weak evidence.</span>
+                  <span>Why minimal was not adopted: reading and agent at minimal scored 38/39 with one false alarm and were not faster (p50 13.8 s); the product scored 39/39 (p50 10.6 s). The judge alone at minimal also scored 38/39, with the same false alarm and no visible gain. These runs were hours apart, so the speed gaps are weak evidence.</span>
                 </p>
               </div>
             </section>
@@ -176,8 +210,8 @@ export default function Eval() {
               <SplitTag split="test" />
               <Table
                 caption="Muse Spark 1.3 compared with Muse Spark Open"
-                head={["Model", "Correct", "False SAFE", "Turns", "p50", "Cost"]}
-                rows={[main, open].map((c) => [c === open ? "Muse Spark Open" : "Muse Spark 1.3", `${c.correct}/${c.n}`, `${c.false_safe}/${c.risky}`, c.turns_median, secs(c.latency_p50_s), `${c === open ? "~" : ""}${usd(c.cost_per_check_usd)}`])}
+                head={["Model", "Correct", "Risky not called SAFE", "Turns", "p50", "Cost"]}
+                rows={[main, open].map((c) => [c === open ? "Muse Spark Open" : "Muse Spark 1.3", `${c.correct}/${c.n}`, notSafe(c), c.turns_median, secs(c.latency_p50_s), `${c === open ? "~" : ""}${usd(c.cost_per_check_usd)}`])}
               />
               <p className="t-caption text-ink-soft">
                 Privacy Mode runs the whole pipeline on the open-weight model on an external host (Baseten; a Fireworks fallback is built but untested live). It is not offline. It skips SAM, which is on Meta&apos;s API, so images are read uncropped. Its cost is an estimate at Spark 1.3 token rates, because no price is listed.
