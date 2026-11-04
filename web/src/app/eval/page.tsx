@@ -2,11 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ShieldMark } from "@/components/icons";
 import results from "@/eval.generated.json";
-import CountUp from "./CountUp";
 
 export const metadata: Metadata = {
   title: "Evaluation — BillSaathi",
-  description: "Accuracy, risky items not called SAFE, latency and cost of BillSaathi on a small synthetic held-out test set.",
+  description: "Accuracy, risky items not called SAFE, latency and cost of BillSaathi on a small synthetic test set kept aside from tuning.",
 };
 
 type Summary = {
@@ -59,7 +58,7 @@ function Tile({ value, total, suffix, label, note, wide }: { value: number; tota
   return (
     <div className={`rounded-[18px] border border-line bg-card p-4 shadow-soft ${wide ? "col-span-2 lg:col-span-1" : ""}`}>
       <p className="text-[1.75rem] font-bold tabular-nums leading-tight tracking-tight">
-        <CountUp value={value} decimals={suffix ? 1 : 0} />
+        {suffix ? value.toFixed(1) : value}
         {total != null && `/${total}`}
         {suffix}
       </p>
@@ -70,7 +69,7 @@ function Tile({ value, total, suffix, label, note, wide }: { value: number; tota
 }
 
 function SplitTag({ split }: { split: "test" | "dev" }) {
-  return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[12px] font-semibold ${split === "test" ? "bg-brand-soft text-brand" : "bg-[#efeafe] text-[#5236c9]"}`}>{split === "test" ? "Test split · 21 items" : "Dev split · 39 items"}</span>;
+  return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[12px] font-semibold ${split === "test" ? "bg-brand-soft text-brand" : "bg-[#efeafe] text-[#5236c9]"}`}>{split === "test" ? "Test cases kept aside (never used for tuning) · 21 items" : "Dev split · 39 items"}</span>;
 }
 
 function Table({ head, rows, emphasis, caption }: { head: string[]; rows: (string | number)[][]; emphasis?: number; caption?: string }) {
@@ -115,7 +114,9 @@ const row = (name: string, s: Summary) => [
   secs(s.latency_p50_s),
   secs(s.latency_p90_s),
 ];
-const HEAD = ["", "Items", "Correct", "Risky not called SAFE", "Genuine bills passed", "p50", "p90"];
+const P50 = "Median time (p50)";
+const P90 = "90th-percentile time (p90)";
+const HEAD = ["", "Items", "Correct", "Risky not called SAFE", "Genuine bills passed", P50, P90];
 
 export default function Eval() {
   const main = configs["spark-low"];
@@ -139,7 +140,7 @@ export default function Eval() {
 
       <section className="hero-glow px-4 py-7 text-white lg:px-[max(1rem,calc(50%-33rem))] lg:py-9">
         <h1 className="t-display">
-          {main.correct}/{main.n} correct on a small synthetic held-out set
+          {main.correct}/{main.n} correct on a small synthetic set kept aside from tuning
         </h1>
         <p className="mt-2 max-w-3xl text-[15px] leading-relaxed text-white/85 lg:text-base">
           A good sign, not proof: the {main.n} items were written by the builder, and {main.risky - main.false_safe} of {main.risky} risky items not called SAFE still allows a true miss rate up to about {safeBound}% (95% confidence, rule of three).
@@ -161,7 +162,7 @@ export default function Eval() {
             <Tile value={main.evidence_found} total={main.n} label="All expected findings present" note={`The other ${main.n - main.evidence_found} are named below; each verdict was still correct`} />
             <Tile value={main.risky - main.false_safe} total={main.risky} label="Risky items NOT called SAFE" note={`${main.false_safe} dangerous mistakes`} />
             <Tile value={main.safe - main.false_alarm} total={main.safe} label="Genuine bills passed" note={`${main.false_alarm} false alarms`} />
-            <Tile wide value={main.latency_p50_s} suffix=" s" label="Median to verdict" note={`p90 ${secs(main.latency_p90_s)}, ${usd(main.cost_per_check_usd)} per check`} />
+            <Tile wide value={main.latency_p50_s} suffix=" s" label="Median time (p50)" note={`90th-percentile time (p90): ${secs(main.latency_p90_s)}. ${usd(main.cost_per_check_usd)} per check`} />
           </div>
           {main.evidence_gaps.length > 0 && (
             <div className="rounded-[18px] border border-line bg-card p-4 shadow-soft">
@@ -194,7 +195,7 @@ export default function Eval() {
               <SplitTag split="test" />
               <Table
                 caption="Reasoning effort sweep"
-                head={["Effort", "Correct", "Risky not called SAFE", "p50", "Cost"]}
+                head={["Effort", "Correct", "Risky not called SAFE", P50, "Cost"]}
                 emphasis={sweep.indexOf("spark-low")}
                 rows={sweep.map((k) => {
                   const c = configs[k];
@@ -202,10 +203,10 @@ export default function Eval() {
                 })}
               />
               <div className="t-caption space-y-1.5 text-ink-soft">
-                <p>Accuracy did not separate the levels on this set. Effort applied to reading and the agent; the judge ran at low in every row.</p>
+                <p>Accuracy did not separate the levels on this set. Effort applied to reading and the agent; the second AI check ran at low in every row.</p>
                 <p className="flex flex-wrap items-center gap-1.5">
                   <SplitTag split="dev" />
-                  <span>Why minimal was not adopted: reading and agent at minimal scored 38/39 with one false alarm and were not faster (p50 13.8 s); the product scored 39/39 (p50 10.6 s). The judge alone at minimal also scored 38/39, with the same false alarm and no visible gain. These runs were hours apart, so the speed gaps are weak evidence.</span>
+                  <span>Why minimal was not adopted: reading and agent at minimal scored 38/39 with one false alarm and were not faster (p50 13.8 s); the product scored 39/39 (p50 10.6 s). The second AI check alone at minimal also scored 38/39, with the same false alarm and no visible gain. These runs were hours apart, so the speed gaps are weak evidence.</span>
                 </p>
               </div>
             </section>
@@ -217,7 +218,7 @@ export default function Eval() {
               <SplitTag split="test" />
               <Table
                 caption="Muse Spark 1.3 compared with Muse Spark Open"
-                head={["Model", "Correct", "Risky not called SAFE", "Turns", "p50", "Cost"]}
+                head={["Model", "Correct", "Risky not called SAFE", "Turns", P50, "Cost"]}
                 rows={[main, open].map((c) => [c === open ? "Muse Spark Open" : "Muse Spark 1.3", `${c.correct}/${c.n}`, notSafe(c), c.turns_median, secs(c.latency_p50_s), `${c === open ? "~" : ""}${usd(c.cost_per_check_usd)}`])}
               />
               <p className="t-caption text-ink-soft">
@@ -271,13 +272,13 @@ export default function Eval() {
               <h2 className="t-title">How this was measured</h2>
               <ul className="list-disc space-y-1 pl-5 text-[15px]">
                 <li>
-                  <strong>Held-out split.</strong> {results.n_test} of 60 labelled synthetic items, split by scenario before any tuning. Prompts and rules were tuned on the 39 dev items only. Labels were written from intent, and a separate test requires the real tools to reproduce every label.
+                  <strong>Test cases kept aside (never used for tuning).</strong> {results.n_test} of 60 labelled synthetic items, split by scenario before any tuning. Prompts and rules were tuned on the 39 dev items only. Labels were written from intent, and a separate test requires the real tools to reproduce every label.
                 </li>
                 <li>
                   <strong>Deterministic graders.</strong> Code compares each verdict with its label; no model does any grading. The graders have their own unit tests.
                 </li>
                 <li>
-                  <strong>The real pipeline.</strong> SAM, reading, the milestone check, the fixed checks, the agent, the deterministic checks and the judge, as in the live app. Nobody answers the agent&apos;s question, so a question ends as no answer, which means forced CAUTION.
+                  <strong>The real pipeline.</strong> SAM, reading, the milestone check, the fixed checks, the agent, the deterministic checks and the second AI check, as in the live app. Nobody answers the agent&apos;s question, so a question ends as no answer, which means forced CAUTION.
                 </li>
                 <li>
                   <strong>Time</strong> is to the verdict; the explanation follows it. <strong>Cost</strong> is model spend from token counts at list prices, and includes the explanation ({usd(main.explanation_cost_per_check_usd)}) in the product row only.
