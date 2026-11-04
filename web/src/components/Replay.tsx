@@ -9,6 +9,26 @@ import { Badge, Button, Card, rise } from "./ui";
 
 type Attempt = (typeof replay.attempts)[number];
 
+const TRANSLATION = "Electricity office: your dues are ₹2,750. Pay electricityofficer@okdemo immediately, or the power will be cut tonight.";
+const refusedReason = replay.attempts.flatMap((a) => a.reasons).find((r) => !r.supported)?.reason ?? "";
+const corrected = refusedReason.replace(" tonight", "");
+
+/** The word the check refused, and the claim as the agent corrected it. */
+function Claim({ text, supported }: { text: string; supported: boolean }) {
+  if (!supported && text.includes("tonight")) {
+    const [before, after] = text.split("tonight");
+    return (
+      <>
+        {before}
+        <mark className="mark-risky">tonight</mark>
+        {after}
+      </>
+    );
+  }
+  if (supported && text === corrected) return <mark className="mark-ok">{text}</mark>;
+  return <>{text}</>;
+}
+
 function Claims({ attempt, title, lang }: { attempt: Attempt; title: string; lang: Lang }) {
   return (
     <motion.section {...rise} className="space-y-2">
@@ -23,12 +43,17 @@ function Claims({ attempt, title, lang }: { attempt: Attempt; title: string; lan
               <span aria-hidden="true" className={r.supported ? "text-safe" : "text-caution"}>
                 {r.supported ? "✓ " : "! "}
               </span>
-              {r.reason}
+              <Claim text={r.reason} supported={r.supported} />
             </p>
             {!r.supported && <p className="wrap-words t-caption mt-1 text-caution">{r.why}</p>}
           </li>
         ))}
       </ul>
+      {!attempt.accepted && (
+        <p className="wrap-words rounded-xl bg-paper p-2.5 text-[14px] font-medium leading-snug" data-testid="replay-why">
+          {t(lang, "replayWhy")}
+        </p>
+      )}
     </motion.section>
   );
 }
@@ -56,6 +81,9 @@ export default function Replay({ lang, onClose }: { lang: Lang; onClose: () => v
       </div>
       <div lang="te" className="wrap-words rounded-2xl rounded-tl-md bg-[#eef1f5] px-3.5 py-2.5 text-[15px] leading-relaxed">
         {replay.message}
+        <p lang="en" className="t-caption mt-1.5 text-muted" data-testid="replay-translation">
+          In English: {TRANSLATION}
+        </p>
       </div>
       {replay.attempts.slice(0, shown).map((attempt, i) => (
         <Claims key={i} attempt={attempt} lang={lang} title={t(lang, i === 0 ? "replayAttempt1" : "replayAttempt2")} />

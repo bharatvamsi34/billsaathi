@@ -86,9 +86,7 @@ export default function Capture({
         <section className="rise">
           <p className="t-caption mb-2 px-1 text-muted">{t(lang, "samplesNote")}</p>
           <ul className="grid gap-2 lg:grid-cols-2">
-            {samples.map((s) => (
-              <SampleCard key={s.id} s={s} lang={lang} busy={busy} onRun={async () => onSubmit(await sampleInput(s))} />
-            ))}
+            <SampleCard key={samples[0].id} s={samples[0]} lang={lang} busy={busy} onRun={async () => onSubmit(await sampleInput(samples[0]))} />
             <li className="lg:col-span-2">
               <Card className="overflow-hidden transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-px hover:border-brand hover:shadow-lift">
                 <button type="button" disabled={busy} onClick={onReplay} data-sample="replay" className="flex w-full items-center gap-3 p-2.5 text-left disabled:opacity-60">
@@ -102,6 +100,9 @@ export default function Capture({
                 </button>
               </Card>
             </li>
+            {samples.slice(1).map((s) => (
+              <SampleCard key={s.id} s={s} lang={lang} busy={busy} onRun={async () => onSubmit(await sampleInput(s))} />
+            ))}
           </ul>
         </section>
       ) : (
