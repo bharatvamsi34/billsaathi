@@ -28,7 +28,6 @@ export default function SandboxPay({ checkId, tl, lang }: { checkId: string; tl:
   const amount = f?.amount.value;
   if (amount == null) return null;
 
-  const label = <p className="t-caption rounded-xl bg-caution-bg px-3 py-2 text-center font-semibold text-caution">{t(lang, "sandboxLabel")}</p>;
   const grid = "grid grid-cols-[minmax(6rem,auto)_minmax(0,1fr)] gap-x-3 gap-y-1 text-[14px]";
 
   if (receipt) {
@@ -48,7 +47,7 @@ export default function SandboxPay({ checkId, tl, lang }: { checkId: string; tl:
           <Row label={t(lang, "receiptNumber")} value={receipt.receipt_id} code />
           <Row label={t(lang, "auditEntry")} value={`#${receipt.audit_id}`} />
         </dl>
-        <div className="mt-3">{label}</div>
+        <p className="t-caption mt-3 rounded-xl bg-caution-bg px-3 py-2 text-center font-semibold text-caution">{t(lang, "receiptNote")}</p>
       </section>
     );
   }

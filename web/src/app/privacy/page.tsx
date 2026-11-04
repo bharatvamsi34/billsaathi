@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ShieldMark } from "@/components/icons";
 
 export const metadata: Metadata = {
   title: "Privacy policy — BillSaathi",
@@ -20,14 +21,21 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 // Plain server-rendered text: it must be readable without JavaScript, including by Meta's app review.
 export default function Privacy() {
   return (
+    <>
+    <header className="glass sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-line px-4 lg:px-[max(1rem,calc(50%-33rem))]">
+      <Link href="/" className="flex items-center gap-2" aria-label="BillSaathi home">
+        <ShieldMark className="h-7 w-7" />
+        <span className="text-lg font-bold tracking-tight">BillSaathi</span>
+      </Link>
+      <Link href="/" className="ml-auto inline-flex min-h-10 items-center rounded-full px-3 text-[15px] font-semibold text-brand hover:bg-brand-soft">
+        ← Back to the app
+      </Link>
+    </header>
     <main className="mx-auto max-w-2xl space-y-6 px-4 py-8 leading-relaxed">
-      <header>
-        <Link href="/" className="font-bold text-brand underline underline-offset-4">
-          BillSaathi
-        </Link>
-        <h1 className="mt-2 text-3xl font-extrabold">Privacy policy</h1>
+      <div>
+        <h1 className="text-3xl font-extrabold">Privacy policy</h1>
         <p className="text-sm text-muted">Last updated: 4 November 2026</p>
-      </header>
+      </div>
 
       <Section title="What BillSaathi is">
         <p>
@@ -35,7 +43,7 @@ export default function Privacy() {
           Hackathon. It checks a bill or payment message for signs of a scam and explains the result. All billers and bills in it are
           synthetic, its bill-payment service (BBPS) is a mock, and no real money ever moves.
         </p>
-        <p className="rounded-xl bg-caution-bg p-3 font-semibold text-caution">
+        <p className="rounded-xl border border-caution-line bg-caution-bg p-3 font-semibold text-caution">
           Please do not send real bills or anything with personal details. Use the samples in the app.
         </p>
       </Section>
@@ -115,5 +123,6 @@ export default function Privacy() {
         </p>
       </Section>
     </main>
+    </>
   );
 }

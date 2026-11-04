@@ -77,6 +77,16 @@ html[data-demo="1"] {
   }
 }
 
+/* After a verdict the samples step back: flat and quiet, the result is what to read. */
+@media (min-width: 1024px) {
+  .rail-flat [class*="shadow"] {
+    box-shadow: none;
+  }
+  .rail-flat li > div {
+    background: transparent;
+  }
+}
+
 /* Telugu and Devanagari need a little more line height to stay readable. */
 :lang(te),
 :lang(hi) {

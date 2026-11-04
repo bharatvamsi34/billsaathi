@@ -80,9 +80,16 @@ export default function WarnFamily({ verdict, lang, helpline, privacy, onPicture
             <ModelBadge model="image" lang={lang} />
           </div>
         )}
-        {privacy && file && <p className="t-caption text-muted">{t(lang, "plainCard")}</p>}
+        {privacy && file && <p className="t-caption w-0 min-w-full text-muted">{t(lang, "plainCard")}</p>}
+        {note && (
+          <p role="status" className="t-caption rise hidden w-0 min-w-full rounded-lg bg-safe-bg px-2 py-1 font-semibold text-safe lg:block" data-testid="card-note">
+            {note}
+          </p>
+        )}
       </div>
-      <Toast message={note} />
+      <div className="lg:hidden">
+        <Toast message={note} />
+      </div>
     </div>
   );
 }

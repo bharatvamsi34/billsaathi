@@ -46,7 +46,7 @@ export default function TopBar({
           <span className="text-lg font-bold tracking-tight">BillSaathi</span>
         </Link>
         <Link href="/eval" className="hidden min-h-9 items-center rounded-full px-3 text-[15px] font-semibold text-ink-soft transition-colors hover:bg-brand-soft hover:text-brand lg:ml-2 lg:inline-flex">
-          {t(lang, "evalLink")}
+          {t(lang, "evalLink")} {lang !== "en" && t(lang, "inEnglish")}
         </Link>
         <div role="group" aria-label={t(lang, "language")} className="topbar-langs ml-auto flex gap-0.5 rounded-full bg-[#e9edf2] p-0.5 lg:order-last lg:ml-0">
           {LANGS.map((l) => (
@@ -56,7 +56,7 @@ export default function TopBar({
               lang={l.code}
               aria-pressed={lang === l.code}
               onClick={() => onLang(l.code)}
-              className={`min-h-9 rounded-full px-3 text-[13px] font-semibold transition-colors duration-150 lg:min-h-8 ${lang === l.code ? "bg-card text-ink shadow-soft" : "text-muted hover:text-ink"}`}
+              className={`relative min-h-9 rounded-full px-3 text-[13px] font-semibold transition-colors duration-150 before:absolute before:inset-x-0 before:-inset-y-1 lg:min-h-8 lg:before:hidden ${lang === l.code ? "bg-card text-ink shadow-soft" : "text-muted hover:text-ink"}`}
             >
               {l.code === "en" ? "EN" : l.name}
             </button>
@@ -68,7 +68,14 @@ export default function TopBar({
           <span className="sm:hidden">{t(lang, "sandboxBadgeShort")}</span>
           <span className="hidden sm:inline">{t(lang, "sandboxBadge")}</span>
         </Badge>
-        <Switch checked={privacy} onChange={onPrivacy} label={t(lang, "privacyToggle")} disabled={busy} />
+        <div className="flex shrink-0 flex-col items-end">
+          <Switch checked={privacy} onChange={onPrivacy} label={t(lang, "privacyToggle")} disabled={busy} />
+          {privacy && (
+            <span className="text-[11px] leading-tight text-muted" data-testid="privacy-caption">
+              {t(lang, "privacyCaption")}
+            </span>
+          )}
+        </div>
       </div>
     </header>
   );

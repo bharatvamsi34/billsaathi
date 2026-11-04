@@ -12,17 +12,21 @@ export default function Trace({ tl, lang, open, onToggle, highlightSeq, imageUrl
   const last = tl.judge[tl.judge.length - 1];
   const claims = last?.reasons.length ?? 0;
   const verified = last?.reasons.filter((r) => r.supported).length ?? 0;
+  const time = tl.totalMs != null ? `${((tl.totalMs - waitMs(tl)) / 1000).toFixed(1)} s${waitMs(tl) ? ` (${t(lang, "exclReply")})` : ""}` : "";
   const pieces = [
     t(lang, "traceChecks", { n: tl.checks.length }),
     t(lang, tl.agentTurns.length === 1 ? "traceTurn" : "traceTurns", { n: tl.agentTurns.length }),
     ...(last ? [t(lang, "traceJudge", { a: verified, b: claims })] : []),
-    ...(tl.totalMs != null ? [`${((tl.totalMs - waitMs(tl)) / 1000).toFixed(1)} s${waitMs(tl) ? ` (${t(lang, "exclReply")})` : ""}`] : []),
+    ...(time ? [time] : []),
   ];
   return (
     <Card className="overflow-hidden" data-testid="trace">
       <button type="button" onClick={onToggle} aria-expanded={open} className="flex w-full flex-wrap items-center gap-x-2 gap-y-1 p-3.5 text-left text-[14px] leading-snug transition-colors hover:bg-paper">
         <ListCheckIcon className="h-5 w-5 shrink-0 text-navy" />
-        <span className="min-w-0 flex-1 font-medium text-ink-soft">{pieces.join(" · ")}</span>
+        <span className="hidden min-w-0 flex-1 font-medium text-ink-soft sm:inline">{pieces.join(" · ")}</span>
+        <span className="min-w-0 flex-1 font-medium text-ink-soft sm:hidden" data-testid="trace-short">
+          {[...(last ? [t(lang, "traceClaims", { a: verified, b: claims })] : []), time].filter(Boolean).join(" · ")}
+        </span>
         <span className="font-semibold text-brand">
           {t(lang, open ? "hideTrace" : "viewTrace")} {open ? "▴" : "▾"}
         </span>

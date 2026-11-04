@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRef, useState } from "react";
 import samples from "@/samples.generated.json";
 import { t, type Lang } from "@/lib/i18n";
@@ -25,7 +26,7 @@ function SampleCard({ s, lang, busy, onRun }: { s: Sample; lang: Lang; busy: boo
         <button type="button" disabled={busy} onClick={onRun} data-sample={s.id} className="flex w-full items-center gap-3 p-2.5 text-left disabled:opacity-60">
           {s.kind === "image" ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={s.src} alt="" className="h-12 w-12 shrink-0 rounded-xl border border-line object-cover object-top" />
+            <img src={s.src} alt="" className="h-16 w-16 shrink-0 rounded-xl border border-line object-cover object-top" />
           ) : (
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand">
               {s.kind === "audio" ? <MicIcon className="h-6 w-6" /> : <MessageIcon className="h-6 w-6" />}
@@ -108,7 +109,10 @@ export default function Capture({
       ) : (
         <Card className="rise p-4">
           <p className="t-caption rounded-xl bg-caution-bg p-3 text-caution">
-            {t(lang, "ownHelper")} {t(lang, "noRealData")}
+            {t(lang, "ownHelper")}{" "}
+            <Link href="/privacy" className="font-semibold underline underline-offset-2">
+              {t(lang, "privacy")}
+            </Link>
           </p>
 
           {/* Desktop: upload and paste lead; camera and voice are secondary. Phone: all three in one row. */}
@@ -129,6 +133,7 @@ export default function Capture({
               {t(lang, "uploadLong")}
             </Button>
           </div>
+          <p className="t-caption mt-1.5 text-center text-muted">{t(lang, "uploadFormats")}</p>
           <input ref={camera} type="file" accept="image/*" capture="environment" className="hidden" onChange={pick} />
           <input ref={upload} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={pick} />
 
@@ -142,7 +147,7 @@ export default function Capture({
             maxLength={4000}
             onChange={(e) => setText(e.target.value)}
             placeholder={t(lang, "pastePlaceholder")}
-            className="w-full resize-y rounded-2xl border border-line bg-paper p-3 text-[15px] leading-relaxed transition-colors focus:border-brand focus:bg-card"
+            className="w-full resize-y rounded-2xl border border-[#727F8E] bg-paper p-3 text-[15px] leading-relaxed transition-colors focus:border-brand focus:bg-card"
           />
           <Button variant="primary" size="lg" disabled={busy || !text.trim()} onClick={() => onSubmit({ text: text.trim() })} className="mt-2 w-full" data-testid="check-message">
             <MessageIcon className="h-5 w-5" />

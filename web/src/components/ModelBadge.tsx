@@ -15,13 +15,13 @@ export type Model = keyof typeof MODEL_NAMES;
 export default function ModelBadge({ model, job, code, privacy, lang = "en" }: { model?: Model; job?: Key; code?: boolean; privacy?: boolean; lang?: Lang }) {
   const name = model && (privacy ? MODEL_NAMES.open : MODEL_NAMES[model]);
   return (
-    <span className="inline-flex max-w-full flex-wrap items-center gap-1 text-xs font-semibold leading-tight">
+    <span className="inline-flex max-w-full flex-wrap items-center gap-1 text-[13px] font-medium leading-tight">
       {name && (
         <span className="inline-flex items-center gap-1.5 rounded-full border border-[#d5e3fb] bg-brand-soft px-2 py-0.5 text-[#0a4fb0]">
           <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "var(--accent-gradient)" }} />
           <span>
             {name}
-            {privacy ? ` · ${t(lang, "openWeights")}` : job ? ` · ${t(lang, job)}` : ""}
+            {job ? ` · ${t(lang, job)}` : ""}
           </span>
         </span>
       )}

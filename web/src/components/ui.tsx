@@ -125,9 +125,9 @@ export function Switch({ checked, onChange, label, disabled, dark }: { checked: 
       aria-checked={checked}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={`inline-flex min-h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full text-[12px] font-semibold leading-tight disabled:opacity-50 lg:gap-2 lg:text-[13px] ${dark ? "text-white" : "text-ink"}`}
+      className={`relative inline-flex min-h-8 shrink-0 items-center gap-1.5 before:absolute before:inset-x-0 before:-inset-y-1.5 lg:before:hidden whitespace-nowrap rounded-full text-[12px] font-semibold leading-tight disabled:opacity-50 lg:gap-2 lg:text-[13px] ${dark ? "text-white" : "text-ink"}`}
     >
-      <span className={`relative h-5 w-9 shrink-0 rounded-full transition-colors duration-150 ${checked ? "bg-brand" : "bg-[#b4bdc8]"}`}>
+      <span className={`relative h-5 w-9 shrink-0 rounded-full transition-colors duration-150 ${checked ? "bg-brand" : "bg-[#727F8E]"}`}>
         <motion.span animate={{ x: checked ? 16 : 0 }} transition={{ duration: 0.15, ease: "easeOut" }} className="absolute left-0.5 top-0.5 block h-4 w-4 rounded-full bg-white shadow" />
       </span>
       {label}

@@ -84,7 +84,7 @@ export default function Hero({ lang, busy, onQuick }: { lang: Lang; busy: boolea
                 ["scam", "chipScam"],
               ] as const
             ).map(([sample, label]) => (
-              <Chip key={sample} disabled={busy} onClick={() => onQuick(sample)} className="border-white/30! bg-white/10! text-white!">
+              <Chip key={sample} disabled={busy} onClick={() => onQuick(sample)} className="min-h-10! border-white/30! bg-transparent! text-white! shadow-none!">
                 {t(lang, label)}
               </Chip>
             ))}

@@ -53,7 +53,8 @@ describe("judge-catch replay", () => {
 
 describe("wording", () => {
   it("says synthetic, never made-up", () => {
-    for (const [key, text] of Object.entries(STRINGS)) expect(text.en, key).not.toMatch(/made[- ]up/i);
+    // Our data is synthetic. ownHelper is an instruction to the user about what they type, BV's wording.
+    for (const [key, text] of Object.entries(STRINGS)) if (key !== "ownHelper") expect(text.en, key).not.toMatch(/made[- ]up/i);
     for (const s of samples) expect(s.title.en).not.toMatch(/made[- ]up/i);
   });
 });

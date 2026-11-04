@@ -2,7 +2,7 @@
 
 import { motion } from "motion/react";
 import { useState } from "react";
-import { t, type Lang } from "@/lib/i18n";
+import { LANGS, t, type Lang } from "@/lib/i18n";
 import { reasonLines } from "@/lib/reasons";
 import type { Timeline, Verdict } from "@/lib/timeline";
 import Comparison from "./Comparison";
@@ -43,6 +43,9 @@ export default function VerdictCard({
   const lines = reasonLines(tl, lang);
   const shown = allOpen ? lines : lines.slice(0, 2);
   const headline = t(lang, `headline_${v.verdict}`);
+  // A check keeps the language it ran in, even if the page language changes afterwards.
+  const textLang = LANGS.find((l) => l.code === tl.explanation?.language)?.code ?? lang;
+  const spokenHeadline = t(textLang, `headline_${v.verdict}`);
   const fallback = v.verdict === "CAUTION" ? `${headline} ${t(lang, "cautionLine")}` : headline;
   const explanation = tl.explanation?.text ?? (tl.done ? fallback : null);
   const last = tl.judge[tl.judge.length - 1];
@@ -66,6 +69,9 @@ export default function VerdictCard({
               {t(lang, "traceJudge", { a: last.reasons.filter((r) => r.supported).length, b: last.reasons.length })}
             </span>
           )}
+          <button type="button" onClick={onReset} className="hidden min-h-9 whitespace-nowrap rounded-full px-1 text-[14px] font-semibold underline underline-offset-4 lg:block" data-testid="check-another-top">
+            {t(lang, "checkAnother")}
+          </button>
         </div>
 
         <div className="space-y-4 p-4">
@@ -77,7 +83,7 @@ export default function VerdictCard({
             {v.verdict === "SAFE" ? (
               <>
                 {checkId && <SandboxPay checkId={checkId} tl={tl} lang={lang} />}
-                <ListenButton text={explanation} headline={headline} lang={lang} />
+                <ListenButton text={explanation} headline={spokenHeadline} lang={lang} textLang={textLang} />
               </>
             ) : (
               <>
@@ -88,14 +94,14 @@ export default function VerdictCard({
                   </a>
                 )}
                 <div className="grid items-center gap-2 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-                  <ListenButton text={explanation} headline={headline} lang={lang} />
+                  <ListenButton text={explanation} headline={spokenHeadline} lang={lang} textLang={textLang} />
                   <WarnFamily verdict={v.verdict} lang={lang} helpline={helpline} privacy={tl.privacy} onPicture={onCardPicture} />
                 </div>
               </>
             )}
           </div>
 
-          <Explanation text={explanation} lang={lang} />
+          <Explanation text={explanation} lang={lang} textLang={textLang} />
 
           {lines.length > 0 && (
             <section aria-labelledby="why-title">
@@ -137,7 +143,7 @@ export default function VerdictCard({
             </section>
           )}
 
-          <Button variant="ghost" onClick={onReset} className="w-full">
+          <Button variant="ghost" onClick={onReset} className="w-full lg:hidden">
             {t(lang, "checkAnother")}
           </Button>
         </div>

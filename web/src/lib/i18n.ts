@@ -137,7 +137,11 @@ export const STRINGS = {
     te: "ఏ చెల్లింపుకైనా ముందు మీరే నిర్ధారిస్తారు.",
     hi: "हर भुगतान से पहले आप ही पुष्टि करते हैं।",
   },
-  report: { en: "Report fraud: call {value}", te: "మోసాన్ని ఫిర్యాదు చేయండి: {value} కు కాల్ చేయండి", hi: "धोखाधड़ी की शिकायत: {value} पर कॉल करें" },
+  report: {
+    en: "Report fraud: call {value}",
+    te: "మోసం ఫిర్యాదు: {value} కు కాల్",
+    hi: "धोखाधड़ी की शिकायत: {value} पर कॉल करें",
+  },
   warnFamily: { en: "Warn my family", te: "నా కుటుంబాన్ని హెచ్చరించండి", hi: "परिवार को सावधान करें" },
   copied: {
     en: "Warning copied. Paste it in WhatsApp.",
@@ -146,7 +150,11 @@ export const STRINGS = {
   },
   checkAnother: { en: "Check another", te: "మరొకటి తనిఖీ చేయండి", hi: "दूसरा जाँचें" },
   questionTitle: { en: "One quick question", te: "ఒక చిన్న ప్రశ్న", hi: "एक छोटा सा सवाल" },
-  send: { en: "Send", te: "పంపండి", hi: "भेजें" },
+  send: {
+    en: "Continue check",
+    te: "తనిఖీ కొనసాగించండి",
+    hi: "जाँच जारी रखें",
+  },
   skip: { en: "I don't know", te: "నాకు తెలియదు", hi: "मुझे नहीं पता" },
   errRate: {
     en: "Too many checks. Please wait a minute and try again.",
@@ -192,7 +200,11 @@ export const STRINGS = {
     te: "కోడ్, రెండో మోడల్ ప్రతి కారణాన్ని దాని ఆధారంతో సరిచూస్తాయి. ఏ ప్రమాదాన్నీ సురక్షితంగా మార్చలేరు.",
     hi: "कोड और दूसरा मॉडल हर कारण को उसके सबूत से मिलाते हैं। कोई भी जोखिम सुरक्षित नहीं बन सकता।",
   },
-  qrTitle: { en: "Best on your phone", te: "ఫోన్‌లో ఉత్తమంగా పనిచేస్తుంది", hi: "फ़ोन पर सबसे अच्छा" },
+  qrTitle: {
+    en: "Open this demo on your phone",
+    te: "ఈ డెమోను మీ ఫోన్‌లో తెరవండి",
+    hi: "यह डेमो अपने फ़ोन पर खोलें",
+  },
   qrNote: {
     en: "Scan to open this page and photograph a bill with your camera.",
     te: "ఈ పేజీని తెరవడానికి స్కాన్ చేసి, కెమెరాతో బిల్లు ఫోటో తీయండి.",
@@ -389,14 +401,14 @@ export const STRINGS = {
     hi: "नमूना आज़माएँ",
   },
   tabOwn: {
-    en: "Check your own",
-    te: "మీది తనిఖీ చేయండి",
-    hi: "अपना जाँचें",
+    en: "Try your own example",
+    te: "మీ సొంత ఉదాహరణ ప్రయత్నించండి",
+    hi: "अपना उदाहरण आज़माएँ",
   },
   ownHelper: {
-    en: "Your own real bill will usually show CAUTION — scam checks run on anything, but the registry holds only 8 synthetic demo billers.",
-    te: "మీ నిజమైన బిల్లుకు సాధారణంగా జాగ్రత్త (CAUTION) వస్తుంది — మోసం తనిఖీలు దేనిపైనైనా జరుగుతాయి, కానీ రిజిస్ట్రీలో 8 సింథటిక్ డెమో బిల్లర్లు మాత్రమే ఉన్నారు.",
-    hi: "आपके असली बिल पर आमतौर पर सावधान (CAUTION) आएगा — धोखे की जाँच हर चीज़ पर होती है, पर रजिस्ट्री में सिर्फ़ 8 सिंथेटिक डेमो बिलर हैं।",
+    en: "Use made-up details only. Real bills can't be matched against this demo registry.",
+    te: "కల్పిత వివరాలు మాత్రమే వాడండి. నిజమైన బిల్లులను ఈ డెమో రిజిస్ట్రీతో సరిపోల్చలేము.",
+    hi: "सिर्फ़ बनावटी जानकारी डालें। असली बिल इस डेमो रजिस्ट्री से नहीं मिलाए जा सकते।",
   },
   noRealData: {
     en: "Please don't send anything with real personal details.",
@@ -425,7 +437,7 @@ export const STRINGS = {
   },
   chipScam: {
     en: "Scam SMS",
-    te: "మోసం SMS",
+    te: "మోసపూరిత SMS",
     hi: "धोखे का SMS",
   },
   chipTampered: {
@@ -550,7 +562,7 @@ export const STRINGS = {
   },
   traceTurn: {
     en: "{n} agent turn",
-    te: "{n} ఏజెంట్ మలుపు",
+    te: "{n} ఏజెంట్ రౌండ్",
     hi: "{n} एजेंट टर्न",
   },
   colRecordShort: {
@@ -560,7 +572,7 @@ export const STRINGS = {
   },
   traceTurns: {
     en: "{n} agent turns",
-    te: "{n} ఏజెంట్ మలుపులు",
+    te: "{n} ఏజెంట్ రౌండ్లు",
     hi: "{n} एजेंट टर्न",
   },
   traceJudge: {
@@ -614,14 +626,14 @@ export const STRINGS = {
     hi: "फ़ोटो क्रॉपिंग छोड़ी गई: SAM 3.1 Meta API पर चलता है।",
   },
   fillValid: {
-    en: "Fill demo consumer number",
-    te: "డెమో వినియోగదారు సంఖ్య నింపండి",
-    hi: "डेमो उपभोक्ता संख्या भरें",
+    en: "Use matching demo number",
+    te: "సరిపోలే డెమో నంబర్ వాడండి",
+    hi: "मेल खाता डेमो नंबर डालें",
   },
   fillWrong: {
-    en: "Fill a wrong number",
-    te: "తప్పు సంఖ్య నింపండి",
-    hi: "गलत संख्या भरें",
+    en: "Use unmatched demo number",
+    te: "సరిపోలని డెమో నంబర్ వాడండి",
+    hi: "मेल न खाता डेमो नंबर डालें",
   },
   retry: {
     en: "Try again",
@@ -772,6 +784,51 @@ export const STRINGS = {
     en: "Confirm with the biller's official app, or a bill you already trust.",
     te: "బిల్లర్ అధికారిక యాప్‌లో లేదా మీరు నమ్మే బిల్లుతో సరిచూసుకోండి.",
     hi: "बिलर के आधिकारिक ऐप या अपने भरोसेमंद बिल से पुष्टि करें।",
+  },
+  privacyCaption: {
+    en: "Open-weight Muse Spark Open · externally hosted",
+    te: "ఓపెన్-వెయిట్ Muse Spark Open · బయటి హోస్ట్‌లో",
+    hi: "ओपन-वेट Muse Spark Open · बाहरी होस्ट पर",
+  },
+  explainFrom: {
+    en: "Explanation from this check · {lang}",
+    te: "ఈ తనిఖీ వివరణ · {lang}",
+    hi: "इस जाँच की व्याख्या · {lang}",
+  },
+  youEntered: {
+    en: "You entered",
+    te: "మీరు ఇచ్చినది",
+    hi: "आपने डाला",
+  },
+  highlights: {
+    en: "Highlights:",
+    te: "గుర్తులు:",
+    hi: "निशान:",
+  },
+  chooseAnother: {
+    en: "Choose another image",
+    te: "మరో చిత్రం ఎంచుకోండి",
+    hi: "दूसरा चित्र चुनें",
+  },
+  uploadFormats: {
+    en: "PNG, JPEG or WebP",
+    te: "PNG, JPEG లేదా WebP",
+    hi: "PNG, JPEG या WebP",
+  },
+  inEnglish: {
+    en: "(in English)",
+    te: "(ఇంగ్లీష్‌లో)",
+    hi: "(अंग्रेज़ी में)",
+  },
+  traceClaims: {
+    en: "{a}/{b} claims verified",
+    te: "{a}/{b} వాదనలు ధృవీకరించబడ్డాయి",
+    hi: "{a}/{b} दावे सत्यापित",
+  },
+  receiptNote: {
+    en: "Sandbox: no real money moves",
+    te: "ఇది డెమో మాత్రమే. మీ ఖాతా నుంచి డబ్బు వెళ్లదు.",
+    hi: "डेमो: कोई असली पैसा नहीं जाता",
   },
 } satisfies Record<string, Text>;
 

@@ -43,21 +43,30 @@ export default function InputReview({ input, tl, lang }: { input: ReviewInput; t
         ...f.payment_destinations.value.map((d) => d.value),
       ]
     : [];
+  const shownText = input.kind === "text" ? [input.text] : input.kind === "audio" ? (tl.heard ? [tl.heard] : []) : entities;
+  const used = new Set(shownText.flatMap((text) => highlight(text, tl).map((span) => span.mark)));
   return (
     <Card className="p-3.5 scroll-mt-[calc(var(--topbar-h)+0.75rem)]" id="results-top">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
         <h2 className="t-caption font-semibold uppercase tracking-wide text-muted">{t(lang, "inputTitle")}</h2>
-        {tl.checks.length > 0 && (
-          <div className="flex flex-wrap gap-1" aria-hidden="true">
-            <Badge tone="bad" className="text-[11px]">
-              {t(lang, "legendRisky")}
-            </Badge>
-            <Badge tone="warn" className="text-[11px]">
-              {t(lang, "legendUnverified")}
-            </Badge>
-            <Badge tone="good" className="text-[11px]">
-              {t(lang, "legendOk")}
-            </Badge>
+        {tl.checks.length > 0 && (used.has("risky") || used.has("unverified") || used.has("ok")) && (
+          <div className="flex flex-wrap items-center gap-1" aria-hidden="true">
+            <span className="t-caption text-muted">{t(lang, "highlights")}</span>
+            {used.has("risky") && (
+              <Badge tone="bad" className="text-[11px]">
+                {t(lang, "legendRisky")}
+              </Badge>
+            )}
+            {used.has("unverified") && (
+              <Badge tone="warn" className="text-[11px]">
+                {t(lang, "legendUnverified")}
+              </Badge>
+            )}
+            {used.has("ok") && (
+              <Badge tone="good" className="text-[11px]">
+                {t(lang, "legendOk")}
+              </Badge>
+            )}
           </div>
         )}
       </div>

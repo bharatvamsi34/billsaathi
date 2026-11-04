@@ -61,6 +61,7 @@ export default function Home() {
   const stop = useRef<(() => void) | null>(null);
   const lastSeq = useRef(-1);
   const lastEventAt = useRef(0);
+  const picker = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     document.documentElement.lang = lang; // right fonts and line height for Telugu / Hindi
@@ -218,11 +219,11 @@ export default function Home() {
       {/* Phone: while a check runs the hero steps aside, so the result fits the first screen. */}
       <div className={showResults ? "hidden lg:block" : undefined}>
         <Hero lang={lang} busy={busy} onQuick={quick} />
-        {!demo && <Guide lang={lang} step={tl.verdict || replaying ? 3 : checking ? 2 : 1} />}
+        {!demo && !tl.verdict && <Guide lang={lang} step={replaying ? 3 : checking ? 2 : 1} />}
       </div>
 
       <main id="workspace" className={`flex flex-col gap-4 px-4 py-4 lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start lg:gap-8 lg:py-6 ${GUTTER}`}>
-        <div className={`lg:sticky lg:top-[calc(var(--topbar-h)+1rem)] ${showResults ? "hidden lg:block" : ""}`}>
+        <div className={`lg:sticky lg:top-[calc(var(--topbar-h)+1rem)] ${showResults ? "rail-flat hidden lg:block" : ""}`}>
           <Capture lang={lang} busy={busy} onSubmit={submit} onReplay={startReplay} />
         </div>
 
@@ -242,10 +243,31 @@ export default function Home() {
           {error && (
             <div role="alert" id={checking ? undefined : "results-top"} className="rise scroll-mt-[calc(var(--topbar-h)+0.75rem)] rounded-2xl border border-scam/30 bg-scam-bg p-4">
               <p className="font-semibold text-scam">{t(lang, error)}</p>
-              {lastInput && (
-                <Button variant="secondary" className="mt-3" onClick={() => void submit(lastInput)} data-testid="retry">
-                  {t(lang, "retry")}
-                </Button>
+              {error === "errImage" ? (
+                <>
+                  {/* Sending the same file again would fail the same way. */}
+                  <Button variant="secondary" className="mt-3" onClick={() => picker.current?.click()} data-testid="choose-another">
+                    {t(lang, "chooseAnother")}
+                  </Button>
+                  <input
+                    ref={picker}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      e.target.value = "";
+                      if (file) void submit({ image: file, imageName: file.name });
+                    }}
+                  />
+                </>
+              ) : (
+                lastInput &&
+                error !== "errRate" && (
+                  <Button variant="secondary" className="mt-3" onClick={() => void submit(lastInput)} data-testid="retry">
+                    {t(lang, "retry")}
+                  </Button>
+                )
               )}
             </div>
           )}
@@ -301,7 +323,7 @@ export default function Home() {
       <footer className={`t-caption px-4 py-6 text-center text-muted ${GUTTER}`}>
         BillSaathi · Meta Global AI Developer Hackathon 2026 ·{" "}
         <Link href="/eval" className="font-semibold text-brand underline underline-offset-4">
-          {t(lang, "evalLink")}
+          {t(lang, "evalLink")} {lang !== "en" && t(lang, "inEnglish")}
         </Link>{" "}
         ·{" "}
         <a href={TEST_GUIDE} className="font-semibold text-brand underline underline-offset-4">
@@ -309,7 +331,7 @@ export default function Home() {
         </a>{" "}
         ·{" "}
         <Link href="/privacy" className="font-semibold text-brand underline underline-offset-4">
-          {t(lang, "privacy")}
+          {t(lang, "privacy")} {lang !== "en" && t(lang, "inEnglish")}
         </Link>
       </footer>
     </MotionConfig>

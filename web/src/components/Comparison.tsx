@@ -9,6 +9,11 @@ import { Badge, Soft } from "./ui";
 const NOTE: Partial<Record<RowStatus, Key>> = { noRecord: "notInRegistry", notChecked: "notChecked", notFound: "noAccount" };
 
 function label(row: CompareRow, lang: Lang): string {
+  const base = baseLabel(row, lang);
+  return row.entered ? `${base} · ${t(lang, "youEntered")}` : base;
+}
+
+function baseLabel(row: CompareRow, lang: Lang): string {
   if (row.key === "amount" && row.status === "mismatch") return t(lang, "rowAmountDiffers");
   if (row.key === "destination" && row.status === "mismatch") return t(lang, "rowAddressDiffers");
   if (row.key === "consumer" && row.status === "notFound") return t(lang, "rowAccountNotFound");

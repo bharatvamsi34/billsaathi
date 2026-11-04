@@ -12,6 +12,7 @@ export interface CompareRow {
   record: string | null;
   status: RowStatus;
   flag?: string; // the evidence code that makes a destination risky
+  entered?: boolean; // the value came from the user's answer, not from the bill or message
 }
 
 const BAD_DESTINATION = ["KNOWN_SCAM_DESTINATION", "LOOKALIKE_VPA", "LOOKALIKE_DOMAIN", "APK_LINK", "SHORT_URL", "PERSONAL_PHONE_NUMBER", "DESTINATION_NOT_OFFICIAL"];
@@ -88,6 +89,7 @@ export function compareRows(tl: Timeline): CompareRow[] {
       says: consumer,
       record: found ? consumer : null,
       status: found ? "match" : fetchCodes.has("CONSUMER_NOT_FOUND") ? "notFound" : record ? "notChecked" : "noRecord",
+      entered: f.consumer_number.value == null,
     });
   }
   return rows;

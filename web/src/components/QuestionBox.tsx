@@ -42,7 +42,7 @@ export default function QuestionBox({
         maxLength={200}
         aria-label={question}
         onChange={(e) => setAnswer(e.target.value)}
-        className="mt-3 w-full rounded-2xl border border-line bg-paper p-3 text-[15px] transition-colors focus:border-brand focus:bg-card"
+        className="mt-3 w-full rounded-2xl border border-[#727F8E] bg-paper p-3 text-[15px] transition-colors focus:border-brand focus:bg-card"
       />
       {field === "consumer_number" && (
         <div className="mt-2 flex flex-wrap gap-1.5">
