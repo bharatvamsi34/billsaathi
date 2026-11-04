@@ -75,13 +75,13 @@ export default function Comparison({ tl, lang, verdict }: { tl: Timeline; lang: 
         <table className="hidden w-full table-fixed border-collapse text-left text-[15px] leading-snug sm:table">
           <thead>
             <tr className="bg-paper text-[13px] text-muted">
-              <th scope="col" className="w-[20%] px-3 py-2 font-semibold">
+              <th scope="col" className="w-[20%] px-3 py-1 font-semibold">
                 <span className="sr-only">{t(lang, "biller")}</span>
               </th>
-              <th scope="col" className="w-[40%] px-3 py-2 font-semibold">
+              <th scope="col" className="w-[40%] px-3 py-1 font-semibold">
                 {says}
               </th>
-              <th scope="col" className="w-[40%] px-3 py-2 font-semibold">
+              <th scope="col" className="w-[40%] px-3 py-1 font-semibold">
                 {record}
               </th>
             </tr>
