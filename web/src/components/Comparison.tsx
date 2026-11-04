@@ -86,13 +86,13 @@ export default function Comparison({ tl, lang, verdict }: { tl: Timeline; lang: 
               const big = isDecisive(row);
               return (
                 <tr key={i} data-status={row.status} data-decisive={big || undefined} className={`border-t border-line align-top ${big ? tint : ""}`}>
-                  <th scope="row" className={`wrap-words px-3 text-[13px] ${big ? "py-3 font-bold text-ink" : "py-2.5 font-medium text-muted"}`}>
+                  <th scope="row" className={`wrap-words px-3 text-[13px] ${big ? "py-3 font-bold text-ink" : "py-1.5 font-medium text-muted"}`}>
                     {label(row, lang)}
                   </th>
-                  <td className={`px-3 ${big ? "py-3" : "py-2.5"}`}>
+                  <td className={`px-3 ${big ? "py-3" : "py-1.5"}`}>
                     <Says row={row} lang={lang} />
                   </td>
-                  <td className={`px-3 ${big ? "py-3" : "py-2.5"}`}>
+                  <td className={`px-3 ${big ? "py-3" : "py-1.5"}`}>
                     <Record row={row} lang={lang} />
                   </td>
                 </tr>
@@ -117,7 +117,7 @@ export default function Comparison({ tl, lang, verdict }: { tl: Timeline; lang: 
             return (
               <div key={i} data-status={row.status} data-decisive={big || undefined} className={`${big ? `p-3 ${tint}` : "px-3 py-2"}`}>
                 <dt className={`wrap-words mb-1 text-[13px] ${big ? "font-bold text-ink" : "font-medium text-muted"}`}>{label(row, lang)}</dt>
-                <dd className="grid grid-cols-[4.75rem_minmax(0,1fr)] gap-x-2 gap-y-1">
+                <dd className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-x-2 gap-y-1">
                   <span className="t-caption text-muted">{says}</span>
                   <Says row={row} lang={lang} />
                   <span className="t-caption text-muted">{t(lang, "colRecordShort")}</span>

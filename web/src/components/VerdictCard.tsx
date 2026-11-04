@@ -49,7 +49,7 @@ export default function VerdictCard({
   const judged = !v.forced && !!last?.accepted;
 
   return (
-    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.25, ease: "easeOut" }} aria-live="polite" id="verdict-top" className="scroll-mt-[calc(var(--topbar-h)+0.5rem)]">
+    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.25, ease: "easeOut" }} style={{ transformOrigin: "top" }} aria-live="polite" id="verdict-top" className="scroll-mt-[calc(var(--topbar-h)+0.5rem)]">
       <Card className={`overflow-hidden ${judged ? "gradient-ring" : ""}`} data-testid="verdict" data-verdict={v.verdict}>
         <div className={`flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3.5 ${band}`}>
           <Icon className="h-10 w-10 shrink-0" />
