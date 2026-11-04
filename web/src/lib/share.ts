@@ -16,6 +16,9 @@ const TEXT: Record<"SCAM" | "CAUTION", Record<Lang, string>> = {
   },
 };
 
+/** India's national cybercrime helpline, the vetted value in api/app/facts.py (a test keeps them equal). */
+export const CYBERCRIME_HELPLINE = "1930";
+
 const REPORT: Record<Lang, string> = {
   en: "Report fraud: call {value}.",
   te: "మోసాన్ని ఫిర్యాదు చేయండి: {value} కు కాల్ చేయండి.",

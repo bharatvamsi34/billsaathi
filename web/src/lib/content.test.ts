@@ -6,7 +6,7 @@ import samples from "@/samples.generated.json";
 import { KNOWN_CODES } from "./codes";
 import { LANGS, STRINGS } from "./i18n";
 import { wrapLines } from "./card";
-import { warningText } from "./share";
+import { CYBERCRIME_HELPLINE, warningText } from "./share";
 
 const ROOT = join(__dirname, "..", "..", "..");
 
@@ -48,6 +48,13 @@ describe("judge-catch replay", () => {
     expect(replay.attempts[0].accepted).toBe(false);
     expect(replay.attempts[1].accepted).toBe(true);
     for (const attempt of replay.attempts) for (const r of attempt.reasons) expect(file).toContain(r.reason);
+  });
+});
+
+describe("helpline", () => {
+  it("is the vetted value from the API's facts", () => {
+    const facts = readFileSync(join(ROOT, "api", "app", "facts.py"), "utf8");
+    expect(facts).toContain(`value="${CYBERCRIME_HELPLINE}"`);
   });
 });
 

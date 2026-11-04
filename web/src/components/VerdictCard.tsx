@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 import { useState } from "react";
 import { LANGS, t, type Lang } from "@/lib/i18n";
 import { reasonLines } from "@/lib/reasons";
+import { CYBERCRIME_HELPLINE } from "@/lib/share";
 import type { Timeline, Verdict } from "@/lib/timeline";
 import Comparison from "./Comparison";
 import Explanation, { ListenButton } from "./Explanation";
@@ -38,7 +39,8 @@ export default function VerdictCard({
 }) {
   const v = tl.verdict!;
   const { band, icon: Icon } = LOOK[v.verdict];
-  const helpline = v.facts.find((f) => f.key === "cybercrime_helpline")?.value;
+  // A scam always gets the way to report it, whether or not the agent listed the helpline.
+  const helpline = v.facts.find((f) => f.key === "cybercrime_helpline")?.value ?? (v.verdict === "SCAM" ? CYBERCRIME_HELPLINE : undefined);
   const [allOpen, setAllOpen] = useState(false);
   const lines = reasonLines(tl, lang);
   const shown = allOpen ? lines : lines.slice(0, 2);
