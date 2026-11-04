@@ -1,6 +1,6 @@
-# BillSaathi: submission form answers (draft)
+# BillSaathi: submission form answers
 
-Draft for BV to review and paste. The form's exact fields aren't visible without signing in, so these follow the topics we expect. **Fill in the `[BV: …]` items before submitting.** Figures are from `web/src/eval.generated.json` and `CLAUDE.md` §11.
+Plain-text copy for pasting: `docs/SUBMISSION_PASTE.txt`. The form's exact fields aren't visible without signing in, so these follow the topics we expect. Evidence for every claim: `docs/CLAIMS_AND_EVIDENCE.md`.
 
 ## Basics
 
@@ -10,25 +10,31 @@ Draft for BV to review and paste. The form's exact fields aren't visible without
 - **Live app:** https://zealous-coast-09279dd00.1.azurestaticapps.net
 - **Evaluation:** https://zealous-coast-09279dd00.1.azurestaticapps.net/eval
 - **Repository:** https://github.com/bharatvamsi34/billsaathi
-- **WhatsApp test number:** +1 555-659-7481 `[BV: confirm whether to publish it, and whether numbers other than yours can message it]`. Text, photo and voice note were tested live by BV on 2026-11-03.
-- **Demo video:** `[BV: link]`
-- **X post:** `[BV: link]`
+- **WhatsApp:** shown working in the demo video. It runs on a test number that accepts only allow-listed numbers, so it isn't open for judges to message. Text, photo and voice note were tested live from the builder's phone on 2026-11-03.
+- **Demo video:** [BV: video link]
+- **X post:** [BV: X post link]
 
-**One line:** BillSaathi is an AI agent that checks an Indian bill or payment request before you pay: it verifies it against the biller's records, catches scams before money moves, and explains the verdict in your language.
+**One line:** BillSaathi is an AI agent that checks an Indian bill or payment request before you pay: it verifies it against simulated biller records in this demo, catches scams before money moves, and explains the verdict in your language.
 
-**Built during the event:** Everything was built during the hackathon, Oct 26 to Nov 4, 2026, in a public repository created for it; the commit history shows this. Nothing pre-existing was used apart from public libraries. All billers, bills and test data are synthetic, BBPS is a mock we built, and no real money moves. The code was written with Claude Code as a coding assistant, which the commit trailers show. `[BV: check whether the rules ask for AI-assistant disclosure elsewhere]`
+**Built during the event:** Everything was built during the hackathon, Oct 26 to Nov 4, 2026, in a public repository created for it; the commit history shows this. Nothing pre-existing was used apart from public libraries. All billers, bills and test data are synthetic, BBPS is a mock we built, and no real money moves. The code was written with Claude Code as a coding assistant, which the commit trailers show.
 
 ## Project description
 
 "Your electricity will be cut tonight. Pay now." Messages like this reach Indian families, including people new to digital payments who may not read English. The Ministry of Home Affairs told the Lok Sabha that Indians lost ₹22,845 crore to cyber fraud in 2024, up 206% in a year. That figure covers all cyber fraud, and fake bills are one common route.
 
-You send BillSaathi a bill photo, a screenshot, a message or a voice note, on the web or on WhatsApp. It answers SAFE, CAUTION or SCAM, shows what the message says next to what the demo biller record says, quotes the real values behind each reason, and explains in English, Telugu or Hindi, which it can read aloud.
+You send BillSaathi a bill photo, a screenshot, a message or a voice note, on the web or on WhatsApp (WhatsApp is shown in the demo video). It answers SAFE, CAUTION or SCAM, shows what the message says next to what the demo biller record says, quotes the real values behind each reason, and explains in English, Telugu or Hindi, which it can read aloud.
 
 The product is the verification, not the reading. Code runs fixed checks first: is the biller registered, is every link and UPI ID official or a lookalike, does the wording match known scams, does the biller's own amount match, is it normal for this account? A tool-calling agent reviews that evidence and may investigate further or ask one question. Its verdict then has to pass deterministic rules and an independent check of every reason against its evidence. No model can turn a risk into SAFE: anything uncertain ends as CAUTION.
 
 On SAFE, the user can simulate a payment after an explicit confirmation, with an idempotency key, a receipt and an append-only audit log. No real money moves. On SCAM or CAUTION, they get a warning card to forward to family, and SCAM replies give the national helpline 1930.
 
-**Measured:** on 21 synthetic test items held out from all tuning: 21/21 correct, 13/13 risky requests not called SAFE (0 dangerous mistakes), 8/8 genuine bills passed (0 false alarms), median 10.9 s to the verdict, p90 17.2 s, about $0.024 per check. The set is small and written by the builder, so 13/13 still allows a true miss rate up to about 23%. The evaluation page says this too.
+**Measured:** on 21 synthetic test items held out from all tuning: 21/21 correct, 13/13 risky requests not called SAFE (0 dangerous mistakes), 8/8 genuine bills passed (0 false alarms), median 10.9 s to the verdict, p90 17.2 s, about $0.024 per check. The set is small and written by the builder, so 13/13 still allows a true miss rate up to about 23%. The evaluation page says this too. Live checks are slower at busy hours: on Nov 4, two sets of six took a median of 16.8 and 21.4 s.
+
+**Fresh challenge set:** 20 new synthetic cases, frozen in the public repo before running and run once on the fixed code: 20/20 verdicts correct, with no scam or risky case called SAFE. One case reached SCAM without its strongest finding, because a phone number in words stayed in words. We wrote these cases too, so 17/17 still allows a true miss rate up to about 18%. All results: `docs/CHALLENGE_RESULTS.md`.
+
+**Fail-closed tests:** 73 tests use a scripted model that tries to get SAFE: registry errors, prompt injection in English, Telugu and Hindi, an official destination next to a known-scam one, and invented phone numbers and links.
+
+**A gap our own tests found:** found by our own fail-closed tests on Nov 4 and fixed before submission. The code could miss a contact written as a toll-free or landline number, in Devanagari or Telugu digits, or as a link on an uncommon domain ending. The fix covers those, punycode and non-Latin domain names, and checks a biller's own helpline against its official channels. It does not cover contacts spelled in words, or landlines without 0 or +91. Details: `docs/CHALLENGE_RESULTS.md`.
 
 **Limits:** biller records are simulated, not the live BBPS network, so a real bill ends as CAUTION by design. Runtime state is in memory on one replica. The next step is real biller data, which needs a partner.
 
@@ -89,8 +95,6 @@ The full list, with steps to reproduce, is in `FEEDBACK.md`.
 - **Worked well:** OpenAI-compatible endpoint, native tool calling, image input by data URL, near-exact Telugu–English audio, and reasoning returned separately. The full agent loop ran unchanged and scored 21/21 on the test split.
 - **Improve:** no per-token price is listed for `meta-models/muse-spark-open-1026`, so we can't budget it; we estimate at Spark 1.3 rates. Indian-language output had less native script than Spark 1.3 (share of native-script letters: Tamil 0.81 and Hindi 0.88, against 0.99).
 
-**Fireworks and Modal:** not used live. A Fireworks fallback is implemented and unit-tested but has never run against the real service, as we have no key set. `[BV: remove this line if the form only wants partners you used]`
-
 ## Bonus prizes
 
 ### Best Agentic Use-Case
@@ -101,13 +105,16 @@ BillSaathi is a real agent under real constraints, in a domain where a wrong ans
 - **An independent LLM judge** can only refuse, and fails closed. Refusals go back to the agent; after three, or any outage or limit, the result is forced CAUTION or the stricter floor.
 - **Everything is an audit trail:** every tool result, refusal and verdict is in an append-only evidence record that also drives the live timeline.
 - **See it catch itself:** the app replays a real recorded run in which the judge refused a reason that said "tonight" when the evidence did not, and the agent corrected it.
-- **Tested against its failures:** a scripted fake model covers invented citations, skipped destinations, lowered verdicts and judge outages. 638 API tests in total.
+- **Tested against its failures:** a scripted model covers invented citations, skipped destinations, lowered verdicts and judge outages, and 73 fail-closed tests have it try to get SAFE through registry errors, injection in three languages, a known-scam destination beside an official one, and invented contacts. 748 API tests in total.
+- **Tested on cases it had never seen:** a challenge set of 20, frozen before running and run once: 20/20 verdicts, including injection in three languages, with one finding missed and published.
+- **Its tests caught a real gap:** found by our own fail-closed tests on Nov 4 and fixed before submission (`docs/CHALLENGE_RESULTS.md`).
 
 ### Best Build on Open Weights
 Privacy Mode runs the whole pipeline on **Muse Spark Open** through Baseten: reading, tool-calling agent, judge, explanation and speech.
 
 - **Not a demo of a prompt:** the same agent loop, tools, deterministic checks and evidence record, behind one client interface.
 - **Measured side by side on the held-out set:** 21/21 correct, 13/13 risky not called SAFE, 8/8 genuine bills passed, median 19.1 s (Spark 1.3: 10.9 s), about 2 agent turns (Spark 1.3: 1), with cost estimated at about $0.033 per check because no price is listed.
+- **A fix from testing:** the open model often answers its first turn in plain text, and its one retry sometimes wrote the verdict as text too. That retry now requires `submit_verdict`, still through the checks and judge: 0 of 29 runs stopped without a verdict. The figures above predate this fix and weren't re-run.
 - **Fails safe:** if no open-weight provider is available, the check is refused rather than quietly sent to Meta's API. SAM isn't used on this path, because it's on Meta's API.
 - **Honest about privacy:** this means no call to Meta's Model API. The model still runs on an external host (Baseten), so it isn't offline or on-device. The Fireworks fallback is built but untested live.
 
@@ -119,19 +126,19 @@ Privacy Mode runs the whole pipeline on **Muse Spark Open** through Baseten: rea
 >
 > If your parents got this message, would they know it's fake?
 >
-> I built BillSaathi for @[BV: hackathon handle]: an AI agent that checks a bill before you pay, and answers in Telugu, Hindi or English. Built on Meta's Muse models.
+> I built BillSaathi at the Meta Global AI Developer Hackathon: an AI agent that checks a bill before you pay, and answers in Telugu, Hindi or English. Built on Meta's Muse models.
 >
 > Try a scam sample: https://zealous-coast-09279dd00.1.azurestaticapps.net
 
-`[BV: submit the post through the platform; it counts until Nov 8 EOD]`
+Submit the post through the platform; it counts until Nov 8 EOD.
 
 ### Community Vote
-> **Would your parents spot a fake electricity bill?** BillSaathi checks it for them. Forward a bill or a message on WhatsApp, or send a voice note in Telugu, and get SAFE, CAUTION or SCAM in your language, with the evidence. Try it in ten seconds with a one-tap scam sample, no sign-up. All the data is synthetic, so it's safe to play with. If you know someone who has nearly paid one of these, give it a vote.
+> **Would your parents spot a fake electricity bill?** BillSaathi checks it for them. Show it a bill or a message, or speak in Telugu, and get SAFE, CAUTION or SCAM in your language, with the evidence. Try it in ten seconds with a one-tap scam sample, no sign-up. All the data is synthetic, so it's safe to play with. If you know someone who has nearly paid one of these, give it a vote.
 
 ## Fill in before submitting
 
 - [ ] Video and X post links
+- [ ] Deploy the Nov 4 fix first: the "fixed before submission" wording is only fully true for the live site after that
 - [ ] User testing: **no sessions are recorded in `CLAUDE.md` §11.** If you run them, add one honest line to the description, for example how many people, and what changed. If not, say nothing about users.
-- [ ] Whether to publish the WhatsApp number
 - [ ] Anything from your Telugu and Hindi review
 - [ ] Check spend on dev.meta.ai and Baseten

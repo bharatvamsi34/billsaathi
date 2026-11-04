@@ -6,7 +6,7 @@ Updated for the Nov 4 interface. Live app: https://zealous-coast-09279dd00.1.azu
 
 **Rules for every take**
 - Say only what the screen shows. Biller records are simulated; never say or imply a connection to the live BBPS network.
-- Checks took 15 to 30 seconds overnight (median to verdict below), and speed varies by time of day. Speed up the waiting in the edit, label it **"sped up"**, and leave the real timers readable.
+- Checks took a median of 17 to 21 seconds on Nov 4, up to about 26 seconds, and speed varies by time of day. Speed up the waiting in the edit, label it **"sped up"**, and leave the real timers readable.
 - Never show a real bill, name or phone number other than the test number. Hide notifications.
 
 ## At a glance
@@ -96,12 +96,12 @@ Voiceover is written for about 2.3 words a second. Trim the voiceover before you
 
 > "Privacy Mode runs the whole pipeline on open weights: Muse Spark Open on an external host, with no call to Meta's Model API. Same tools, same rules."
 
-**Don't say "offline" or "on your device".** About 1 run in 4 tonight, Spark Open stopped without submitting, which ends safely but shows "Some checks could not be completed". Just retake.
+**Don't say "offline" or "on your device".** Spark Open can still end on three judge refusals (1 of 29 runs on Nov 4), which is safe but shows "Some checks could not be completed". Just retake.
 
 ### Scene 9, 2:32–2:47: how well it works
 **Clicks:** open `/eval`. Hold on the headline, the tiles, then the sweep and the Spark 1.3 vs Spark Open tables.
 
-> "We measured it on twenty-one synthetic test items we never tuned on. All correct, zero of thirteen risky requests called SAFE. A small set, and the page says so. Results and graders are public."
+> "We measured it on twenty-one synthetic test items we never tuned on. All correct, and thirteen of thirteen risky requests not called SAFE. A small set, and the page says so. Results and graders are public."
 
 ### Scene 10, 2:47–3:00: impact and close
 **On screen:** end card with the live URL and repo URL.

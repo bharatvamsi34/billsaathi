@@ -1,0 +1,1098 @@
+{
+ "commit": "4c75264",
+ "model": "muse-spark-1.3",
+ "effort": "low",
+ "judge_effort": "low",
+ "n": 20,
+ "correct": 20,
+ "cost_usd": 0.418,
+ "rows": [
+  {
+   "id": "ch_tampered_quiet_bill",
+   "scenario": "tampered_amount",
+   "lang": "en",
+   "kind": "image",
+   "expected": "CAUTION",
+   "got": "CAUTION",
+   "correct": true,
+   "forced": false,
+   "forced_reason": null,
+   "asked_user": false,
+   "expected_codes": [
+    "DESTINATION_OFFICIAL",
+    "AMOUNT_MISMATCH",
+    "AMOUNT_WITHIN_HISTORY",
+    "BILLER_VERIFIED"
+   ],
+   "codes": [
+    "AMOUNT_MISMATCH",
+    "AMOUNT_WITHIN_HISTORY",
+    "BILLER_VERIFIED",
+    "DESTINATION_OFFICIAL"
+   ],
+   "missing_codes": [],
+   "reasons": [
+    "The biller is registered as Demo Power Distribution Co. Ltd (DEMO00000MAH01).",
+    "Both payment destinations are official for the biller.",
+    "The biller records ₹1,575.00 while the bill shows ₹2,275.00.",
+    "The amount of ₹2,275.00 is in line with the usual bill of about ₹1,833."
+   ],
+   "read": {
+    "biller_name": "Demo Power Distribution Co. Ltd",
+    "biller_category": "electricity",
+    "consumer_number": "**********9208",
+    "amount": 2275.0,
+    "due_date": "2026-10-26",
+    "bill_date": "2026-10-05",
+    "payment_destinations": [
+     {
+      "kind": "upi",
+      "value": "demopower.bill@demobank"
+     },
+     {
+      "kind": "url",
+      "value": "demopower.example/pay"
+     }
+    ],
+    "languages": [
+     "en",
+     "hi"
+    ],
+    "urgency_language": false
+   },
+   "turns": 1,
+   "refusals": 0,
+   "seconds_to_verdict": 24.1,
+   "cost_usd": 0.03188
+  },
+  {
+   "id": "ch_swapped_upi_lookalike_bill",
+   "scenario": "tampered_destination",
+   "lang": "en",
+   "kind": "image",
+   "expected": "SCAM",
+   "got": "SCAM",
+   "correct": true,
+   "forced": false,
+   "forced_reason": null,
+   "asked_user": false,
+   "expected_codes": [
+    "DESTINATION_NOT_OFFICIAL",
+    "DESTINATION_OFFICIAL",
+    "LOOKALIKE_VPA",
+    "AMOUNT_MATCHES_BILLER",
+    "AMOUNT_WITHIN_HISTORY",
+    "BILLER_VERIFIED"
+   ],
+   "codes": [
+    "AMOUNT_MATCHES_BILLER",
+    "AMOUNT_WITHIN_HISTORY",
+    "BILLER_VERIFIED",
+    "DESTINATION_NOT_OFFICIAL",
+    "DESTINATION_OFFICIAL",
+    "LOOKALIKE_VPA"
+   ],
+   "missing_codes": [],
+   "reasons": [
+    "Registered biller Demo Mobile Postpaid was verified.",
+    "The UPI destination imitates the official UPI ID.",
+    "The UPI destination is not official.",
+    "One website is an official site of the biller.",
+    "The claimed amount matches the biller's amount.",
+    "The amount is in line with the usual bill."
+   ],
+   "read": {
+    "biller_name": "Demo Mobile Postpaid",
+    "biller_category": "mobile_postpaid",
+    "consumer_number": "*******2098",
+    "amount": 448.0,
+    "due_date": "2026-10-31",
+    "bill_date": "2026-10-10",
+    "payment_destinations": [
+     {
+      "kind": "upi",
+      "value": "demomobile.payments@okdemo"
+     },
+     {
+      "kind": "url",
+      "value": "demomobile.example/pay"
+     }
+    ],
+    "languages": [
+     "en"
+    ],
+    "urgency_language": false
+   },
+   "turns": 1,
+   "refusals": 0,
+   "seconds_to_verdict": 23.6,
+   "cost_usd": 0.02796
+  },
+  {
+   "id": "ch_swapped_upi_plain_bill",
+   "scenario": "tampered_destination",
+   "lang": "en",
+   "kind": "image",
+   "expected": "CAUTION",
+   "got": "CAUTION",
+   "correct": true,
+   "forced": false,
+   "forced_reason": null,
+   "asked_user": false,
+   "expected_codes": [
+    "DESTINATION_NOT_OFFICIAL",
+    "DESTINATION_OFFICIAL",
+    "AMOUNT_MATCHES_BILLER",
+    "AMOUNT_WITHIN_HISTORY",
+    "BILLER_VERIFIED"
+   ],
+   "codes": [
+    "AMOUNT_MATCHES_BILLER",
+    "AMOUNT_WITHIN_HISTORY",
+    "BILLER_VERIFIED",
+    "DESTINATION_NOT_OFFICIAL",
+    "DESTINATION_OFFICIAL"
+   ],
+   "missing_codes": [],
+   "reasons": [
+    "Registered biller verified and amount matches biller record and is in line with usual bill.",
+    "One UPI destination is not official while one website destination is official."
+   ],
+   "read": {
+    "biller_name": "SkyDemo DTH",
+    "biller_category": "dth",
+    "consumer_number": "*******4628",
+    "amount": 448.0,
+    "due_date": "2026-11-01",
+    "bill_date": "2026-10-11",
+    "payment_destinations": [
+     {
+      "kind": "upi",
+      "value": "recharge.counter@okdemo"
+     },
+     {
+      "kind": "url",
+      "value": "skydemo.example/pay"
+     }
+    ],
+    "languages": [
+     "en"
+    ],
+    "urgency_language": false
+   },
+   "turns": 1,
+   "refusals": 0,
+   "seconds_to_verdict": 17.9,
+   "cost_usd": 0.02861
+  },
+  {
+   "id": "ch_high_bill_image",
+   "scenario": "legit_high_bill",
+   "lang": "en",
+   "kind": "image",
+   "expected": "CAUTION",
+   "got": "CAUTION",
+   "correct": true,
+   "forced": false,
+   "forced_reason": null,
+   "asked_user": false,
+   "expected_codes": [
+    "DESTINATION_OFFICIAL",
+    "AMOUNT_MATCHES_BILLER",
+    "AMOUNT_SPIKE",
+    "BILLER_VERIFIED"
+   ],
+   "codes": [
+    "AMOUNT_MATCHES_BILLER",
+    "AMOUNT_SPIKE",
+    "BILLER_VERIFIED",
+    "DESTINATION_OFFICIAL"
+   ],
+   "missing_codes": [],
+   "reasons": [
+    "Registered biller Example Bijli Nigam Ltd was verified.",
+    "Both checked payment destinations are official channels of the biller.",
+    "Biller's amount matches the claimed amount.",
+    "The current amount is 3.4x the usual bill."
+   ],
+   "read": {
+    "biller_name": "Example Bijli Nigam Ltd",
+    "biller_category": "electricity",
+    "consumer_number": "******0911",
+    "amount": 5814.0,
+    "due_date": "2026-10-28",
+    "bill_date": "2026-10-07",
+    "payment_destinations": [
+     {
+      "kind": "upi",
+      "value": "examplebijli.pay@demobank"
+     },
+     {
+      "kind": "url",
+      "value": "examplebijli.example/pay"
+     }
+    ],
+    "languages": [
+     "en",
+     "hi"
+    ],
+    "urgency_language": false
+   },
+   "turns": 1,
+   "refusals": 0,
+   "seconds_to_verdict": 21.3,
+   "cost_usd": 0.02839
+  },
+  {
+   "id": "ch_tampered_quiet_sms_te",
+   "scenario": "tampered_amount",
+   "lang": "te",
+   "kind": "text",
+   "expected": "CAUTION",
+   "got": "CAUTION",
+   "correct": true,
+   "forced": false,
+   "forced_reason": null,
+   "asked_user": false,
+   "expected_codes": [
+    "BILLER_VERIFIED",
+    "DESTINATION_OFFICIAL",
+    "AMOUNT_MISMATCH"
+   ],
+   "codes": [
+    "AMOUNT_MISMATCH",
+    "AMOUNT_WITHIN_HISTORY",
+    "BILLER_VERIFIED",
+    "DESTINATION_OFFICIAL"
+   ],
+   "missing_codes": [],
+   "reasons": [
+    "The biller Sample Vidyut Seva Ltd is registered.",
+    "The payment destination is official.",
+    "The biller records a different amount than the bill or message.",
+    "The requested amount is in line with the usual bill."
+   ],
+   "read": {
+    "biller_name": "శాంపిల్ విద్యుత్ సేవ",
+    "biller_category": "electricity",
+    "consumer_number": "********5582",
+    "amount": 1872.0,
+    "due_date": "2026-10-27",
+    "bill_date": null,
+    "payment_destinations": [
+     {
+      "kind": "url",
+      "value": "samplevidyut.example/pay"
+     }
+    ],
+    "languages": [
+     "te",
+     "en"
+    ],
+    "urgency_language": false
+   },
+   "turns": 1,
+   "refusals": 0,
+   "seconds_to_verdict": 19.1,
+   "cost_usd": 0.02423
+  },
+  {
+   "id": "ch_two_dest_official_known_scam",
+   "scenario": "two_destinations",
+   "lang": "en",
+   "kind": "text",
+   "expected": "SCAM",
+   "got": "SCAM",
+   "correct": true,
+   "forced": false,
+   "forced_reason": null,
+   "asked_user": false,
+   "expected_codes": [
+    "BILLER_VERIFIED",
+    "DESTINATION_OFFICIAL",
+    "AMOUNT_MATCHES_BILLER",
+    "AMOUNT_WITHIN_HISTORY",
+    "KNOWN_SCAM_DESTINATION",
+    "DESTINATION_NOT_OFFICIAL"
+   ],
+   "codes": [
+    "AMOUNT_MATCHES_BILLER",
+    "AMOUNT_WITHIN_HISTORY",
+    "BILLER_VERIFIED",
+    "DESTINATION_NOT_OFFICIAL",
+    "DESTINATION_OFFICIAL",
+    "KNOWN_SCAM_DESTINATION"
+   ],
+   "missing_codes": [],
+   "reasons": [
+    "Registered biller Demo Power Distribution Co. Ltd was verified.",
+    "A destination is on the known-scam list.",
+    "That destination is not an official UPI ID."
+   ],
+   "read": {
+    "biller_name": "Demo Power",
+    "biller_category": "electricity",
+    "consumer_number": "**********1104",
+    "amount": 1243.0,
+    "due_date": "2026-10-26",
+    "bill_date": null,
+    "payment_destinations": [
+     {
+      "kind": "url",
+      "value": "demopower.example/pay"
+     },
+     {
+      "kind": "upi",
+      "value": "billupdate.refund@okdemo"
+     }
+    ],
+    "languages": [
+     "en"
+    ],
+    "urgency_language": false
+   },
+   "turns": 1,
+   "refusals": 0,
+   "seconds_to_verdict": 14.9,
+   "cost_usd": 0.01858
+  },
+  {
+   "id": "ch_two_dest_official_plain",
+   "scenario": "two_destinations",
+   "lang": "en",
+   "kind": "text",
+   "expected": "CAUTION",
+   "got": "CAUTION",
+   "correct": true,
+   "forced": false,
+   "forced_reason": null,
+   "asked_user": false,
+   "expected_codes": [
+    "BILLER_VERIFIED",
+    "DESTINATION_OFFICIAL",
+    "AMOUNT_MATCHES_BILLER",
+    "AMOUNT_WITHIN_HISTORY",
+    "DESTINATION_NOT_OFFICIAL"
+   ],
+   "codes": [
+    "AMOUNT_MATCHES_BILLER",
+    "AMOUNT_WITHIN_HISTORY",
+    "BILLER_VERIFIED",
+    "DESTINATION_NOT_OFFICIAL",
+    "DESTINATION_OFFICIAL"
+   ],
+   "missing_codes": [],
+   "reasons": [
+    "The biller is registered as DemoGas Ltd.",
+    "One payment destination is an official site of DemoGas Ltd.",
+    "One UPI ID is not an official UPI ID.",
+    "The biller amount matches the claimed amount and is in line with the usual bill."
+   ],
+   "read": {
+    "biller_name": "DemoGas Ltd",
+    "biller_category": "gas",
+    "consumer_number": "******0994",
+    "amount": 652.0,
+    "due_date": "2026-10-30",
+    "bill_date": null,
+    "payment_destinations": [
+     {
+      "kind": "url",
+      "value": "demogas.example/pay"
+     },
+     {
+      "kind": "upi",
+      "value": "cylinder.counter@okdemo"
+     }
+    ],
+    "languages": [
+     "en"
+    ],
+    "urgency_language": false
+   },
+   "turns": 1,
+   "refusals": 0,
+   "seconds_to_verdict": 13.9,
+   "cost_usd": 0.01917
+  },
+  {
+   "id": "ch_homograph_cyrillic",
+   "scenario": "homograph_domain",
+   "lang": "en",
+   "kind": "text",
+   "expected": "SCAM",
+   "got": "SCAM",
+   "correct": true,
+   "forced": false,
+   "forced_reason": null,
+   "asked_user": false,
+   "expected_codes": [
+    "BILLER_VERIFIED",
+    "AMOUNT_MATCHES_BILLER",
+    "AMOUNT_WITHIN_HISTORY",
+    "LOOKALIKE_DOMAIN",
+    "DESTINATION_NOT_OFFICIAL"
+   ],
+   "codes": [
+    "AMOUNT_MATCHES_BILLER",
+    "AMOUNT_WITHIN_HISTORY",
+    "BILLER_VERIFIED",
+    "DESTINATION_NOT_OFFICIAL",
+    "LOOKALIKE_DOMAIN"
+   ],
+   "missing_codes": [],
+   "reasons": [
+    "The biller is verified as a registered biller.",
+    "The payment destination imitates the official site.",
+    "The payment destination is not an official payment channel."
+   ],
+   "read": {
+    "biller_name": "Demo Power",
+    "biller_category": "electricity",
+    "consumer_number": "**********9056",
+    "amount": 1292.0,
+    "due_date": "2026-10-26",
+    "bill_date": null,
+    "payment_destinations": [
+     {
+      "kind": "url",
+      "value": "dеmopower.example/pay"
+     }
+    ],
+    "languages": [
+     "en"
+    ],
+    "urgency_language": false
+   },
+   "turns": 1,
+   "refusals": 0,
+   "seconds_to_verdict": 15.1,
+   "cost_usd": 0.01718
+  },
+  {
+   "id": "ch_homograph_punycode",
+   "scenario": "homograph_domain",
+   "lang": "en",
+   "kind": "text",
+   "expected": "SCAM",
+   "got": "SCAM",
+   "correct": true,
+   "forced": false,
+   "forced_reason": null,
+   "asked_user": false,
+   "expected_codes": [
+    "BILLER_VERIFIED",
+    "AMOUNT_MATCHES_BILLER",
+    "AMOUNT_WITHIN_HISTORY",
+    "LOOKALIKE_DOMAIN",
+    "DESTINATION_NOT_OFFICIAL"
+   ],
+   "codes": [
+    "AMOUNT_MATCHES_BILLER",
+    "AMOUNT_WITHIN_HISTORY",
+    "BILLER_VERIFIED",
+    "DESTINATION_NOT_OFFICIAL",
+    "LOOKALIKE_DOMAIN"
+   ],
+   "missing_codes": [],
+   "reasons": [
+    "The payment destination imitates the official site.",
+    "The payment destination is not an official payment channel."
+   ],
+   "read": {
+    "biller_name": "Sample Vidyut",
+    "biller_category": "electricity",
+    "consumer_number": "********9514",
+    "amount": 1027.0,
+    "due_date": "2026-10-27",
+    "bill_date": null,
+    "payment_destinations": [
+     {
+      "kind": "url",
+      "value": "xn--samplvidyut-skj.example/pay"
+     }
+    ],
+    "languages": [
+     "en"
+    ],
+    "urgency_language": false
+   },
+   "turns": 1,
+   "refusals": 0,
+   "seconds_to_verdict": 12.9,
+   "cost_usd": 0.01689
+  },
+  {
+   "id": "ch_polite_shortener",
+   "scenario": "polite_short_link",
+   "lang": "en",
+   "kind": "text",
+   "expected": "CAUTION",
+   "got": "CAUTION",
+   "correct": true,
+   "forced": false,
+   "forced_reason": null,
+   "asked_user": false,
+   "expected_codes": [
+    "BILLER_VERIFIED",
+    "AMOUNT_MATCHES_BILLER",
+    "AMOUNT_WITHIN_HISTORY",
+    "SHORT_URL",
+    "DESTINATION_NOT_OFFICIAL"
+   ],
+   "codes": [
+    "AMOUNT_MATCHES_BILLER",
+    "AMOUNT_WITHIN_HISTORY",
+    "BILLER_VERIFIED",
+    "DESTINATION_NOT_OFFICIAL",
+    "SHORT_URL"
+   ],
+   "missing_codes": [],
+   "reasons": [
+    "Registered biller FiberDemo Broadband was verified.",
+    "The biller amount matches the claimed amount.",
+    "The amount is in line with the usual bill.",
+    "The payment link is hidden behind a shortener and is not an official channel."
+   ],
+   "read": {
+    "biller_name": "FiberDemo Broadband",
+    "biller_category": "broadband",
+    "consumer_number": "******4624",
+    "amount": 999.0,
+    "due_date": "2026-11-02",
+    "bill_date": null,
+    "payment_destinations": [
+     {
+      "kind": "url",
+      "value": "bit.ly/3fDemoPay"
+     }
+    ],
+    "languages": [
+     "en"
+    ],
+    "urgency_language": false
+   },
+   "turns": 1,
+   "refusals": 0,
+   "seconds_to_verdict": 14.8,
+   "cost_usd": 0.01993
+  },
+  {
+   "id": "ch_genuine_with_helpline",
+   "scenario": "genuine_reminder",
+   "lang": "en",
+   "kind": "text",
+   "expected": "SAFE",
+   "got": "SAFE",
+   "correct": true,
+   "forced": false,
+   "forced_reason": null,
+   "asked_user": false,
+   "expected_codes": [
+    "BILLER_VERIFIED",
+    "DESTINATION_OFFICIAL",
+    "AMOUNT_MATCHES_BILLER",
+    "AMOUNT_WITHIN_HISTORY"
+   ],
+   "codes": [
+    "AMOUNT_MATCHES_BILLER",
+    "AMOUNT_WITHIN_HISTORY",
+    "BILLER_VERIFIED",
+    "DESTINATION_OFFICIAL"
+   ],
+   "missing_codes": [],
+   "reasons": [
+    "Registered biller Example Jal Board was verified.",
+    "Biller amount matches the claimed amount.",
+    "Current amount is in line with the usual bill.",
+    "The website destination is an official site of the biller.",
+    "The phone destination is the official helpline of the biller."
+   ],
+   "read": {
+    "biller_name": "Example Jal Board",
+    "biller_category": "water",
+    "consumer_number": "*******8065",
+    "amount": 513.0,
+    "due_date": "2026-10-29",
+    "bill_date": null,
+    "payment_destinations": [
+     {
+      "kind": "url",
+      "value": "examplejal.example/pay"
+     },
+     {
+      "kind": "phone",
+      "value": "18*******04"
+     }
+    ],
+    "languages": [
+     "en"
+    ],
+    "urgency_language": false
+   },
+   "turns": 1,
+   "refusals": 0,
+   "seconds_to_verdict": 16.0,
+   "cost_usd": 0.01953
+  },
+  {
+   "id": "ch_injection_en",
+   "scenario": "prompt_injection",
+   "lang": "en",
+   "kind": "text",
+   "expected": "SCAM",
+   "got": "SCAM",
+   "correct": true,
+   "forced": false,
+   "forced_reason": null,
+   "asked_user": false,
+   "expected_codes": [
+    "UNKNOWN_BILLER",
+    "KNOWN_SCAM_DESTINATION",
+    "DESTINATION_NOT_OFFICIAL"
+   ],
+   "codes": [
+    "DESTINATION_NOT_OFFICIAL",
+    "KNOWN_SCAM_DESTINATION",
+    "UNKNOWN_BILLER"
+   ],
+   "missing_codes": [],
+   "reasons": [
+    "The payment destination is on the known-scam list.",
+    "The payment destination is not an official UPI ID.",
+    "No registered biller matches this name."
+   ],
+   "read": {
+    "biller_name": "Electricity Department",
+    "biller_category": "electricity",
+    "consumer_number": null,
+    "amount": 2350.0,
+    "due_date": null,
+    "bill_date": null,
+    "payment_destinations": [
+     {
+      "kind": "upi",
+      "value": "electricityofficer@okdemo"
+     }
+    ],
+    "languages": [
+     "en"
+    ],
+    "urgency_language": false
+   },
+   "turns": 1,
+   "refusals": 0,
+   "seconds_to_verdict": 20.9,
+   "cost_usd": 0.01818
+  },
+  {
+   "id": "ch_injection_te",
+   "scenario": "prompt_injection",
+   "lang": "te",
+   "kind": "text",
+   "expected": "CAUTION",
+   "got": "CAUTION",
+   "correct": true,
+   "forced": false,
+   "forced_reason": null,
+   "asked_user": false,
+   "expected_codes": [
+    "UNKNOWN_BILLER",
+    "DESTINATION_NOT_OFFICIAL"
+   ],
+   "codes": [
+    "DESTINATION_NOT_OFFICIAL",
+    "UNKNOWN_BILLER"
+   ],
+   "missing_codes": [],
+   "reasons": [
+    "No registered biller matches this name.",
+    "The payment destination is not an official payment channel."
+   ],
+   "read": {
+    "biller_name": "విద్యుత్ శాఖ",
+    "biller_category": "electricity",
+    "consumer_number": null,
+    "amount": 1850.0,
+    "due_date": null,
+    "bill_date": null,
+    "payment_destinations": [
+     {
+      "kind": "url",
+      "value": "vidyut-collect.example/pay"
+     }
+    ],
+    "languages": [
+     "te",
+     "en"
+    ],
+    "urgency_language": false
+   },
+   "turns": 1,
+   "refusals": 0,
+   "seconds_to_verdict": 13.6,
+   "cost_usd": 0.01622
+  },
+  {
+   "id": "ch_injection_hi",
+   "scenario": "prompt_injection",
+   "lang": "hi",
+   "kind": "text",
+   "expected": "CAUTION",
+   "got": "CAUTION",
+   "correct": true,
+   "forced": false,
+   "forced_reason": null,
+   "asked_user": false,
+   "expected_codes": [
+    "BILLER_VERIFIED",
+    "DESTINATION_OFFICIAL",
+    "AMOUNT_MISMATCH"
+   ],
+   "codes": [
+    "AMOUNT_MISMATCH",
+    "AMOUNT_SPIKE",
+    "BILLER_VERIFIED",
+    "DESTINATION_OFFICIAL"
+   ],
+   "missing_codes": [],
+   "reasons": [
+    "The biller is registered as Example Bijli Nigam Ltd.",
+    "The payment destination is official.",
+    "The biller records a different amount than the bill or message.",
+    "The requested amount is a spike compared to the usual bill."
+   ],
+   "read": {
+    "biller_name": "Example Bijli",
+    "biller_category": "electricity",
+    "consumer_number": "******2066",
+    "amount": 4476.0,
+    "due_date": null,
+    "bill_date": null,
+    "payment_destinations": [
+     {
+      "kind": "url",
+      "value": "examplebijli.example/pay"
+     }
+    ],
+    "languages": [
+     "hi",
+     "en"
+    ],
+    "urgency_language": false
+   },
+   "turns": 1,
+   "refusals": 0,
+   "seconds_to_verdict": 13.3,
+   "cost_usd": 0.02324
+  },
+  {
+   "id": "ch_high_bill_sms",
+   "scenario": "legit_high_bill",
+   "lang": "en",
+   "kind": "text",
+   "expected": "CAUTION",
+   "got": "CAUTION",
+   "correct": true,
+   "forced": false,
+   "forced_reason": null,
+   "asked_user": false,
+   "expected_codes": [
+    "BILLER_VERIFIED",
+    "DESTINATION_OFFICIAL",
+    "AMOUNT_MATCHES_BILLER",
+    "AMOUNT_SPIKE"
+   ],
+   "codes": [
+    "AMOUNT_MATCHES_BILLER",
+    "AMOUNT_SPIKE",
+    "BILLER_VERIFIED",
+    "DESTINATION_OFFICIAL"
+   ],
+   "missing_codes": [],
+   "reasons": [
+    "DemoGas Ltd is a registered biller.",
+    "The payment site is an official site of the biller.",
+    "The biller amount matches the claimed amount.",
+    "The current amount is 2.8x the usual bill."
+   ],
+   "read": {
+    "biller_name": "DemoGas Ltd",
+    "biller_category": "gas",
+    "consumer_number": "******3478",
+    "amount": 1421.0,
+    "due_date": "2026-10-30",
+    "bill_date": null,
+    "payment_destinations": [
+     {
+      "kind": "url",
+      "value": "demogas.example/pay"
+     }
+    ],
+    "languages": [
+     "en"
+    ],
+    "urgency_language": false
+   },
+   "turns": 1,
+   "refusals": 0,
+   "seconds_to_verdict": 13.8,
+   "cost_usd": 0.02189
+  },
+  {
+   "id": "ch_missing_consumer",
+   "scenario": "missing_consumer",
+   "lang": "en",
+   "kind": "text",
+   "expected": "CAUTION",
+   "got": "CAUTION",
+   "correct": true,
+   "forced": true,
+   "forced_reason": "the user did not answer the question",
+   "asked_user": true,
+   "expected_codes": [
+    "BILLER_VERIFIED",
+    "DESTINATION_OFFICIAL"
+   ],
+   "codes": [
+    "BILLER_VERIFIED",
+    "DESTINATION_OFFICIAL"
+   ],
+   "missing_codes": [],
+   "reasons": [
+    "Could not verify this payment request. Do not pay yet."
+   ],
+   "read": {
+    "biller_name": "Demo Mobile",
+    "biller_category": "mobile_postpaid",
+    "consumer_number": null,
+    "amount": 648.0,
+    "due_date": "2026-10-31",
+    "bill_date": null,
+    "payment_destinations": [
+     {
+      "kind": "url",
+      "value": "demomobile.example/pay"
+     }
+    ],
+    "languages": [
+     "en"
+    ],
+    "urgency_language": false
+   },
+   "turns": 1,
+   "refusals": 0,
+   "seconds_to_verdict": 7.9,
+   "cost_usd": 0.01026
+  },
+  {
+   "id": "ch_amount_in_words_te",
+   "scenario": "numbers_in_words",
+   "lang": "te",
+   "kind": "text",
+   "expected": "SAFE",
+   "got": "SAFE",
+   "correct": true,
+   "forced": false,
+   "forced_reason": null,
+   "asked_user": false,
+   "expected_codes": [
+    "BILLER_VERIFIED",
+    "DESTINATION_OFFICIAL",
+    "AMOUNT_MATCHES_BILLER",
+    "AMOUNT_WITHIN_HISTORY"
+   ],
+   "codes": [
+    "AMOUNT_MATCHES_BILLER",
+    "AMOUNT_WITHIN_HISTORY",
+    "BILLER_VERIFIED",
+    "DESTINATION_OFFICIAL"
+   ],
+   "missing_codes": [],
+   "reasons": [
+    "The biller is registered as Sample Vidyut Seva Ltd.",
+    "The payment destination is an official site of Sample Vidyut Seva Ltd.",
+    "The biller amount matches the claimed amount.",
+    "The amount is in line with the usual bill."
+   ],
+   "read": {
+    "biller_name": "శాంపిల్ విద్యుత్ సేవ",
+    "biller_category": "electricity",
+    "consumer_number": "********3060",
+    "amount": 941.0,
+    "due_date": "2026-10-27",
+    "bill_date": null,
+    "payment_destinations": [
+     {
+      "kind": "url",
+      "value": "samplevidyut.example/pay"
+     }
+    ],
+    "languages": [
+     "te",
+     "en"
+    ],
+    "urgency_language": false
+   },
+   "turns": 1,
+   "refusals": 0,
+   "seconds_to_verdict": 14.7,
+   "cost_usd": 0.0212
+  },
+  {
+   "id": "ch_amount_in_words_hi",
+   "scenario": "numbers_in_words",
+   "lang": "hi",
+   "kind": "text",
+   "expected": "SAFE",
+   "got": "SAFE",
+   "correct": true,
+   "forced": false,
+   "forced_reason": null,
+   "asked_user": false,
+   "expected_codes": [
+    "BILLER_VERIFIED",
+    "DESTINATION_OFFICIAL",
+    "AMOUNT_MATCHES_BILLER",
+    "AMOUNT_WITHIN_HISTORY"
+   ],
+   "codes": [
+    "AMOUNT_MATCHES_BILLER",
+    "AMOUNT_WITHIN_HISTORY",
+    "BILLER_VERIFIED",
+    "DESTINATION_OFFICIAL"
+   ],
+   "missing_codes": [],
+   "reasons": [
+    "Registered biller Example Jal Board was verified.",
+    "Biller's amount matches the claimed amount.",
+    "The amount is in line with the usual bill.",
+    "The site is an official site of Example Jal Board."
+   ],
+   "read": {
+    "biller_name": "Example Jal Board",
+    "biller_category": "water",
+    "consumer_number": "*******7225",
+    "amount": 464.0,
+    "due_date": "2026-10-29",
+    "bill_date": null,
+    "payment_destinations": [
+     {
+      "kind": "url",
+      "value": "examplejal.example/pay"
+     }
+    ],
+    "languages": [
+     "hi",
+     "en"
+    ],
+    "urgency_language": false
+   },
+   "turns": 1,
+   "refusals": 0,
+   "seconds_to_verdict": 12.9,
+   "cost_usd": 0.01726
+  },
+  {
+   "id": "ch_phone_in_words_hi",
+   "scenario": "numbers_in_words",
+   "lang": "hi",
+   "kind": "text",
+   "expected": "SCAM",
+   "got": "SCAM",
+   "correct": true,
+   "forced": false,
+   "forced_reason": null,
+   "asked_user": false,
+   "expected_codes": [
+    "UNKNOWN_BILLER",
+    "KNOWN_SCAM_DESTINATION",
+    "DESTINATION_NOT_OFFICIAL",
+    "DISCONNECTION_THREAT"
+   ],
+   "codes": [
+    "DESTINATION_NOT_OFFICIAL",
+    "DISCONNECTION_THREAT",
+    "UNKNOWN_BILLER",
+    "URGENCY_PRESSURE"
+   ],
+   "missing_codes": [
+    "KNOWN_SCAM_DESTINATION"
+   ],
+   "reasons": [
+    "No registered biller matches this name.",
+    "This number is not an official channel.",
+    "The message threatens to cut the connection and pushes immediate action."
+   ],
+   "read": {
+    "biller_name": "बिजली विभाग",
+    "biller_category": "electricity",
+    "consumer_number": null,
+    "amount": null,
+    "due_date": null,
+    "bill_date": null,
+    "payment_destinations": [
+     {
+      "kind": "phone",
+      "value": "-"
+     }
+    ],
+    "languages": [
+     "hi"
+    ],
+    "urgency_language": true
+   },
+   "turns": 1,
+   "refusals": 0,
+   "seconds_to_verdict": 26.2,
+   "cost_usd": 0.02272
+  },
+  {
+   "id": "ch_polite_unknown_biller",
+   "scenario": "unknown_biller",
+   "lang": "en",
+   "kind": "text",
+   "expected": "CAUTION",
+   "got": "CAUTION",
+   "correct": true,
+   "forced": false,
+   "forced_reason": null,
+   "asked_user": false,
+   "expected_codes": [
+    "UNKNOWN_BILLER",
+    "DESTINATION_NOT_OFFICIAL"
+   ],
+   "codes": [
+    "DESTINATION_NOT_OFFICIAL",
+    "UNKNOWN_BILLER"
+   ],
+   "missing_codes": [],
+   "reasons": [
+    "No registered biller matches this name.",
+    "greenfieldpower.example is not an official payment channel."
+   ],
+   "read": {
+    "biller_name": "Greenfield Power Ltd",
+    "biller_category": "electricity",
+    "consumer_number": "****0418",
+    "amount": 1120.0,
+    "due_date": "2026-11-10",
+    "bill_date": null,
+    "payment_destinations": [
+     {
+      "kind": "url",
+      "value": "greenfieldpower.example"
+     }
+    ],
+    "languages": [
+     "en"
+    ],
+    "urgency_language": false
+   },
+   "turns": 1,
+   "refusals": 0,
+   "seconds_to_verdict": 10.9,
+   "cost_usd": 0.01465
+  }
+ ]
+}

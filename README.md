@@ -79,7 +79,7 @@ Contributor models, which train on inputs, are refused in code.
 **The model proposes, the code verifies.** Each layer can only make the outcome stricter. Design: [docs/AGENT_DESIGN.md](docs/AGENT_DESIGN.md).
 
 1. **Fixed checks at fixed points.** Code runs the biller lookup, a check of every destination, scam wording, bill fetch and history before the agent's first turn. The agent cannot skip them.
-2. **Milestone check.** Any link, UPI ID or mobile number in the text that reading missed is added and must be checked. It reads the original image even when the fields read SAM's crop, so cropping cannot hide a link.
+2. **Milestone check.** Any link, UPI ID or phone number in the text that reading missed is added and must be checked. It reads the original image even when the fields read SAM's crop, so cropping cannot hide a link.
 3. **Deterministic checks in `submit_verdict`.** Citations must exist in this run, every destination must be checked, the verdict can never go below the risk-engine floor, and SAFE needs every hard check to pass.
 4. **Independent judge.** A separate model call checks that each reason says only what its evidence says. It can only refuse, and it fails closed.
 5. **Forced CAUTION.** Three refusals, a failed tool, a limit or an outage ends as CAUTION, or the floor if stricter. Never SAFE.
@@ -98,7 +98,11 @@ The real pipeline on the **test split: 21 held-out synthetic items** never used 
 | Spark 1.3, high | 21/21 | 13/13 | 8/8 | 16.3 s | 21.5 s | $0.026 |
 | Muse Spark Open (Privacy Mode) | 21/21 | 13/13 | 8/8 | 19.1 s | 23.7 s | ~$0.033 (estimate) |
 
-**Read these honestly.** The set is small, synthetic and written by the builder, so 13/13 risky items not called SAFE (0 dangerous mistakes) still allows a true miss rate up to about 23% (95%, rule of three). The checks recorded every expected finding on 19 of 21 items; on the other 2 the biller check answered UNKNOWN_BILLER, stricter than the label expected, and the verdict was still right ([details on `/eval`](https://zealous-coast-09279dd00.1.azurestaticapps.net/eval)). Only the product row includes explanation cost. The judge ran at `low` in every row. Times are from a developer machine running three checks at once. Spark Open has no listed price, so its cost is estimated at Spark 1.3 rates.
+**Read these honestly.** The set is small, synthetic and written by the builder, so 13/13 risky items not called SAFE (0 dangerous mistakes) still allows a true miss rate up to about 23% (95%, rule of three). The checks recorded every expected finding on 19 of 21 items; on the other 2 the biller check answered UNKNOWN_BILLER, stricter than the label expected, and the verdict was still right ([details on `/eval`](https://zealous-coast-09279dd00.1.azurestaticapps.net/eval)). Only the product row includes explanation cost. The judge ran at `low` in every row. Times are from a developer machine running three checks at once. Spark Open has no listed price, so its cost is estimated at Spark 1.3 rates. These runs came before the Nov 4 fixes below. Live speed varies: on Nov 4, two sets of six live checks had a median of 16.8 and 21.4 s to the verdict.
+
+**Fresh challenge set.** 20 new synthetic cases, frozen before running and run once on the fixed code: 20/20 verdicts correct, with one finding missed. Every case and the limits: [docs/CHALLENGE_RESULTS.md](docs/CHALLENGE_RESULTS.md).
+
+**Fail-closed tests.** A scripted model tries to get SAFE through registry errors, prompt injection in three languages, a known-scam destination beside an official one, and invented contacts ([api/tests/test_fail_closed.py](api/tests/test_fail_closed.py)). On Nov 4 these found that a toll-free or landline number, Indian-script digits or an uncommon domain ending could be missed. That is now fixed in the code, with no verdict changed on 80 regression inputs. Evidence for every claim: [docs/CLAIMS_AND_EVIDENCE.md](docs/CLAIMS_AND_EVIDENCE.md).
 
 ## Known limits
 
@@ -106,6 +110,8 @@ The real pipeline on the **test split: 21 held-out synthetic items** never used 
 - Checks, open questions, rate limits and the daily spend cap live in one process's memory, so the API runs at max 1 replica and a restart loses them. The sandbox audit log is durable: SQLite on an Azure Files share, kept across restarts and new revisions.
 - Privacy Mode means open weights on an external host (Baseten; the Fireworks fallback is built but untested live), with no call to Meta's Model API. It is not offline. It skips SAM and the generated card picture, because both are on Meta's API, and it is slower.
 - Scam patterns and the known-scam list are small and synthetic. New wording is left to the agent and the other checks.
+- Contacts spelled in words ("nine eight seven…", "help-desk dot shop") and landlines without 0 or +91 are not detected by code.
+- If the reading step reports a different amount from the one printed, code does not cross-check it against the raw text.
 - WhatsApp text, photo and voice note were tested live by the builder on 2026-11-03, from the builder's phone only; other numbers are untested.
 - Telugu has been rated by a native speaker on earlier samples (4/5); Hindi is approximate. Marathi and Tamil are not shipped.
 - Free Meta credits may let Meta use submitted content to improve its products: send only synthetic data.
@@ -130,6 +136,6 @@ cd ..\api
 
 ## Repository
 
-`api/` FastAPI app, agent, risk engine, mock BBPS, WhatsApp · `web/` Next.js app · `data/synthetic/` labelled dataset · `eval/` harness, graders, results · `infra/` Azure deployment · `docs/` design, testing, handoff · [FEEDBACK.md](FEEDBACK.md) notes on the Meta APIs.
+`api/` FastAPI app, agent, risk engine, mock BBPS, WhatsApp · `web/` Next.js app · `data/synthetic/` labelled dataset · `data/challenge/` frozen challenge set · `eval/` harness, graders, results · `infra/` Azure deployment · `docs/` design, testing, handoff · [FEEDBACK.md](FEEDBACK.md) notes on the Meta APIs.
 
 Built by Bharat Vamsi Chillimunta (Ireesha Infosol Pvt Ltd). MIT licence.
