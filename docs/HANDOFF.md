@@ -1,5 +1,9 @@
 # BillSaathi — handoff
 
+## Morning update (Nov 4)
+
+Details in `CLAUDE.md` §11. **The overnight report's "judge at minimal" was wrong:** the setting was never connected, the judge always ran at `low`, and it stays there. Live speed is limited by the model at this hour (verdict median 16.8-21.4 s across two runs of the same code). Privacy Mode's retry now requires `submit_verdict`. `/eval` shows success counts and names the 2 evidence gaps. Video cards and re-recorded footage are in `docs/screenshots/demo/`.
+
 ## Overnight report (Nov 4, finished about 02:45 IST)
 
 **Everything in the overnight list shipped except where noted below. Nothing weakened a safety rule:** verdict logic, risk rules, the judge's refusal rules, `facts.py`, eval data and labels are unchanged.
@@ -20,7 +24,7 @@
 1. **WhatsApp's new replies have never run on a real phone.** They passed with a mocked Graph API only. Send one text, DETAILS and one photo first. The short reply no longer carries the web link or sandbox footer; those moved to DETAILS.
 2. **Checks are slower than yesterday's numbers:** 15-30 s to the verdict tonight, against about 12 s measured earlier and the 10.9 s on `/eval`. Nothing tonight touches the steps before the verdict, and the 6 baseline scam checks were already at 19.3 s, so I suspect the time of day, but I did not prove it. Re-time in your recording window. Don't quote a live speed that the video contradicts.
 3. **Rehearse the spoken Telugu line.** Digits may come back as words, so the number may not be read as a number.
-4. **Privacy Mode occasionally stops without a verdict:** 1 of my 4 runs, and 1 of 21 in the eval file. It ends safely (the floor verdict, "Some checks could not be completed"). Retake if it happens.
+4. **Privacy Mode stopping without a verdict:** fixed in the morning update, 0 of 29 runs. It can still end on three judge refusals (1 of 29), which is safe; retake if it happens.
 5. **Read the new Telugu and Hindi text.** I wrote it and no native speaker has checked it: `web/src/lib/i18n.ts`, `web/src/lib/reasons.ts`, `api/app/whatsapp/texts.py`, sample titles in `web/scripts/build-samples.mjs`.
 6. **Not tested by me:** a real phone (only Chrome's phone emulation), a real microphone, Listen's audio output, the Fireworks fallback.
 7. **`/eval` numbers were not re-run tonight.** Verdict logic did not change; the explanation prompt and timing did.
