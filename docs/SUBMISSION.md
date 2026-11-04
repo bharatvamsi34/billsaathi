@@ -138,7 +138,6 @@ Submit the post through the platform; it counts until Nov 8 EOD.
 ## Fill in before submitting
 
 - [ ] Video and X post links
-- [ ] Deploy the Nov 4 fix first: the "fixed before submission" wording is only fully true for the live site after that
 - [ ] User testing: **no sessions are recorded in `CLAUDE.md` §11.** If you run them, add one honest line to the description, for example how many people, and what changed. If not, say nothing about users.
 - [ ] Anything from your Telugu and Hindi review
 - [ ] Check spend on dev.meta.ai and Baseten

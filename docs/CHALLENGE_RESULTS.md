@@ -48,7 +48,7 @@ Nothing else failed. All 20 runs took one agent turn with no judge refusals. One
 - **The set is small.** 17 of 17 non-SAFE cases not called SAFE still allows a true miss rate up to about 18% (95%, rule of three).
 - **We wrote it.** The author knew how the tools work. It tests new wording and new combinations, not an attacker who has never seen our rules.
 - **It tested only three genuine messages.** That says little about false alarms.
-- **The fix is not on the site yet.** This ran locally on the fixed code. The deployed API is `7167d21` until the fix is deployed.
+- **It ran locally, not on the site.** The challenge ran on the fixed code from the dev machine. The fix went live afterwards, on Nov 4, as API image `5badfb9`. The challenge set was not re-run there.
 - **A fooled reading step is still a limit.** If reading reports a different amount from the one printed, code does not cross-check it against the raw text. Payment could still go only to official destinations.
 
 ## The gap our own tests found
