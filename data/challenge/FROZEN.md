@@ -4,7 +4,7 @@ Written and committed on 2026-11-04, before any model saw these 20 cases.
 
 | | |
 |---|---|
-| Labels and code | commit `6e14ae0` (this file is added in the next commit; nothing else changes) |
+| Labels and code | commit `6e14ae0` plus the next two commits: this file, and a runner fix that records what the reading step returned. Labels, model and rules do not change, and nothing had run yet |
 | Fix included | wider contact detection (`9ccd24d`) |
 | Reading and agent | Muse Spark 1.3 (`muse-spark-1.3`), effort `low` |
 | Judge | Muse Spark 1.3, effort `low` |

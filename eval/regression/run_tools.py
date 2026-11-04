@@ -8,11 +8,10 @@ api, inputs, out = sys.argv[1:4]
 sys.path[:0] = [api, api + "/tests"]
 sys.stdout.reconfigure(encoding="utf-8")
 logging.disable(logging.CRITICAL)
-from fakes import ScriptedModel, evidence, submit  # noqa: E402
-
-from app.agent.loop import start  # noqa: E402
-from app.agent.protocol import AgentInput  # noqa: E402
-from app.schemas import BillFields  # noqa: E402
+from app.agent.loop import start
+from app.agent.protocol import AgentInput
+from app.schemas import BillFields
+from fakes import ScriptedModel, evidence, submit
 
 
 def cheat(conv):

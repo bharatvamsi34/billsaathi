@@ -11,11 +11,9 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(ROOT / "api"))
 
-import make_dataset  # noqa: E402
-from make_demo_samples import screenshot_only  # noqa: E402
-
-from app.bbps_mock import service  # noqa: E402
-from app.schemas import (  # noqa: E402
+import make_dataset
+from app.bbps_mock import service
+from app.schemas import (
     BillFields,
     Channel,
     Evidence,
@@ -26,6 +24,7 @@ from app.schemas import (  # noqa: E402
     PaymentDestination,
     Verdict,
 )
+from make_demo_samples import screenshot_only
 
 OUT = ROOT / "data" / "challenge"
 C = EvidenceCode
@@ -64,7 +63,9 @@ def text_case(id_, scenario, text, verdict, evidence, *, biller=None, category=N
                 biller_category=category,
                 consumer_number=consumer,
                 amount=amount,
-                payment_destinations=[PaymentDestination(kind=k, value=v) for k, v in dests],
+                payment_destinations=[
+                    PaymentDestination(kind=k, value=v) for k, v in dests
+                ],
                 languages=list(langs),
             ),
             verdict=verdict,
@@ -215,7 +216,9 @@ def images() -> list[Label]:
     make_dataset.IMAGES = OUT / "images"
     make_dataset.render_html = screenshot_only
     demo = "DEMO00000MAH01"
-    tampered_amount = service.current_bill(demo, make_dataset.consumer(demo, 1)).amount + 700
+    tampered_amount = (
+        service.current_bill(demo, make_dataset.consumer(demo, 1)).amount + 700
+    )
     items = [
         make_dataset.bill_item("ch_tampered_quiet_bill", "tampered_amount", demo, 1, Verdict.CAUTION, amount=tampered_amount, layout="layout-b"),
         make_dataset.bill_item("ch_swapped_upi_lookalike_bill", "tampered_destination", "DMOB00000NAT01", 3, Verdict.SCAM, vpa=("demomobile.payments@okdemo", "lookalike_vpa")),

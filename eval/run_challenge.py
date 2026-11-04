@@ -15,14 +15,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "api"))
 sys.path.insert(0, str(ROOT / "eval"))
-from dotenv import load_dotenv  # noqa: E402
+from dotenv import load_dotenv
 
 load_dotenv(ROOT / "api" / ".env")
-import run_eval  # noqa: E402
-
-from app import pipeline  # noqa: E402
-from app.api.store import CheckState, SpendMeter  # noqa: E402
-from app.schemas import Label  # noqa: E402
+import run_eval
+from app import pipeline
+from app.api.store import CheckState, SpendMeter
+from app.schemas import Label
 
 DATA = ROOT / "data" / "challenge"
 OUT = ROOT / "eval" / "results" / f"challenge_{date.today():%Y-%m-%d}.json"
@@ -39,7 +38,9 @@ def run_item(label: Label, clients: pipeline.Clients) -> dict:
         check.image_mime = "image/png" if path.suffix == ".png" else "image/jpeg"
     else:
         check.text = label.input.text
-    state = CheckState(check_id=uuid.uuid4().hex, language=lang, input_kind=label.input.kind)
+    state = CheckState(
+        check_id=uuid.uuid4().hex, language=lang, input_kind=label.input.kind
+    )
     spend = SpendMeter(1000)
     t0 = time.perf_counter()
     pipeline.run_check(state, check, clients, spend)
@@ -50,7 +51,9 @@ def run_item(label: Label, clients: pipeline.Clients) -> dict:
     verdict = next(e for e in reversed(events) if e["type"] == "verdict")
     end = next(e for e in reversed(events) if e["type"] == "complete")
     read = next((e for e in events if e["type"] == "extracted"), {})
-    codes = sorted({ev["code"] for e in events if e["type"] == "check" for ev in e["evidence"]})
+    codes = sorted(
+        {ev["code"] for e in events if e["type"] == "check" for ev in e["evidence"]}
+    )
     agent = end.get("agent") or {}
     expected_codes = [e.code.value for e in label.expected.evidence]
     return {
@@ -68,7 +71,7 @@ def run_item(label: Label, clients: pipeline.Clients) -> dict:
         "codes": codes,
         "missing_codes": sorted(set(expected_codes) - set(codes)),
         "reasons": [r["text"] for r in verdict["reasons"]],
-        "read": {k: read.get(k) for k in ("biller_name", "category", "consumer", "amount", "destinations") if k in read},
+        "read": {k: v["value"] for k, v in read.get("fields", {}).items()},
         "turns": agent.get("model_turns"),
         "refusals": agent.get("refusals"),
         "seconds_to_verdict": round(end["timings_ms"]["total"] / 1000, 1),

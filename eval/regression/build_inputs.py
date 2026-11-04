@@ -13,9 +13,8 @@ from string import Template
 ROOT = Path.cwd()
 sys.path[:0] = [str(ROOT / "api"), str(ROOT / "data/generators")]
 sys.stdout.reconfigure(encoding="utf-8")
-import make_dataset  # noqa: E402
-
-from app.bbps_mock.registry import BILLERS  # noqa: E402
+import make_dataset
+from app.bbps_mock.registry import BILLERS
 
 texts = {}
 TEMPLATES = ROOT / "data/generators/templates"
@@ -23,7 +22,7 @@ TEMPLATES = ROOT / "data/generators/templates"
 
 def capture(template, values, size, out):
     page = Template((TEMPLATES / template).read_text(encoding="utf8")).substitute(values)
-    page = re.sub(r"<(style|script).*?</\1>", " ", page, flags=re.S)
+    page = re.sub(r"<(style|script).*?</\1>", " ", page, flags=re.DOTALL)
     page = re.sub(r"<br\s*/?>|</(div|tr|p|td|th)>", "\n", page)
     texts[Path(out).stem] = re.sub(r"[ \t]+", " ", html.unescape(re.sub(r"<[^>]+>", " ", page))).strip()
     return defaultdict(lambda: [0, 0, 1, 1])
@@ -65,12 +64,12 @@ def derive(text):
 
 
 md = Path("docs/TESTING.md").read_text(encoding="utf8")
-for m in re.finditer(r"^\*\*(\d+)\. (.+?)\*\* — expected \*\*(\w+)\*\*.*?\n\n```\n(.+?)\n```", md, re.S | re.M):
+for m in re.finditer(r"^\*\*(\d+)\. (.+?)\*\* — expected \*\*(\w+)\*\*.*?\n\n```\n(.+?)\n```", md, re.DOTALL | re.MULTILINE):
     items.append({"group": "testing", "id": f"testing_{m.group(1)}", "expected": m.group(3), "fields": derive(m.group(4)), "text": m.group(4), "visible": None})
 
 samples = json.load(open("web/src/samples.generated.json", encoding="utf8"))
 by = {x["id"]: x for x in items}
-voice = re.search(r'VOICE_TEXT\s*=\s*\(?\s*"(.+?)"', Path("data/generators/make_demo_samples.py").read_text(encoding="utf8"), re.S)
+voice = re.search(r'VOICE_TEXT\s*=\s*\(?\s*"(.+?)"', Path("data/generators/make_demo_samples.py").read_text(encoding="utf8"), re.DOTALL)
 for s in samples:
     i = s["id"]
     if i in by:

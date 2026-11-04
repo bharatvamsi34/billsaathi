@@ -21,8 +21,8 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(ROOT / "api"))
 
-import make_dataset  # noqa: E402
-from render import EDGE, TEMPLATES  # noqa: E402
+import make_dataset
+from render import EDGE, TEMPLATES
 
 OUT = ROOT / "web" / "public" / "samples"
 VOICE_TEXT = (

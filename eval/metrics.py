@@ -35,7 +35,7 @@ def summarise(rows: list[dict[str, Any]]) -> dict[str, Any]:
     graded = [grade(r) for r in rows]
     risky = sum(r["expected"] != "SAFE" for r in rows)
     safe = len(rows) - risky
-    count = lambda key: sum(g[key] for g in graded)  # noqa: E731
+    count = lambda key: sum(g[key] for g in graded)
     latencies = [r["latency_s"] for r in rows if r.get("latency_s") is not None]
     costs = [r["cost_usd"] for r in rows]
     return {

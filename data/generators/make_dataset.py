@@ -22,11 +22,9 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "api"))
 sys.path.insert(0, str(Path(__file__).parent))
 
-from render import box_to_polygon, esc, make_photo, render_html  # noqa: E402
-
-from app.bbps_mock import service  # noqa: E402
-from app.bbps_mock.registry import BY_ID, Biller  # noqa: E402
-from app.schemas import (  # noqa: E402
+from app.bbps_mock import service
+from app.bbps_mock.registry import BY_ID, Biller
+from app.schemas import (
     BillerCategory,
     BillFields,
     Channel,
@@ -41,6 +39,7 @@ from app.schemas import (  # noqa: E402
     Region,
     Verdict,
 )
+from render import box_to_polygon, esc, make_photo, render_html
 
 OUT = ROOT / "data" / "synthetic"
 IMAGES = OUT / "images"

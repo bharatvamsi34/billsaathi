@@ -22,13 +22,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "api"))
 
-from app import pipeline, voice  # noqa: E402
-from app.api.store import CheckState, SpendMeter  # noqa: E402
-from app.config import get_settings  # noqa: E402
-from app.models.meta import MetaClient  # noqa: E402
-from app.models.openweight import MODEL_LABEL, privacy_client  # noqa: E402
-from app.schemas import Label  # noqa: E402
-from app.vision import MetaSam  # noqa: E402
+from app import pipeline, voice
+from app.api.store import CheckState, SpendMeter
+from app.config import get_settings
+from app.models.meta import MetaClient
+from app.models.openweight import MODEL_LABEL, privacy_client
+from app.schemas import Label
+from app.vision import MetaSam
 
 DATA = ROOT / "data" / "synthetic"
 RESULTS = ROOT / "eval" / "results"
