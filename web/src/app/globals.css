@@ -57,6 +57,26 @@ html[data-demo="1"] {
   zoom: 1.25;
 }
 
+/* Recording mode is zoomed, so the wide bar only fits on the widest screens: two rows otherwise. */
+@media (max-width: 1599px) {
+  html[data-demo="1"] .topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.25rem;
+  }
+  html[data-demo="1"] .topbar-row {
+    display: flex;
+  }
+  html[data-demo="1"] .topbar-langs {
+    margin-left: auto;
+    order: 0;
+  }
+  html[data-demo="1"] .topbar-row2 {
+    margin-left: 0;
+    justify-content: space-between;
+  }
+}
+
 /* Telugu and Devanagari need a little more line height to stay readable. */
 :lang(te),
 :lang(hi) {
