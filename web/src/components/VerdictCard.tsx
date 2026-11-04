@@ -52,9 +52,9 @@ export default function VerdictCard({
   const judged = !v.forced && !!last?.accepted;
 
   return (
-    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.25, ease: "easeOut" }} style={{ transformOrigin: "top" }} aria-live="polite" id="verdict-top" className="scroll-mt-[calc(var(--topbar-h)+0.5rem)]">
+    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.25, ease: "easeOut" }} style={{ transformOrigin: "top" }} aria-live="polite" id="verdict-top" className="scroll-mt-[calc(var(--topbar-h)+0.25rem)]">
       <Card className={`overflow-hidden ${judged ? "gradient-ring" : ""}`} data-testid="verdict" data-verdict={v.verdict}>
-        <div className={`flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3.5 ${band}`}>
+        <div className={`flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-2.5 ${band}`}>
           <Icon className="h-10 w-10 shrink-0" />
           <div className="min-w-0 flex-1 basis-56">
             <div className="text-[1.625rem] font-bold leading-tight tracking-tight">{t(lang, `verdict_${v.verdict}`)}</div>
@@ -63,18 +63,20 @@ export default function VerdictCard({
             </div>
             {v.verdict === "CAUTION" && <div className="wrap-words mt-0.5 text-[14px] leading-snug text-white/90">{t(lang, "cautionLine")}</div>}
           </div>
-          {judged && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[13px] font-semibold leading-tight" data-testid="second-check">
-              <span aria-hidden="true">✓</span>
-              {t(lang, "traceJudge", { a: last.reasons.filter((r) => r.supported).length, b: last.reasons.length })}
-            </span>
-          )}
-          <button type="button" onClick={onReset} className="hidden min-h-9 whitespace-nowrap rounded-full px-1 text-[14px] font-semibold underline underline-offset-4 lg:block" data-testid="check-another-top">
-            {t(lang, "checkAnother")}
-          </button>
+          <div className="ml-auto flex flex-col items-end gap-0.5">
+            {judged && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[13px] font-semibold leading-tight" data-testid="second-check">
+                <span aria-hidden="true">✓</span>
+                {t(lang, "traceJudge", { a: last.reasons.filter((r) => r.supported).length, b: last.reasons.length })}
+              </span>
+            )}
+            <button type="button" onClick={onReset} className="hidden min-h-7 whitespace-nowrap rounded-full px-1 text-[14px] font-semibold underline underline-offset-4 lg:block" data-testid="check-another-top">
+              {t(lang, "checkAnother")}
+            </button>
+          </div>
         </div>
 
-        <div className="space-y-4 p-4">
+        <div className="space-y-3 p-3.5">
           {v.forced && <p className="t-caption rounded-xl bg-caution-bg p-2.5 font-semibold text-caution">{t(lang, "forced")}</p>}
 
           <Comparison tl={tl} lang={lang} verdict={v.verdict} />

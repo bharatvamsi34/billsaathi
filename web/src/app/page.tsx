@@ -36,7 +36,7 @@ const ERRORS: Record<string, Key> = {
 };
 
 function scrollToVerdict() {
-  requestAnimationFrame(() => (document.querySelector('[data-testid="privacy-bar"]') ?? document.getElementById("verdict-top"))?.scrollIntoView({ behavior: scrollBehavior(), block: "start" }));
+  requestAnimationFrame(() => document.getElementById("verdict-top")?.scrollIntoView({ behavior: scrollBehavior(), block: "start" }));
 }
 
 function scrollToResults() {
