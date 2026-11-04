@@ -22,8 +22,8 @@ export type QuickSample = "scam" | "tampered" | "genuine" | "voice";
 function Stat({ lang }: { lang: Lang }) {
   return (
     <div>
-      <p className="text-[1.375rem] font-bold leading-tight tracking-tight text-white">{t(lang, "statValue")}</p>
-      <p className="mt-1 text-[15px] leading-snug text-white/85">{t(lang, "statLabel")}</p>
+      <p className="text-[18px] font-medium leading-tight text-white/85">{t(lang, "statValue")}</p>
+      <p className="t-caption mt-0.5 text-white/75">{t(lang, "statLabel")}</p>
       <a href={SOURCE} target="_blank" rel="noreferrer" className="t-caption mt-1 inline-flex min-h-6 items-center text-white/70 underline underline-offset-2 hover:text-white">
         {t(lang, "statSource")}
       </a>
@@ -36,6 +36,7 @@ function EvalProof({ lang }: { lang: Lang }) {
   if (!best) return null;
   return (
     <Link href="/eval" className="block rounded-2xl border border-white/15 bg-white/[0.07] p-3.5 transition-colors duration-150 hover:bg-white/[0.12]">
+      <span className="t-caption mb-1.5 block font-semibold text-white/80">{t(lang, "statsLabel", { n: best.n })}</span>
       <span className="grid grid-cols-3 gap-2">
         {[
           [`${best.correct}/${best.n}`, "statCorrect"],
@@ -48,7 +49,7 @@ function EvalProof({ lang }: { lang: Lang }) {
           </span>
         ))}
       </span>
-      <span className="t-caption mt-2 block font-semibold text-[#9cc3ff]">{t(lang, "statMore", { n: best.n })}&nbsp;→</span>
+      <span className="t-caption mt-2 block font-semibold text-[#9cc3ff]">{t(lang, "statHow")}&nbsp;→</span>
     </Link>
   );
 }
@@ -60,14 +61,17 @@ export default function Hero({ lang, busy, onQuick }: { lang: Lang; busy: boolea
         <div>
           <h1 className="t-display">{t(lang, "heroTitle")}</h1>
           <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-white/85 lg:mt-3 lg:text-lg">{t(lang, "heroBody")}</p>
+          <p className="mt-2 max-w-2xl text-[13px] leading-snug text-white/75 lg:text-[14px]" data-testid="model-strip">
+            {t(lang, "heroModels")}
+          </p>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center lg:mt-5 lg:gap-3">
             <Button variant="onDark" size="lg" disabled={busy} onClick={() => onQuick("scam")} data-testid="cta-scam">
               {t(lang, "tryScam")}
             </Button>
             <span className="hidden lg:contents">
-              <Button variant="onDarkGhost" size="lg" disabled={busy} onClick={() => onQuick("genuine")} data-testid="cta-genuine">
+              <button type="button" disabled={busy} onClick={() => onQuick("genuine")} data-testid="cta-genuine" className="min-h-11 rounded-full px-2 text-[15px] font-semibold text-white underline underline-offset-4 hover:text-brand-soft disabled:opacity-50">
                 {t(lang, "tryGenuine")}
-              </Button>
+              </button>
             </span>
           </div>
           {/* Phone: one tap to every kind of sample, right at the top. */}
@@ -88,8 +92,8 @@ export default function Hero({ lang, busy, onQuick }: { lang: Lang; busy: boolea
           <p className="t-caption mt-3 text-white/70">{t(lang, "heroSim")}</p>
         </div>
         <div className="hidden space-y-4 lg:block">
-          <Stat lang={lang} />
           <EvalProof lang={lang} />
+          <Stat lang={lang} />
         </div>
       </div>
     </section>
@@ -101,8 +105,8 @@ export function ProofStrip({ lang }: { lang: Lang }) {
   return (
     <>
       <section className="hero-glow space-y-4 px-4 py-5 text-white lg:hidden">
-        <Stat lang={lang} />
         <EvalProof lang={lang} />
+        <Stat lang={lang} />
       </section>
       <section aria-labelledby="models-title" className="border-y border-line bg-card px-4 py-4 lg:px-[max(2rem,calc(50%-38rem))]">
         <div className="lg:flex lg:items-center lg:gap-6">
