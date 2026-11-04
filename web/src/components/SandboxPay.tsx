@@ -29,7 +29,7 @@ export default function SandboxPay({ checkId, tl, lang }: { checkId: string; tl:
   if (amount == null) return null;
 
   const label = <p className="t-caption rounded-xl bg-caution-bg px-3 py-2 text-center font-semibold text-caution">{t(lang, "sandboxLabel")}</p>;
-  const grid = "grid grid-cols-[minmax(6rem,auto)_minmax(0,1fr)] gap-x-3 gap-y-1 text-[15px]";
+  const grid = "grid grid-cols-[minmax(6rem,auto)_minmax(0,1fr)] gap-x-3 gap-y-1 text-[14px]";
 
   if (receipt) {
     return (
@@ -38,12 +38,14 @@ export default function SandboxPay({ checkId, tl, lang }: { checkId: string; tl:
           <SafeIcon className="h-5 w-5" />
           {t(lang, "receiptTitle")}
         </h3>
+        <p className="mt-2 text-[24px] font-bold leading-tight tabular-nums" data-testid="receipt-amount">
+          {money(receipt.amount)}
+        </p>
+        <p className="wrap-words text-[16px] font-semibold leading-snug">{receipt.biller_name}</p>
         <dl className={`mt-2 ${grid}`}>
-          <Row label={t(lang, "receiptNumber")} value={receipt.receipt_id} code />
-          <Row label={t(lang, "biller")} value={receipt.biller_name} />
           <Row label={t(lang, "consumer")} value={receipt.consumer_masked} code />
-          <Row label={t(lang, "amount")} value={money(receipt.amount)} />
-          <Row label={t(lang, "paidAt")} value={new Date(receipt.paid_at).toLocaleString(`${lang}-IN`, { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" })} />
+          <Row label={t(lang, "paidAt")} value={new Date(receipt.paid_at).toLocaleString(lang === "en" ? "en-GB" : `${lang}-IN`, { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true })} />
+          <Row label={t(lang, "receiptNumber")} value={receipt.receipt_id} code />
           <Row label={t(lang, "auditEntry")} value={`#${receipt.audit_id}`} />
         </dl>
         <div className="mt-3">{label}</div>
@@ -78,12 +80,14 @@ export default function SandboxPay({ checkId, tl, lang }: { checkId: string; tl:
         {f?.consumer_number.value && <Row label={t(lang, "consumer")} value={f.consumer_number.value} code />}
         <Row label={t(lang, "amount")} value={money(amount)} />
       </dl>
-      {label}
       {failed && (
         <p role="alert" className="t-caption font-semibold text-scam">
           {t(lang, "errPay")}
         </p>
       )}
+      <p className="t-caption rounded-xl bg-caution-bg px-3 py-2 text-center font-semibold text-caution" data-testid="no-real-money">
+        {t(lang, "noRealMoney")}
+      </p>
       <div className="grid grid-cols-2 gap-2">
         <Button variant="safe" disabled={step === "paying"} onClick={confirm} data-testid="pay-yes">
           {t(lang, "confirmPay")}
