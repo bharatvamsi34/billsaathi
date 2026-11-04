@@ -9,7 +9,8 @@ import Hero, { ProofStrip, type QuickSample } from "@/components/Hero";
 import InputReview, { type ReviewInput } from "@/components/InputReview";
 import QuestionBox from "@/components/QuestionBox";
 import Replay from "@/components/Replay";
-import Timeline from "@/components/Timeline";
+import { Spinner } from "@/components/icons";
+import Timeline, { currentStep, Elapsed } from "@/components/Timeline";
 import TopBar from "@/components/TopBar";
 import Trace from "@/components/Trace";
 import { Button, Card } from "@/components/ui";
@@ -20,7 +21,7 @@ import { scrollBehavior, useDemoMode } from "@/lib/demo";
 import { t, type Key } from "@/lib/i18n";
 import { prepareImage } from "@/lib/image";
 import { useLang } from "@/lib/useLang";
-import { emptyTimeline, reduce, type Timeline as TL } from "@/lib/timeline";
+import { emptyTimeline, reduce, waitMs, type Timeline as TL } from "@/lib/timeline";
 
 const GUTTER = "lg:px-[max(2rem,calc(50%-38rem))]";
 const STALL_MS = 90_000;
@@ -191,6 +192,7 @@ export default function Home() {
     scrollToResults();
   };
 
+  const step = currentStep(tl);
   const checking = review !== null;
   const showResults = checking || replaying || !!error;
   const runSample = async (id: string) => {
@@ -232,7 +234,7 @@ export default function Home() {
           {checking && <InputReview input={review} tl={tl} lang={lang} />}
 
           {error && (
-            <div role="alert" id={checking ? undefined : "results-top"} className="rise rounded-2xl border border-scam/30 bg-scam-bg p-4">
+            <div role="alert" id={checking ? undefined : "results-top"} className="rise scroll-mt-[calc(var(--topbar-h)+0.75rem)] rounded-2xl border border-scam/30 bg-scam-bg p-4">
               <p className="font-semibold text-scam">{t(lang, error)}</p>
               {lastInput && (
                 <Button variant="secondary" className="mt-3" onClick={() => void submit(lastInput)} data-testid="retry">
@@ -242,10 +244,11 @@ export default function Home() {
             </div>
           )}
 
-          {checking && tl.privacy && (
+          {/* From the first moment, so it does not push the steps down when the first event arrives. */}
+          {checking && (tl.privacy || (busy && privacy)) && (
             <div className="t-caption rise space-y-0.5 rounded-2xl bg-navy px-3.5 py-2.5 font-semibold text-white" data-testid="privacy-bar">
               <p>{t(lang, "privacyActive")}</p>
-              {tl.input === "image" && <p className="font-normal text-white/80">{t(lang, "photoCropSkipped")}</p>}
+              {review?.kind === "image" && <p className="font-normal text-white/80">{t(lang, "photoCropSkipped")}</p>}
             </div>
           )}
 
@@ -258,12 +261,20 @@ export default function Home() {
                   data-testid="status"
                   data-step={tl.early ?? undefined}
                   aria-live="polite"
-                  className={`flex min-h-16 items-center gap-2 rounded-2xl px-4 py-3 text-[17px] font-semibold shadow-soft transition-colors duration-200 ${
+                  className={`flex min-h-[4.75rem] items-center gap-2.5 rounded-2xl px-4 py-3 text-[17px] font-semibold leading-snug shadow-soft transition-colors duration-200 ${
                     tl.early === "scam_signals" ? "border border-caution-line bg-caution-bg text-caution" : "bg-navy text-white"
                   }`}
                 >
-                  {tl.early === "scam_signals" && <span aria-hidden="true">⚠️</span>}
-                  {t(lang, tl.early === "scam_signals" ? "earlyScam" : tl.early ? "earlyChecking" : "checking")}
+                  {tl.early === "scam_signals" ? <span aria-hidden="true">⚠️</span> : <Spinner className="h-5 w-5 shrink-0" />}
+                  <div className="wrap-words min-w-0 flex-1">
+                    <div>{t(lang, tl.early === "scam_signals" ? "earlyScam" : tl.early ? "earlyChecking" : "checking")}</div>
+                    {step && (
+                      <div className="t-caption mt-0.5 font-medium opacity-90" data-testid="status-step">
+                        {t(lang, step)}
+                      </div>
+                    )}
+                  </div>
+                  <Elapsed start={tl.times.received != null ? tl.times.received + waitMs(tl) : undefined} skew={tl.skew} label={t(lang, "statusElapsed")} />
                 </div>
               )}
               {tl.verdict ? (

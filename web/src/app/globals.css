@@ -39,7 +39,6 @@
 
 html {
   -webkit-text-size-adjust: 100%;
-  scroll-padding-top: calc(var(--topbar-h) + 0.75rem);
 }
 
 body {
@@ -60,6 +59,15 @@ html[data-demo="1"] {
 :lang(te),
 :lang(hi) {
   line-height: 1.7;
+}
+/* Tight tracking is for Latin: it crowds joined Telugu and Devanagari letters. */
+:lang(te) .t-display,
+:lang(hi) .t-display,
+:lang(te) .t-title,
+:lang(hi) .t-title,
+:lang(te) .tracking-tight,
+:lang(hi) .tracking-tight {
+  letter-spacing: 0;
 }
 
 :focus-visible {
@@ -98,15 +106,9 @@ html[data-demo="1"] {
   hyphens: none;
 }
 
-/* Frosted glass for floating chrome only, with a solid fallback. */
+/* Floating chrome stays white over the dark hero: a see-through bar turned patchy grey there. */
 .glass {
-  background: rgb(255 255 255 / 0.97);
-}
-@supports (backdrop-filter: blur(12px)) {
-  .glass {
-    background: rgb(255 255 255 / 0.78);
-    backdrop-filter: saturate(180%) blur(16px);
-  }
+  background: var(--color-card);
 }
 
 .hero-glow {

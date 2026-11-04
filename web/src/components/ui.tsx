@@ -26,7 +26,7 @@ const SIZES: Record<Size, string> = {
 };
 
 export function buttonClass(variant: Variant = "primary", size: Size = "md", extra = ""): string {
-  return `inline-flex items-center justify-center gap-2 rounded-full text-center font-semibold leading-snug transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50 ${VARIANTS[variant]} ${SIZES[size]} ${extra}`;
+  return `inline-flex items-center justify-center gap-2 rounded-full py-1.5 text-center font-semibold leading-snug transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50 ${VARIANTS[variant]} ${SIZES[size]} ${extra}`;
 }
 
 export function Button({
@@ -40,6 +40,20 @@ export function Button({
     <motion.button type="button" whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.15 }} className={buttonClass(variant, size, className)} {...rest}>
       {children}
     </motion.button>
+  );
+}
+
+/** Long links and UPI IDs break after @ / . and never in the middle of a word, if they can. */
+export function Soft({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/(?<=[@/.])/).map((part, i) => (
+        <span key={i}>
+          {i > 0 && <wbr />}
+          {part}
+        </span>
+      ))}
+    </>
   );
 }
 

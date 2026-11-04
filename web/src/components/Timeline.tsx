@@ -4,10 +4,10 @@ import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { codeLabel, toolLabel, type Tone } from "@/lib/codes";
 import { t, type Key, type Lang } from "@/lib/i18n";
-import { evidenceIndex, lowConfidence, money, type Box, type CheckRow, type Timeline as TL } from "@/lib/timeline";
+import { evidenceIndex, judgePending, lowConfidence, money, waitMs, type Box, type CheckRow, type Timeline as TL } from "@/lib/timeline";
 import { Check, Dot, Spinner } from "./icons";
 import ModelBadge, { type Model } from "./ModelBadge";
-import { Badge, rise, Skeleton } from "./ui";
+import { Badge, rise, Skeleton, Soft } from "./ui";
 
 type Stage = "waiting" | "active" | "done";
 
@@ -38,7 +38,35 @@ function Timer({ start, end, stage, skew }: { start?: number; end?: number; stag
   }, [running, skew]);
   const until = end ?? (running ? now : undefined);
   const seconds = start != null && until != null ? Math.max(until - start, 0) / 1000 : null;
-  return <span className="t-caption ml-auto min-w-11 text-right font-semibold tabular-nums text-muted">{seconds != null ? `${seconds.toFixed(1)} s` : ""}</span>;
+  // Code-only steps finish in milliseconds; "0.0 s" read like a step that never ran.
+  const text = seconds == null ? "" : end != null && seconds < 0.05 ? "< 0.1 s" : `${seconds.toFixed(1)} s`;
+  return <span className="t-caption ml-auto min-w-11 shrink-0 whitespace-nowrap text-right font-semibold tabular-nums text-muted">{text}</span>;
+}
+
+/** The running step and the time so far, for the status bar: the active row can be below the fold. */
+export function currentStep(tl: TL): Key | null {
+  if (!tl.input) return null;
+  if (tl.input === "audio" && !tl.heard) return "stepHear";
+  if (tl.input === "image" && !tl.isolated && !tl.extracted && !tl.privacy) return "stepIsolate";
+  if (!tl.extracted) return tl.input === "image" ? "stepReading" : "stepReadingMsg";
+  if (judgePending(tl)) return "stepJudge";
+  return tl.early || tl.agentTurns.length ? "stepAgent" : "stepFixed";
+}
+
+export function Elapsed({ start, skew, label }: { start?: number; skew: number; label: string }) {
+  const [now, setNow] = useState(0);
+  useEffect(() => {
+    const tick = () => setNow(Date.now() - skew);
+    const id = setInterval(tick, 100);
+    tick();
+    return () => clearInterval(id);
+  }, [skew]);
+  if (start == null || !now) return null;
+  return (
+    <span className="shrink-0 text-right text-[17px] tabular-nums" aria-label={label}>
+      {(Math.max(now - start, 0) / 1000).toFixed(1)} s
+    </span>
+  );
 }
 
 function StepRow({
@@ -96,7 +124,11 @@ function CheckLine({ row, lang, highlighted }: { row: CheckRow; lang: Lang; high
   return (
     <motion.li {...rise} id={`check-${row.seq}`} className={`rounded-xl border bg-card p-2.5 scroll-mt-[calc(var(--topbar-h)+1rem)] ${highlighted ? "border-brand ring-2 ring-brand-soft" : "border-line"}`}>
       <div className="t-caption font-semibold text-ink-soft">{toolLabel(row.tool, lang)}</div>
-      {value && <div className="wrap-value mt-0.5 font-mono text-[13px]">{value}</div>}
+      {value && (
+        <div className="wrap-value mt-0.5 font-mono text-[13px]">
+          <Soft text={value} />
+        </div>
+      )}
       <div className="mt-1.5 flex flex-wrap gap-1">
         {!row.ok ? (
           <Badge tone="warn">! {t(lang, "notChecked")}</Badge>
@@ -202,7 +234,7 @@ function JudgeDetail({ tl, lang }: { tl: TL; lang: Lang }) {
       )}
       {v && !v.forced && (
         <div className="flex flex-wrap gap-1">
-          {v.floor && v.floor !== "SAFE" && <Badge tone="info">{t(lang, "floorEnforced", { v: v.floor })}</Badge>}
+          {v.floor && v.floor !== "SAFE" && <Badge tone="info">{t(lang, "floorEnforced", { v: t(lang, `verdict_${v.floor}`) })}</Badge>}
           <Badge tone="good">{t(lang, "noInvented")}</Badge>
         </div>
       )}
@@ -230,8 +262,9 @@ export default function Timeline({
   const skew = tl.skew;
   const reading: Stage = idle ? "waiting" : tl.extracted || tl.verdict ? "done" : "active";
   const fixedStage: Stage = idle || (!tl.extracted && !fixed.length) ? (tl.verdict ? "done" : "waiting") : tl.early || tl.agentTurns.length || tl.verdict ? "done" : "active";
-  const agentStage: Stage = tl.verdict || tl.judge.length ? "done" : tl.early || fixed.length ? "active" : "waiting";
-  const judgeStage: Stage = tl.verdict ? "done" : tl.agentTurns.length ? "active" : "waiting";
+  const checking = judgePending(tl);
+  const agentStage: Stage = tl.verdict || checking ? "done" : tl.early || fixed.length ? "active" : "waiting";
+  const judgeStage: Stage = checking ? "active" : tl.verdict || tl.judge.length ? "done" : "waiting";
   const explainStage: Stage = tl.explanation || tl.done ? "done" : tl.verdict ? "active" : "waiting";
   const showIsolate = !privacy && (idle || (tl.input === "image" && (tl.isolated != null || !tl.done)));
   const showVoice = idle || tl.input === "audio";
@@ -258,7 +291,7 @@ export default function Timeline({
           {imageUrl && <IsolatedImage src={imageUrl} tl={tl} lang={lang} />}
         </StepRow>
       )}
-      <StepRow {...common} stage={reading} title={t(lang, "stepReading")} model="spark" job="jobVision" start={when.isolated ?? when.transcribed ?? when.received} end={when.extracted}>
+      <StepRow {...common} stage={reading} title={t(lang, idle || tl.input === "image" ? "stepReading" : "stepReadingMsg")} model="spark" job={idle || tl.input === "image" ? "jobVision" : undefined} start={when.isolated ?? when.transcribed ?? when.received} end={when.extracted}>
         {f ? (
           <motion.dl {...rise} className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-0.5 rounded-xl border border-line bg-card p-2.5 text-[13px]">
             {[
@@ -299,7 +332,7 @@ export default function Timeline({
         )}
       </StepRow>
 
-      <StepRow {...common} stage={agentStage} title={t(lang, "stepAgent")} model="spark" job="jobAgent" start={when.early} end={when.agent_turn}>
+      <StepRow {...common} stage={agentStage} title={t(lang, "stepAgent")} model="spark" job="jobAgent" start={when.early != null ? when.early + waitMs(tl) : undefined} end={agentStage === "done" ? when.agent_turn : undefined}>
         {tl.agentTurns.length > 0 && <p className="t-caption rise text-ink-soft">{t(lang, "agentDecided")}</p>}
         {extra.length > 0 && (
           <ul className="space-y-1.5">

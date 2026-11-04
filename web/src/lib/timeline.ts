@@ -194,6 +194,18 @@ export function billerRecord(state: Timeline): BillerRecord | null {
   return state.checks.find((c) => c.tool === "lookup_biller" && c.record)?.record ?? null;
 }
 
+/** Time spent waiting for the user's answer: it is not the agent's time. */
+export function waitMs(state: Timeline): number {
+  const { question, answer } = state.times;
+  return question != null && answer != null ? Math.max(answer - question, 0) : 0;
+}
+
+/** The agent has submitted a verdict and no check has answered it yet. */
+export function judgePending(state: Timeline): boolean {
+  const submitted = state.agentTurns.filter((turn) => turn.tool_calls.includes("submit_verdict")).length;
+  return !state.verdict && submitted > Math.max(state.judge.length, state.refusals.length);
+}
+
 /** Models actually used in this run, for the trace footer. */
 export function modelsUsed(state: Timeline, warningCard: boolean): string[] {
   if (state.privacy) return ["Muse Spark Open"];

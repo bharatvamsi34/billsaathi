@@ -3,7 +3,7 @@
 import { highlight, type Mark } from "@/lib/highlight";
 import { t, type Lang } from "@/lib/i18n";
 import { money, type Timeline } from "@/lib/timeline";
-import { Badge, Card } from "./ui";
+import { Badge, Card, Soft } from "./ui";
 
 export type ReviewInput = { kind: "text"; text: string } | { kind: "image"; url: string } | { kind: "audio"; url?: string } | null;
 
@@ -15,7 +15,7 @@ function Marked({ text, tl }: { text: string; tl: Timeline }) {
       {highlight(text, tl).map((span, i) =>
         span.mark ? (
           <mark key={i} className={CLASS[span.mark]}>
-            {span.text}
+            <Soft text={span.text} />
           </mark>
         ) : (
           <span key={i}>{span.text}</span>

@@ -19,7 +19,11 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${latin.variable} ${telugu.variable} ${deva.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${latin.variable} ${telugu.variable} ${deva.variable}`}>
+      <head>
+        {/* ?demo=1 zoom before the first paint, so the page does not jump when it loads. */}
+        <script dangerouslySetInnerHTML={{ __html: `if(new URLSearchParams(location.search).get("demo")==="1")document.documentElement.dataset.demo="1";` }} />
+      </head>
       <body className="min-h-dvh antialiased">{children}</body>
     </html>
   );

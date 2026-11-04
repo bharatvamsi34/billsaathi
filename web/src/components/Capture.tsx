@@ -35,7 +35,7 @@ function SampleCard({ s, lang, busy, onRun }: { s: Sample; lang: Lang; busy: boo
         </button>
         {s.kind === "audio" && (
           <div className="px-2.5 pb-2.5">
-            <audio controls preload="none" src={s.src} aria-label={t(lang, "playSample")} className="h-9 w-full" />
+            <audio controls preload="metadata" src={s.src} aria-label={t(lang, "playSample")} className="h-9 w-full" />
           </div>
         )}
       </Card>
@@ -92,8 +92,11 @@ export default function Capture({
             <li className="lg:col-span-2">
               <Card className="overflow-hidden transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-px hover:border-brand hover:shadow-lift">
                 <button type="button" disabled={busy} onClick={onReplay} data-sample="replay" className="flex w-full items-center gap-3 p-2.5 text-left disabled:opacity-60">
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white" style={{ background: "var(--accent-gradient)" }} aria-hidden="true">
-                    ↺
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-white" style={{ background: "var(--accent-gradient)" }} aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
+                      <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+                      <path d="M3 3v5h5" />
+                    </svg>
                   </span>
                   <span className="wrap-words flex-1 text-[15px] font-semibold leading-snug">{t(lang, "replayTitle")}</span>
                 </button>

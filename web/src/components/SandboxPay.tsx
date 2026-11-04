@@ -43,7 +43,7 @@ export default function SandboxPay({ checkId, tl, lang }: { checkId: string; tl:
           <Row label={t(lang, "biller")} value={receipt.biller_name} />
           <Row label={t(lang, "consumer")} value={receipt.consumer_masked} code />
           <Row label={t(lang, "amount")} value={money(receipt.amount)} />
-          <Row label={t(lang, "paidAt")} value={new Date(receipt.paid_at).toLocaleString("en-IN")} />
+          <Row label={t(lang, "paidAt")} value={new Date(receipt.paid_at).toLocaleString(`${lang}-IN`, { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" })} />
           <Row label={t(lang, "auditEntry")} value={`#${receipt.audit_id}`} />
         </dl>
         <div className="mt-3">{label}</div>

@@ -109,7 +109,7 @@ export function ProofStrip({ lang }: { lang: Lang }) {
           <h2 id="models-title" className="mb-3 text-sm font-bold leading-tight lg:mb-0 lg:w-24 lg:shrink-0">
             {t(lang, "modelsTitle")}
           </h2>
-          <ul className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <ul className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_0.9fr_1.25fr_1.05fr_1fr]">
             {MODELS.map(([model, job]) => (
               <li key={model}>
                 <ModelBadge model={model} lang={lang} />

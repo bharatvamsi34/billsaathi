@@ -66,7 +66,7 @@ export default function Replay({ lang, onClose }: { lang: Lang; onClose: () => v
         </motion.p>
       )}
       <p className="t-caption text-muted">
-        Source: <code className="wrap-value">{replay.file}</code>
+        {t(lang, "replaySource")}: <code className="wrap-value">{replay.file}</code>
       </p>
       <Button variant="ghost" onClick={onClose} className="w-full">
         {t(lang, "checkAnother")}

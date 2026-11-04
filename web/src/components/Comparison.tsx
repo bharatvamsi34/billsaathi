@@ -4,7 +4,7 @@ import { codeLabel } from "@/lib/codes";
 import { compareRows, type CompareRow, type RowStatus } from "@/lib/compare";
 import { t, type Key, type Lang } from "@/lib/i18n";
 import type { Timeline } from "@/lib/timeline";
-import { Badge } from "./ui";
+import { Badge, Soft } from "./ui";
 
 const NOTE: Partial<Record<RowStatus, Key>> = { noRecord: "notInRegistry", notChecked: "notChecked", notFound: "noAccount" };
 
@@ -18,7 +18,9 @@ function label(row: CompareRow, lang: Lang): string {
 function Says({ row, lang }: { row: CompareRow; lang: Lang }) {
   const bad = row.status === "mismatch";
   if (!row.says) return <span className="text-muted">{t(lang, "missing")}</span>;
-  return <span className={`${row.key === "biller" ? "wrap-words" : "wrap-value"} font-semibold ${bad ? "mark-risky" : ""}`}>{row.says}</span>;
+  return <span className={`${row.key === "biller" ? "wrap-words" : "wrap-value"} font-semibold ${bad ? "mark-risky" : ""}`}>
+      <Soft text={row.says} />
+    </span>;
 }
 
 function Record({ row, lang }: { row: CompareRow; lang: Lang }) {
@@ -32,7 +34,7 @@ function Record({ row, lang }: { row: CompareRow; lang: Lang }) {
               ✓
             </span>
           )}
-          {row.record}
+          <Soft text={row.record} />
         </span>
       ) : (
         note && <span className="font-semibold text-caution">{t(lang, note)}</span>
@@ -58,13 +60,13 @@ export default function Comparison({ tl, lang }: { tl: Timeline; lang: Lang }) {
         <table className="hidden w-full table-fixed border-collapse text-left text-[14px] leading-snug sm:table">
           <thead>
             <tr className="bg-paper text-[13px] text-muted">
-              <th scope="col" className="w-[24%] px-3 py-2 font-semibold">
+              <th scope="col" className="w-[20%] px-3 py-2 font-semibold">
                 <span className="sr-only">{t(lang, "biller")}</span>
               </th>
-              <th scope="col" className="w-[38%] px-3 py-2 font-semibold">
+              <th scope="col" className="w-[40%] px-3 py-2 font-semibold">
                 {says}
               </th>
-              <th scope="col" className="w-[38%] px-3 py-2 font-semibold">
+              <th scope="col" className="w-[40%] px-3 py-2 font-semibold">
                 {record}
               </th>
             </tr>

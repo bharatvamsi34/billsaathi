@@ -9,7 +9,7 @@ import Comparison from "./Comparison";
 import Explanation, { ListenButton } from "./Explanation";
 import { CautionIcon, PhoneIcon, SafeIcon, ScamIcon } from "./icons";
 import SandboxPay from "./SandboxPay";
-import { Badge, Button, buttonClass, Card } from "./ui";
+import { Badge, Button, buttonClass, Card, Soft } from "./ui";
 import WarnFamily from "./WarnFamily";
 
 const LOOK: Record<Verdict, { band: string; icon: typeof SafeIcon }> = {
@@ -94,10 +94,12 @@ export default function VerdictCard({
                 {shown.map((line) => (
                   <li key={line.id}>
                     <button type="button" onClick={() => onShowEvidence(line.seq)} className="flex w-full items-start gap-2 rounded-xl p-1.5 text-left text-[15px] leading-snug transition-colors hover:bg-paper">
-                      <span aria-hidden="true" className={`mt-px font-bold ${TONE_TEXT[line.tone]}`}>
+                      <span aria-hidden="true" className={`mt-px w-4 shrink-0 text-center font-bold ${TONE_TEXT[line.tone]}`}>
                         {MARK[line.tone]}
                       </span>
-                      <span className="wrap-value min-w-0 flex-1">{line.text}</span>
+                      <span className="wrap-value min-w-0 flex-1">
+                        <Soft text={line.text} />
+                      </span>
                     </button>
                   </li>
                 ))}

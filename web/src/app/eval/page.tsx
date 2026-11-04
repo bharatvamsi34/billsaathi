@@ -127,7 +127,7 @@ export default function Eval() {
 
   return (
     <>
-      <header className="glass sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-line px-4 lg:px-[max(2rem,calc(50%-34rem))]">
+      <header className="glass sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-line px-4 lg:px-[max(1rem,calc(50%-33rem))]">
         <Link href="/" className="flex items-center gap-2" aria-label="BillSaathi home">
           <ShieldMark className="h-7 w-7" />
           <span className="text-lg font-bold tracking-tight">BillSaathi</span>
@@ -137,12 +137,19 @@ export default function Eval() {
         </Link>
       </header>
 
-      <section className="hero-glow px-4 py-7 text-white lg:px-[max(2rem,calc(50%-34rem))] lg:py-9">
+      <section className="hero-glow px-4 py-7 text-white lg:px-[max(1rem,calc(50%-33rem))] lg:py-9">
         <h1 className="t-display">
           {main.correct}/{main.n} correct on a small synthetic held-out set
         </h1>
         <p className="mt-2 max-w-3xl text-[15px] leading-relaxed text-white/85 lg:text-base">
           A good sign, not proof: the {main.n} items were written by the builder, and {main.risky - main.false_safe} of {main.risky} risky items not called SAFE still allows a true miss rate up to about {safeBound}% (95% confidence, rule of three).
+        </p>
+        <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-white lg:text-base" data-testid="challenge-line">
+          <strong>New challenge set:</strong> 20/20 verdicts on 20 fresh synthetic cases, run once (details in{" "}
+          <a href={`${REPO}/main/docs/CHALLENGE_RESULTS.md`} className="font-semibold underline underline-offset-4">
+            docs/CHALLENGE_RESULTS.md
+          </a>
+          ). One finding missed: a phone number written in Hindi words stayed in words, so the known-scam match did not fire; that case was still SCAM on other evidence.
         </p>
       </section>
 
@@ -180,9 +187,9 @@ export default function Eval() {
           )}
         </section>
 
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           {sweep.length > 1 && (
-            <section className="space-y-2">
+            <section className="min-w-0 space-y-2">
               <h2 className="t-title">Reasoning effort on Muse Spark 1.3</h2>
               <SplitTag split="test" />
               <Table
@@ -205,7 +212,7 @@ export default function Eval() {
           )}
 
           {open && (
-            <section className="space-y-2">
+            <section className="min-w-0 space-y-2">
               <h2 className="t-title">Muse Spark 1.3 vs Muse Spark Open (Privacy Mode)</h2>
               <SplitTag split="test" />
               <Table

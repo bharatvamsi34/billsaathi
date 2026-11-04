@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { t, type Lang } from "@/lib/i18n";
-import { modelsUsed, type Timeline as TL } from "@/lib/timeline";
+import { modelsUsed, waitMs, type Timeline as TL } from "@/lib/timeline";
 import { Card } from "./ui";
 import Timeline from "./Timeline";
 
@@ -15,7 +15,7 @@ export default function Trace({ tl, lang, open, onToggle, highlightSeq, imageUrl
     t(lang, "traceChecks", { n: tl.checks.length }),
     t(lang, tl.agentTurns.length === 1 ? "traceTurn" : "traceTurns", { n: tl.agentTurns.length }),
     ...(last ? [t(lang, "traceJudge", { a: verified, b: claims })] : []),
-    ...(tl.totalMs != null ? [`${(tl.totalMs / 1000).toFixed(1)} s`] : []),
+    ...(tl.totalMs != null ? [`${((tl.totalMs - waitMs(tl)) / 1000).toFixed(1)} s`] : []),
   ];
   const warningCard = !!tl.verdict && tl.verdict.verdict !== "SAFE";
   return (
