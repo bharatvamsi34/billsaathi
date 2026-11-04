@@ -1,0 +1,573 @@
+{
+ "what": "Weakest verdict the code allows, no model, before and after the wider contact detection. Scripted agent always claims SAFE; judge accepts.",
+ "inputs": {
+  "dataset": 60,
+  "testing_md": 12,
+  "demo_samples": 8
+ },
+ "verdict_changes": [],
+ "evidence_changes": [],
+ "rows": [
+  {
+   "group": "dataset",
+   "id": "bill_genuine_demo",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "dataset",
+   "id": "bill_genuine_svsl",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "dataset",
+   "id": "bill_genuine_ebnl",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "dataset",
+   "id": "bill_genuine_ejbd",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "dataset",
+   "id": "bill_genuine_dgas",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "dataset",
+   "id": "bill_genuine_dmob",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "dataset",
+   "id": "bill_genuine_skyd",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "dataset",
+   "id": "bill_genuine_fibr",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "dataset",
+   "id": "photo_genuine_demo",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "dataset",
+   "id": "photo_genuine_svsl",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "dataset",
+   "id": "photo_genuine_ejbd",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "dataset",
+   "id": "photo_genuine_fibr",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "dataset",
+   "id": "bill_tampered_demo",
+   "expected": "CAUTION",
+   "before": "CAUTION",
+   "after": "CAUTION"
+  },
+  {
+   "group": "dataset",
+   "id": "bill_tampered_ebnl",
+   "expected": "CAUTION",
+   "before": "CAUTION",
+   "after": "CAUTION"
+  },
+  {
+   "group": "dataset",
+   "id": "bill_tampered_ejbd",
+   "expected": "CAUTION",
+   "before": "CAUTION",
+   "after": "CAUTION"
+  },
+  {
+   "group": "dataset",
+   "id": "bill_tampered_svsl",
+   "expected": "CAUTION",
+   "before": "CAUTION",
+   "after": "CAUTION"
+  },
+  {
+   "group": "dataset",
+   "id": "bill_tampered_dmob",
+   "expected": "CAUTION",
+   "before": "CAUTION",
+   "after": "CAUTION"
+  },
+  {
+   "group": "dataset",
+   "id": "bill_tampered_skyd",
+   "expected": "CAUTION",
+   "before": "CAUTION",
+   "after": "CAUTION"
+  },
+  {
+   "group": "dataset",
+   "id": "bill_swapped_vpa_dgas",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "bill_swapped_vpa_fibr",
+   "expected": "CAUTION",
+   "before": "CAUTION",
+   "after": "CAUTION"
+  },
+  {
+   "group": "dataset",
+   "id": "scam_en_disconnect_lookalike",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "scam_en_kyc_apk",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "scam_en_refund_known",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "scam_en_fake_bill_vpa",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "scam_en_short_url",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "scam_en_known_vpa",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "scam_en_dth_phone",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "scam_en_mobile_kyc",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "scam_te_disconnect_lookalike",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "scam_te_kyc_apk",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "scam_te_refund_known",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "scam_te_fake_bill_vpa",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "scam_te_short_url",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "scam_te_known_vpa",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "scam_te_dth_phone",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "scam_te_gas_cashback",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "scam_hi_disconnect_lookalike",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "scam_hi_kyc_apk",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "scam_hi_refund_known",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "scam_hi_fake_bill_vpa",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "scam_hi_short_url",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "scam_hi_known_vpa",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "scam_hi_mobile_phone",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "scam_hi_cashback",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "dataset",
+   "id": "reminder_en_demo",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "dataset",
+   "id": "reminder_en_ejbd",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "dataset",
+   "id": "reminder_en_fibr",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "dataset",
+   "id": "reminder_en_dmob_polite_disconnect",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "dataset",
+   "id": "reminder_te_svsl",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "dataset",
+   "id": "reminder_te_svsl_short",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "dataset",
+   "id": "reminder_te_skyd",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "dataset",
+   "id": "reminder_te_dgas_polite_disconnect",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "dataset",
+   "id": "reminder_hi_ebnl",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "dataset",
+   "id": "reminder_hi_demo",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "dataset",
+   "id": "reminder_hi_ejbd",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "dataset",
+   "id": "reminder_hi_fibr_polite_disconnect",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "dataset",
+   "id": "bill_spike_ebnl",
+   "expected": "CAUTION",
+   "before": "CAUTION",
+   "after": "CAUTION"
+  },
+  {
+   "group": "dataset",
+   "id": "reminder_en_dgas_spike",
+   "expected": "CAUTION",
+   "before": "CAUTION",
+   "after": "CAUTION"
+  },
+  {
+   "group": "dataset",
+   "id": "edge_en_unknown_consumer",
+   "expected": "CAUTION",
+   "before": "CAUTION",
+   "after": "CAUTION"
+  },
+  {
+   "group": "dataset",
+   "id": "edge_en_unknown_biller",
+   "expected": "CAUTION",
+   "before": "CAUTION",
+   "after": "CAUTION"
+  },
+  {
+   "group": "testing",
+   "id": "testing_1",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "testing",
+   "id": "testing_2",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "testing",
+   "id": "testing_3",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "testing",
+   "id": "testing_4",
+   "expected": "CAUTION",
+   "before": "CAUTION",
+   "after": "CAUTION"
+  },
+  {
+   "group": "testing",
+   "id": "testing_5",
+   "expected": "CAUTION",
+   "before": "CAUTION",
+   "after": "CAUTION"
+  },
+  {
+   "group": "testing",
+   "id": "testing_6",
+   "expected": "CAUTION",
+   "before": "CAUTION",
+   "after": "CAUTION"
+  },
+  {
+   "group": "testing",
+   "id": "testing_7",
+   "expected": "CAUTION",
+   "before": "CAUTION",
+   "after": "CAUTION"
+  },
+  {
+   "group": "testing",
+   "id": "testing_8",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "testing",
+   "id": "testing_9",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "testing",
+   "id": "testing_10",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "testing",
+   "id": "testing_11",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "testing",
+   "id": "testing_12",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "demo",
+   "id": "scam_en_known_vpa",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "demo",
+   "id": "demo_tampered_same_account",
+   "expected": "CAUTION",
+   "before": "CAUTION",
+   "after": "CAUTION"
+  },
+  {
+   "group": "demo",
+   "id": "photo_genuine_demo",
+   "expected": "SAFE",
+   "before": "SAFE",
+   "after": "SAFE"
+  },
+  {
+   "group": "demo",
+   "id": "demo_voice_note",
+   "expected": "SCAM",
+   "before": "CAUTION",
+   "after": "CAUTION"
+  },
+  {
+   "group": "demo",
+   "id": "scam_te_known_vpa",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "demo",
+   "id": "scam_hi_kyc_apk",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "demo",
+   "id": "bill_swapped_vpa_dgas",
+   "expected": "SCAM",
+   "before": "SCAM",
+   "after": "SCAM"
+  },
+  {
+   "group": "demo",
+   "id": "demo_missing_account",
+   "expected": null,
+   "before": "CAUTION",
+   "after": "CAUTION"
+  }
+ ],
+ "note": "demo_voice_note: expected value here is what the live app shows. The harness has no transcript with digits, so the spoken number is not read and the code alone gives CAUTION before and after. Live, the reading step turns it into digits."
+}

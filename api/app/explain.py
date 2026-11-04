@@ -16,8 +16,10 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from app.agent.milestones import find_destinations
 from app.labels import CODE_LABELS, HEADLINES, Lang
 from app.models.base import LLMClient, LLMError, Message, Usage
+from app.schemas import DestinationKind
 
 log = logging.getLogger("billsaathi.explain")
 
@@ -106,6 +108,10 @@ def problem(text: str, evidence_text: str, lang: Lang) -> str | None:
             if token.rstrip(".,").lower() not in source.lower():
                 return f"{what} not in the evidence"
         wording = pattern.sub(" ", wording)
+    # The same wider link detection as the milestone check: non-Latin names, any domain ending.
+    for d in find_destinations(text):
+        if d.kind == DestinationKind.URL and d.value.rstrip(".,").lower() not in source.lower():
+            return "link not in the evidence"
     allowed = {_normal_number(n) for n in _NUMBER.findall(source)}
     for token in _NUMBER.findall(wording):
         if _normal_number(token.rstrip(",")) not in allowed:

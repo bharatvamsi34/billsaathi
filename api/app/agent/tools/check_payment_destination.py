@@ -15,6 +15,7 @@ from app.agent.tools import scam_intel
 from app.agent.tools.base import Finding, Outcome, ToolError, define_tool, edit_distance
 from app.bbps_mock import service
 from app.bbps_mock.registry import Biller
+from app.contacts import canonical_phone
 from app.schemas import DestinationKind, EvidenceCode
 
 
@@ -191,11 +192,7 @@ def _check_upi(value: str, targets: tuple[Biller, ...]) -> Outcome:
 
 
 def _check_phone(value: str, targets: tuple[Biller, ...]) -> Outcome:
-    digits = re.sub(r"\D", "", value)
-    if len(digits) == 12 and digits.startswith("91"):
-        digits = digits[2:]
-    elif len(digits) == 11 and digits.startswith("0"):
-        digits = digits[1:]
+    digits = canonical_phone(value)
     masked = digits[:2] + "*" * max(len(digits) - 4, 0) + digits[-2:]
     detail = {"phone_masked": masked}
     for b in targets:

@@ -126,6 +126,12 @@ NOT = C.DESTINATION_NOT_OFFICIAL
         ("upi", "not a vpa", DEMO, {NOT}),
         # phones
         ("phone", "+91 90000 00000", DEMO, {C.PERSONAL_PHONE_NUMBER, NOT}),
+        ("phone", "९०००० ०००००", DEMO, {C.PERSONAL_PHONE_NUMBER, NOT}),
+        ("phone", "౯౦౦౦౦౦౦౦౦౦", DEMO, {C.PERSONAL_PHONE_NUMBER, NOT}),
+        ("phone", "1800-000-1001", DEMO, {C.DESTINATION_OFFICIAL}),
+        ("phone", "१८००-०००-१००१", DEMO, {C.DESTINATION_OFFICIAL}),
+        ("phone", "1800-000-1002", DEMO, {NOT}),
+        ("phone", "040-2345-6789", DEMO, {NOT}),
         ("phone", "09876500001", DEMO, {C.KNOWN_SCAM_DESTINATION, C.PERSONAL_PHONE_NUMBER, NOT}),
         ("phone", "1800-000-1002", DEMO, {NOT}),  # another biller's helpline
     ],

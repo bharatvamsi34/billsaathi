@@ -12,6 +12,7 @@ from collections.abc import Iterable, Sequence
 from pydantic import BaseModel
 
 from app.agent.evidence import ToolEvidence, ToolResult
+from app.contacts import canonical_phone
 from app.schemas import DestinationKind, PaymentDestination, Verdict
 from app.schemas import EvidenceCode as C
 
@@ -76,7 +77,7 @@ def destination_key(kind: DestinationKind | str, value: str) -> tuple[str, str]:
     if kind == DestinationKind.URL:
         v = re.sub(r"^https?://", "", v).removeprefix("www.").rstrip("/")
     elif kind == DestinationKind.PHONE:
-        v = re.sub(r"\D", "", v)[-10:]
+        v = canonical_phone(v)
     return str(kind), v
 
 

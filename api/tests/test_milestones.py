@@ -30,7 +30,10 @@ def test_finds_links_upi_ids_and_mobile_numbers():
     [
         "Water bill Rs 1,240.00 for K.No. EJB80004604 due on 05-Nov-2026.",
         "Demo Power Distribution Co. Ltd, bill no DPB/2026/10/558213, consumer 1205880911",
-        "Toll-free 1800-000-1001. Amount ₹4,243.00. Pay by 9:30 PM.",
+        "Amount ₹4,243.00. Pay by 9:30 PM.",
+        "Pay by 9.PM on 05-10-2026, K.No. and Bill.No are on page 2. Mr.Rao, Pvt.Ltd, Rs.Five.",
+        "डेमो पावर कं.लि. क्र.सं. 12, रु.1,292.00, 05-10-2026।",
+        "Consumer 2774392066, bill no 12345678901, meter 123 456 789.",
     ],
 )
 def test_ignores_things_that_are_not_destinations(text):
@@ -64,3 +67,41 @@ def test_no_false_misses_on_the_dataset(label):
     """Ground-truth destinations are complete, so the milestone check must find nothing extra."""
     _, result = reconcile(label.input.text, label.expected.extracted.payment_destinations)
     assert result is None, [e.summary for e in result.evidence]
+
+
+@pytest.mark.parametrize(
+    "text,kind,value",
+    [
+        ("Call 1800-000-1001", "phone", "18000001001"),
+        ("Call 1800 123 4567", "phone", "18001234567"),
+        ("Call 1860 266 123", "phone", "1860266123"),
+        ("Call 18001234567", "phone", "18001234567"),
+        ("Call 040-2345-6789", "phone", "4023456789"),
+        ("Call 011 2345 6789", "phone", "1123456789"),
+        ("Call +91 40 2345 6789", "phone", "4023456789"),
+        ("Call 987 654 3210", "phone", "9876543210"),
+        ("Call 9876 543 210", "phone", "9876543210"),
+        ("Call ९८७६५४३२१०", "phone", "9876543210"),
+        ("కాల్ ౯౮౭౬౫౪౩౨౧౦", "phone", "9876543210"),
+        ("Call ৯৮৭৬৫৪৩২১০", "phone", "9876543210"),  # Bengali digits
+        ("Call १८०० १२३ ४५६७", "phone", "18001234567"),
+        ("Call 98765\u200b43210", "phone", "9876543210"),  # zero-width space
+        ("Pay at help-desk.shop now", "url", "help-desk.shop"),
+        ("Pay at bill-help.top.", "url", "bill-help.top"),
+        ("Pay at HELP.SHOP", "url", "HELP.SHOP"),
+        ("Pay at refund.club/pay?id=1", "url", "refund.club/pay?id=1"),
+        ("Pay at xn--dmopower-4fg.example", "url", "xn--dmopower-4fg.example"),
+        ("Pay at foo.xn--h2brj9c", "url", "foo.xn--h2brj9c"),
+        ("Pay at dеmopower.example", "url", "dеmopower.example"),  # Cyrillic е
+        ("यहाँ बिजली.भारत पर", "url", "बिजली.भारत"),
+        ("Install update.apk", "url", "update.apk"),
+        ("Pay at help-desk。shop", "url", "help-desk.shop"),  # ideographic dot
+    ],
+)
+def test_wider_contact_detection(text, kind, value):
+    assert PaymentDestination(kind=kind, value=value) in find_destinations(text)
+
+
+def test_a_number_written_two_ways_is_one_destination():
+    found = find_destinations("Call 9876543210 or +91 98765 43210 or ९८७६५४३२१०")
+    assert [d.value for d in found] == ["9876543210"]

@@ -239,6 +239,7 @@ The loop is provider-neutral. Privacy Mode swaps the Meta client for the Baseten
   reason (`eval/judge_adversarial.py`).
 - **Explanation:** after the verdict, the model rewords only the cited evidence. Code rejects any number, link or
   UPI ID not in the evidence, and any reply not in the user's script; then a template from evidence labels.
+- **Contact detection (Nov 4):** the milestone check, the reason check and the phone check share one normaliser (`app/contacts.py`). Links on any domain ending, punycode and non-Latin names; mobile, toll-free (1800/1860) and landline numbers (landline needs its 0 or +91); digits in any Indian script. A number on the verified biller's `official_phones` passes as official; the demo billers' synthetic helplines were already in the mock registry. Not covered: contacts spelled in words or "dot", and landlines without 0 or +91, which look like consumer numbers. A plain link that is really bill wording joined by a dot ("Thanks.Regards") now counts as a link: a possible false alarm, never a missed link.
 - **Privacy Mode:** the same loop and checks on Muse Spark Open; refused, never downgraded, if no provider is up.
   The open model usually answers its first turn in plain text. The one retry requires `submit_verdict`, which still
   goes through the checks, judge and floor. Requiring any tool made it loop on verification tools.
