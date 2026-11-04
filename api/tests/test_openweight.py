@@ -82,6 +82,37 @@ def test_step_converts_tools_and_the_whole_conversation():
     assert sent["messages"][3] == {"role": "tool", "tool_call_id": "c1", "content": '{"ok":true}'}
 
 
+def test_first_turn_is_free_and_the_retry_must_submit_a_verdict():
+    seen = []
+    call = {"id": "c9", "type": "function", "function": {"name": "submit_verdict", "arguments": "{}"}}  # fmt: skip
+    spec = {"type": "function", "name": "submit_verdict", "description": "d", "parameters": {}}
+    ow = client(recording(seen, reply(None, [call], "tool_calls")))
+    ow.step(system="S", conversation=[UserText(text="brief")], tools=[spec])
+    assert "tool_choice" not in seen[0]
+    # A turn that did call a tool is not a retry.
+    ow.step(
+        system="S",
+        conversation=[
+            UserText(text="brief"),
+            AssistantTurn(turn=ModelTurn(tool_calls=[ToolCall(call_id="c1", name="fetch_bill", arguments="{}")])),
+            ToolOutputs(outputs=[ToolOutput(call_id="c1", output="{}")]),
+        ],
+        tools=[spec],
+    )  # fmt: skip
+    assert "tool_choice" not in seen[1]
+    # The model answered in plain text and was nudged: this is the one retry.
+    ow.step(
+        system="S",
+        conversation=[
+            UserText(text="brief"),
+            AssistantTurn(turn=ModelTurn(text="This looks like a scam.")),
+            UserText(text="Call submit_verdict now."),
+        ],
+        tools=[spec],
+    )
+    assert seen[2]["tool_choice"] == {"type": "function", "function": {"name": "submit_verdict"}}
+
+
 def test_cut_off_reply_is_an_error_not_an_answer():
     with pytest.raises(LLMError):
         client(lambda r: httpx.Response(200, json=reply("half", finish="length"))).respond(

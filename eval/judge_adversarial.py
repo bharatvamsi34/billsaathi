@@ -18,7 +18,6 @@ from app.extract.extract import parse_json  # noqa: E402
 from app.models.base import Message  # noqa: E402
 from app.models.meta import MetaClient  # noqa: E402
 
-
 MISMATCH = {"code": "AMOUNT_MISMATCH", "summary": "Biller says ₹1,243.00; the bill or message says ₹4,243.00.", "detail": {"biller_amount": 1243.0, "claimed_amount": 4243.0}}  # fmt: skip
 LOOKALIKE = {"code": "LOOKALIKE_DOMAIN", "summary": "samplevidyut-pay.example imitates the official site samplevidyut.example.", "detail": {"host": "samplevidyut-pay.example"}}  # fmt: skip
 THREAT = {"code": "DISCONNECTION_THREAT", "summary": "Threatens to cut the connection.", "detail": {"matches": [{"pattern_id": "cut_te"}]}}  # fmt: skip

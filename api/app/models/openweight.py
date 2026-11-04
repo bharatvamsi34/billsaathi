@@ -179,13 +179,18 @@ class OpenWeightClient:
             {"type": "function", "function": {k: v for k, v in t.items() if k != "type"}}
             for t in tools
         ]
-        resp, usage, latency_ms = self._create(
-            {
-                "messages": self._conversation(system, conversation),
-                "tools": specs,
-                "max_tokens": max_output_tokens,
-            }
-        )
+        request = {
+            "messages": self._conversation(system, conversation),
+            "tools": specs,
+            "max_tokens": max_output_tokens,
+        }
+        # The open model often answers its first turn in plain text. The loop allows one retry; on
+        # it, require submit_verdict, or it may write the verdict as text again and the run ends with
+        # no verdict. ("required" alone makes it loop on verification tools.) The submission still
+        # goes through the usual checks, judge and floor. Mandatory checks have already run.
+        if any(isinstance(i, AssistantTurn) and not i.turn.tool_calls for i in conversation):
+            request["tool_choice"] = {"type": "function", "function": {"name": "submit_verdict"}}
+        resp, usage, latency_ms = self._create(request)
         message = resp.choices[0].message
         calls = [
             ToolCall(call_id=c.id, name=c.function.name, arguments=c.function.arguments or "")

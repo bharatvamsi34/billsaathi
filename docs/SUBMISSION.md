@@ -50,7 +50,7 @@ Every step carries a badge naming the model and its job (for example "Muse Spark
 - **Native tool calling makes it an agent, not a classifier.** Muse Spark 1.3 calls tools in parallel and works with refusals fed back to it, so verification can sit in code at fixed points while the model investigates and explains.
 - **One family covers every input a real user has.** A tilted phone photo, an SMS, a Telugu voice note: SAM, Spark and Voice Transcribe let one pipeline take all of them.
 - **Indian languages are the point.** Spark 1.3 writes usable Telugu and Hindi explanations (the builder, a native Telugu speaker, rated early samples Telugu 4/5 and Hindi about 4/5), and `languageBias` got a code-mixed Telugu clip exact where it otherwise slipped into Latin letters. Someone who can't read an English warning isn't protected by it.
-- **Effort control and caching let us tune cost and latency.** The judge moved to `minimal` after dev-set testing: about half the latency, and it accepted no bad reason in 24 adversarial judgments.
+- **Effort control lets us test cost against accuracy.** We tried `minimal` on the dev set for the whole pipeline and for the judge alone. Neither was faster overall and each added a false alarm, so the product stays at `low`.
 - **Open weights give a real privacy option.** The same agent, tools and checks run on Muse Spark Open by swapping one client.
 - **It's cheap enough for the audience.** About $0.024 per check at measured token use is close to viable for a free public-interest tool.
 
