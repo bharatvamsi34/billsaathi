@@ -38,14 +38,26 @@ export const STRINGS = {
     hi: "सिंथेटिक उदाहरण — बस एक टैप",
   },
   or: { en: "or", te: "లేదా", hi: "या" },
-  checking: { en: "Checking…", te: "తనిఖీ చేస్తోంది…", hi: "जाँच हो रही है…" },
-  stepReading: { en: "Reading the bill", te: "బిల్లును చదువుతోంది", hi: "बिल पढ़ रहे हैं" },
+  checking: {
+    en: "Reading your request and checking payment details…",
+    te: "మీ అభ్యర్థనను చదివి, చెల్లింపు వివరాలు తనిఖీ చేస్తోంది…",
+    hi: "आपका अनुरोध पढ़कर भुगतान का ब्योरा जाँच रहे हैं…",
+  },
+  stepReading: {
+    en: "Reading the bill photo",
+    te: "బిల్లు ఫోటోను చదువుతోంది",
+    hi: "बिल की फ़ोटो पढ़ रहे हैं",
+  },
   stepReadingMsg: { en: "Reading the message", te: "సందేశాన్ని చదువుతోంది", hi: "संदेश पढ़ रहे हैं" },
   replaySource: { en: "Source", te: "మూలం", hi: "स्रोत" },
   statusElapsed: { en: "Time so far", te: "ఇప్పటివరకు సమయం", hi: "अब तक का समय" },
   stepFixed: { en: "Fixed checks — always run", te: "తప్పనిసరి తనిఖీలు — ఎప్పుడూ జరుగుతాయి", hi: "ज़रूरी जाँचें — हमेशा होती हैं" },
   stepAgent: { en: "Agent review", te: "ఏజెంట్ సమీక్ష", hi: "एजेंट की समीक्षा" },
-  stepJudge: { en: "Independent check", te: "కారణాల స్వతంత్ర తనిఖీ", hi: "कारणों की स्वतंत्र जाँच" },
+  stepJudge: {
+    en: "Second AI check",
+    te: "రెండో AI తనిఖీ",
+    hi: "दूसरी AI जाँच",
+  },
   agentDecided: { en: "The agent reviewed the evidence", te: "ఏజెంట్ ఆధారాలను పరిశీలించింది", hi: "एजेंट ने सबूत देखे" },
   agentExtra: { en: "Extra check requested", te: "అదనపు తనిఖీ కోరింది", hi: "अतिरिक्त जाँच माँगी" },
   judgeOk: {
@@ -74,9 +86,9 @@ export const STRINGS = {
     hi: "डेमो बिलर रिकॉर्ड से जाँचा गया",
   },
   headline_CAUTION: {
-    en: "Not verified yet. Don't pay through this message — check with the company's official app, website or the number on a bill you already trust.",
-    te: "ఇంకా నిర్ధారణ కాలేదు. ఈ సందేశం ద్వారా చెల్లించవద్దు — కంపెనీ అధికారిక యాప్, వెబ్‌సైట్ లేదా మీరు నమ్మే పాత బిల్లుపై ఉన్న నంబర్‌తో సరిచూసుకోండి.",
-    hi: "अभी पुष्टि नहीं हुई। इस संदेश से भुगतान न करें — कंपनी के आधिकारिक ऐप, वेबसाइट या अपने भरोसेमंद बिल पर लिखे नंबर से जाँच लें।",
+    en: "Not verified. Don't pay yet.",
+    te: "నిర్ధారణ కాలేదు. ఇప్పుడే చెల్లించవద్దు.",
+    hi: "पुष्टि नहीं हुई। अभी भुगतान न करें।",
   },
   headline_SCAM: {
     en: "This looks like a scam. Do not pay.",
@@ -96,13 +108,25 @@ export const STRINGS = {
     te: "డెమో: నిజమైన డబ్బు కదలదు",
     hi: "डेमो: कोई असली पैसा नहीं जाता",
   },
-  confirmTitle: { en: "Confirm this payment", te: "ఈ చెల్లింపును నిర్ధారించండి", hi: "इस भुगतान की पुष्टि करें" },
-  confirmPay: { en: "Yes, pay in the sandbox", te: "అవును, డెమోలో చెల్లించండి", hi: "हाँ, डेमो में भुगतान करें" },
+  confirmTitle: {
+    en: "Confirm demo payment",
+    te: "డెమో చెల్లింపును నిర్ధారించండి",
+    hi: "डेमो भुगतान की पुष्टि करें",
+  },
+  confirmPay: {
+    en: "Confirm simulation",
+    te: "డెమో చెల్లింపు పూర్తి చేయండి",
+    hi: "सिमुलेशन की पुष्टि करें",
+  },
   cancel: { en: "Cancel", te: "రద్దు చేయండి", hi: "रद्द करें" },
   receiptTitle: { en: "Sandbox receipt", te: "డెమో రసీదు", hi: "डेमो रसीद" },
   receiptNumber: { en: "Receipt no.", te: "రసీదు సంఖ్య", hi: "रसीद संख्या" },
   auditEntry: { en: "Audit entry", te: "ఆడిట్ నమోదు", hi: "ऑडिट प्रविष्टि" },
-  paidAt: { en: "Paid at", te: "చెల్లించిన సమయం", hi: "भुगतान का समय" },
+  paidAt: {
+    en: "Simulation time",
+    te: "డెమో సమయం",
+    hi: "सिमुलेशन का समय",
+  },
   errPay: {
     en: "Could not finish the sandbox payment. Nothing was paid twice; please try again.",
     te: "డెమో చెల్లింపు పూర్తి కాలేదు. రెండుసార్లు చెల్లింపు జరగదు; మళ్లీ ప్రయత్నించండి.",
@@ -177,9 +201,9 @@ export const STRINGS = {
   qrAlt: { en: "QR code for this page", te: "ఈ పేజీ QR కోడ్", hi: "इस पेज का QR कोड" },
   watchTitle: { en: "Watch the agent work", te: "ఏజెంట్ పనిని చూడండి", hi: "एजेंट को काम करते देखें" },
   watchBody: {
-    en: "Pick a sample. Each step appears here as it happens, with the model doing it and how long it took.",
-    te: "ఒక నమూనాను ఎంచుకోండి. ప్రతి దశ జరుగుతున్నప్పుడే ఇక్కడ కనిపిస్తుంది, ఏ మోడల్ చేసిందో, ఎంత సమయం పట్టిందో సహా.",
-    hi: "एक नमूना चुनें। हर चरण होते ही यहाँ दिखेगा, किस मॉडल ने किया और कितना समय लगा, सहित।",
+    en: "Pick a sample to watch each step live, with the Meta model doing it and how long it took.",
+    te: "ఒక నమూనా ఎంచుకోండి: ప్రతి దశను ప్రత్యక్షంగా చూడండి, ఏ Meta మోడల్ చేసిందో, ఎంత సమయం పట్టిందో సహా.",
+    hi: "कोई नमूना चुनें और हर चरण लाइव देखें: कौन सा Meta मॉडल कर रहा है और कितना समय लगा।",
   },
   howToTest: { en: "How to test", te: "ఎలా పరీక్షించాలి", hi: "कैसे परखें" },
   testGuide: { en: "Full test guide", te: "పూర్తి పరీక్ష గైడ్", hi: "पूरी परीक्षण गाइड" },
@@ -224,9 +248,9 @@ export const STRINGS = {
     hi: "कार्ड साझा नहीं हो सका।",
   },
   earlyScam: {
-    en: "Possible fraud found — running final checks…",
-    te: "మోసం కావచ్చు — చివరి తనిఖీలు జరుగుతున్నాయి…",
-    hi: "धोखे की आशंका — अंतिम जाँच चल रही है…",
+    en: "Possible scam signs found. Checking the evidence…",
+    te: "మోసం సూచనలు కనిపించాయి. ఆధారాలు తనిఖీ చేస్తోంది…",
+    hi: "धोखे के संकेत मिले। सबूत जाँच रहे हैं…",
   },
   earlyChecking: {
     en: "Comparing with the biller record…",
@@ -234,19 +258,19 @@ export const STRINGS = {
     hi: "बिलर के रिकॉर्ड से मिला रहे हैं…",
   },
   heroTitle: {
-    en: "Got a bill or urgent payment message?",
-    te: "బిల్లు లేదా అత్యవసర చెల్లింపు సందేశం వచ్చిందా?",
-    hi: "बिल या तुरंत भुगतान का संदेश आया है?",
+    en: "Check a bill before you pay.",
+    te: "చెల్లించే ముందు బిల్లును తనిఖీ చేయండి.",
+    hi: "भुगतान से पहले बिल जाँचें।",
   },
   tryScam: {
-    en: "Watch a scam get blocked",
-    te: "మోసాన్ని అడ్డుకోవడం చూడండి",
-    hi: "धोखे को रुकते देखें",
+    en: "Watch BillSaathi catch a scam",
+    te: "BillSaathi మోసాన్ని పట్టుకోవడం చూడండి",
+    hi: "BillSaathi को धोखा पकड़ते देखें",
   },
   tryGenuine: {
-    en: "Try a genuine demo bill",
-    te: "నిజమైన డెమో బిల్లును ప్రయత్నించండి",
-    hi: "असली डेमो बिल आज़माएँ",
+    en: "or try a genuine demo bill →",
+    te: "లేదా నిజమైన డెమో బిల్లు ప్రయత్నించండి →",
+    hi: "या असली डेमो बिल आज़माएँ →",
   },
   statValue: {
     en: "₹22,845 crore (~US$2.7 billion)",
@@ -264,8 +288,16 @@ export const STRINGS = {
     hi: "गृह मंत्रालय, लोकसभा में उत्तर, जुलाई 2025",
   },
   statCorrect: { en: "correct verdicts", te: "సరైన తీర్పులు", hi: "सही फ़ैसले" },
-  statBlocked: { en: "scams & risky bills blocked", te: "మోసాలు, ప్రమాదకర బిల్లులు అడ్డుకున్నవి", hi: "धोखे और जोखिम वाले बिल रोके" },
-  statLatency: { en: "median to verdict", te: "తీర్పుకు మధ్యస్థ సమయం", hi: "फ़ैसले का औसत समय" },
+  statBlocked: {
+    en: "risky cases flagged, none marked SAFE",
+    te: "ప్రమాదకర కేసులు గుర్తించాం, ఏదీ సురక్షితం అనలేదు",
+    hi: "जोखिम वाले मामले पकड़े, कोई भी सुरक्षित नहीं बताया",
+  },
+  statLatency: {
+    en: "median to verdict",
+    te: "తీర్పుకు మధ్యస్థ సమయం",
+    hi: "फ़ैसले का मध्यक समय",
+  },
   statMore: {
     en: "{n} synthetic, held-out test items · How we measured",
     te: "{n} సింథటిక్, పక్కన ఉంచిన పరీక్షలపై · ఎలా కొలిచాం",
@@ -322,9 +354,9 @@ export const STRINGS = {
     hi: "टूल चलाने वाला एजेंट",
   },
   jobJudge: {
-    en: "independent judge",
-    te: "స్వతంత్ర న్యాయనిర్ణేత",
-    hi: "स्वतंत्र जज",
+    en: "checks claims",
+    te: "వాదనలను తనిఖీ చేస్తుంది",
+    hi: "दावे जाँचता है",
   },
   jobExplain: {
     en: "multilingual explanation",
@@ -342,9 +374,9 @@ export const STRINGS = {
     hi: "सैंडबॉक्स · सिमुलेटेड बिलर रिकॉर्ड",
   },
   heroBody: {
-    en: "BillSaathi reads it, checks who is asking for money, and compares the amount and payment destination with the biller's records — before you pay.",
-    te: "BillSaathi దాన్ని చదివి, డబ్బు అడుగుతున్నది ఎవరో తనిఖీ చేసి, మొత్తాన్ని, చెల్లింపు చిరునామాను బిల్లర్ రికార్డులతో పోలుస్తుంది — మీరు చెల్లించే ముందే.",
-    hi: "BillSaathi उसे पढ़ता है, देखता है कि पैसे कौन माँग रहा है, और राशि व भुगतान के पते को बिलर के रिकॉर्ड से मिलाता है — आपके भुगतान से पहले।",
+    en: "BillSaathi compares the amount and payment address with the biller's record and shows you exactly what doesn't match.",
+    te: "BillSaathi మొత్తాన్ని, చెల్లింపు చిరునామాను బిల్లర్ రికార్డుతో పోల్చి, ఏది సరిపోలడం లేదో స్పష్టంగా చూపిస్తుంది.",
+    hi: "BillSaathi राशि और भुगतान के पते को बिलर के रिकॉर्ड से मिलाता है और दिखाता है कि ठीक-ठीक क्या मेल नहीं खाता।",
   },
   heroSim: {
     en: "This demo uses simulated biller records, not the live BBPS network (India's national bill-payment network).",
@@ -432,9 +464,9 @@ export const STRINGS = {
     hi: "पुष्टि हुई",
   },
   compareTitle: {
-    en: "Does it match the biller's record?",
-    te: "బిల్లర్ రికార్డుతో సరిపోతుందా?",
-    hi: "क्या यह बिलर के रिकॉर्ड से मेल खाता है?",
+    en: "What the message says vs. the demo biller record",
+    te: "సందేశంలో ఉన్నది, డెమో బిల్లర్ రికార్డులో ఉన్నది",
+    hi: "संदेश में क्या है और डेमो बिलर रिकॉर्ड में क्या है",
   },
   colMessage: {
     en: "Message says",
@@ -447,9 +479,9 @@ export const STRINGS = {
     hi: "बिल में",
   },
   colRecord: {
-    en: "Demo biller record says",
-    te: "డెమో బిల్లర్ రికార్డులో",
-    hi: "डेमो बिलर रिकॉर्ड में",
+    en: "Demo biller record",
+    te: "డెమో బిల్లర్ రికార్డు",
+    hi: "डेमो बिलर रिकॉर्ड",
   },
   destUpi: {
     en: "UPI ID (bank payment address)",
@@ -487,9 +519,9 @@ export const STRINGS = {
     hi: "नहीं दिया",
   },
   viewAll: {
-    en: "View all evidence ({n})",
-    te: "అన్ని ఆధారాలు చూడండి ({n})",
-    hi: "सभी सबूत देखें ({n})",
+    en: "Show all {n} findings",
+    te: "మొత్తం {n} అంశాలు చూపించండి",
+    hi: "सभी {n} निष्कर्ष दिखाएँ",
   },
   hideAll: {
     en: "Show less",
@@ -532,19 +564,19 @@ export const STRINGS = {
     hi: "{n} एजेंट टर्न",
   },
   traceJudge: {
-    en: "judge verified {a}/{b} claims",
-    te: "న్యాయనిర్ణేత {a}/{b} వాదనలు ధృవీకరించారు",
-    hi: "जज ने {a}/{b} दावे सत्यापित किए",
+    en: "Second AI check: {a}/{b} claims verified",
+    te: "రెండో AI తనిఖీ: {a}/{b} వాదనలు ధృవీకరించబడ్డాయి",
+    hi: "दूसरी AI जाँच: {a}/{b} दावे सत्यापित",
   },
   viewTrace: {
-    en: "View trace",
-    te: "వివరాలు చూడండి",
-    hi: "ब्योरा देखें",
+    en: "See verification steps",
+    te: "తనిఖీ దశలు చూడండి",
+    hi: "जाँच के चरण देखें",
   },
   hideTrace: {
-    en: "Hide trace",
-    te: "వివరాలు దాచండి",
-    hi: "ब्योरा छिपाएँ",
+    en: "Hide verification steps",
+    te: "తనిఖీ దశలు దాచండి",
+    hi: "जाँच के चरण छिपाएँ",
   },
   modelsInRun: {
     en: "Meta models in this check",
@@ -597,9 +629,9 @@ export const STRINGS = {
     hi: "फिर कोशिश करें",
   },
   replayTitle: {
-    en: "See the judge catch an over-claim",
-    te: "న్యాయనిర్ణేత అతిశయోక్తిని పట్టుకోవడం చూడండి",
-    hi: "जज को बढ़ा-चढ़ाकर किया दावा पकड़ते देखें",
+    en: "Replay: a second AI catches an unsupported claim",
+    te: "రీప్లే: ఆధారం లేని వాదనను రెండో AI పట్టుకుంది",
+    hi: "रीप्ले: दूसरी AI ने बिना सबूत का दावा पकड़ा",
   },
   replayLabel: {
     en: "Replay of a real run (recorded {date})",
@@ -607,9 +639,9 @@ export const STRINGS = {
     hi: "असली रन का रीप्ले (रिकॉर्ड: {date})",
   },
   replayIntro: {
-    en: "The agent's first answer said more than its evidence showed. The judge sent it back, and the agent corrected it.",
-    te: "ఏజెంట్ మొదటి సమాధానం ఆధారానికి మించి చెప్పింది. న్యాయనిర్ణేత దాన్ని వెనక్కి పంపారు, ఏజెంట్ సరిదిద్దింది.",
-    hi: "एजेंट के पहले जवाब ने सबूत से ज़्यादा कहा। जज ने उसे वापस भेजा और एजेंट ने सुधारा।",
+    en: "The agent's first answer said more than its evidence showed. The second AI check sent it back, and the agent corrected it.",
+    te: "ఏజెంట్ మొదటి సమాధానం ఆధారానికి మించి చెప్పింది. రెండో AI తనిఖీ దాన్ని వెనక్కి పంపింది, ఏజెంట్ సరిదిద్దింది.",
+    hi: "एजेंट के पहले जवाब ने सबूत से ज़्यादा कहा। दूसरी AI जाँच ने उसे वापस भेजा और एजेंट ने सुधारा।",
   },
   replayAttempt1: {
     en: "First answer",
@@ -622,14 +654,14 @@ export const STRINGS = {
     hi: "सुधार के बाद",
   },
   replayRefused: {
-    en: "Sent back by the judge",
-    te: "న్యాయనిర్ణేత వెనక్కి పంపారు",
-    hi: "जज ने वापस भेजा",
+    en: "Sent back by the second AI check",
+    te: "రెండో AI తనిఖీ వెనక్కి పంపింది",
+    hi: "दूसरी AI जाँच ने वापस भेजा",
   },
   replayAccepted: {
-    en: "Accepted by the judge",
-    te: "న్యాయనిర్ణేత ఆమోదించారు",
-    hi: "जज ने स्वीकार किया",
+    en: "Accepted by the second AI check",
+    te: "రెండో AI తనిఖీ ఆమోదించింది",
+    hi: "दूसरी AI जाँच ने स्वीकार किया",
   },
   replayFinal: {
     en: "Final verdict in that run",
@@ -655,6 +687,91 @@ export const STRINGS = {
     en: "The bill SAM 3.1 found",
     te: "SAM 3.1 గుర్తించిన బిల్లు",
     hi: "SAM 3.1 को मिला बिल",
+  },
+  heroModels: {
+    en: "An AI agent on Meta's Muse Spark 1.3 · SAM 3.1 · Muse Voice Transcribe · Muse Image. A second AI call checks every claim.",
+    te: "Meta Muse Spark 1.3 · SAM 3.1 · Muse Voice Transcribe · Muse Image పై నడిచే AI ఏజెంట్. రెండో AI కాల్ ప్రతి వాదనను తనిఖీ చేస్తుంది.",
+    hi: "Meta के Muse Spark 1.3 · SAM 3.1 · Muse Voice Transcribe · Muse Image पर चलने वाला AI एजेंट। दूसरी AI कॉल हर दावे को जाँचती है।",
+  },
+  statsLabel: {
+    en: "{n} synthetic test cases",
+    te: "{n} సింథటిక్ పరీక్షలు",
+    hi: "{n} सिंथेटिक परीक्षण",
+  },
+  statHow: {
+    en: "How we measured",
+    te: "ఎలా కొలిచాం",
+    hi: "कैसे मापा",
+  },
+  tagPhotoOnly: {
+    en: "Photo only",
+    te: "ఫోటోకు మాత్రమే",
+    hi: "सिर्फ़ फ़ोटो",
+  },
+  tagVoiceOnly: {
+    en: "Voice only",
+    te: "వాయిస్‌కు మాత్రమే",
+    hi: "सिर्फ़ आवाज़",
+  },
+  stepReadingVoice: {
+    en: "Reading the transcript",
+    te: "విన్న మాటలను చదువుతోంది",
+    hi: "सुनी गई बात पढ़ रहे हैं",
+  },
+  jobText: {
+    en: "reads text",
+    te: "సందేశం చదువుతుంది",
+    hi: "टेक्स्ट पढ़ता है",
+  },
+  compareTitleBill: {
+    en: "What the bill says vs. the demo biller record",
+    te: "బిల్లులో ఉన్నది, డెమో బిల్లర్ రికార్డులో ఉన్నది",
+    hi: "बिल में क्या है और डेमो बिलर रिकॉर्ड में क्या है",
+  },
+  rowAmountDiffers: {
+    en: "Amount differs",
+    te: "మొత్తం తేడా ఉంది",
+    hi: "राशि अलग है",
+  },
+  rowAddressDiffers: {
+    en: "Payment address differs",
+    te: "చెల్లింపు చిరునామా తేడా ఉంది",
+    hi: "भुगतान का पता अलग है",
+  },
+  rowAccountNotFound: {
+    en: "Account not found",
+    te: "ఖాతా కనబడలేదు",
+    hi: "खाता नहीं मिला",
+  },
+  plainCard: {
+    en: "Plain card: no image model in Privacy Mode",
+    te: "సాధారణ కార్డ్: ప్రైవసీ మోడ్‌లో ఇమేజ్ మోడల్ లేదు",
+    hi: "सादा कार्ड: प्राइवेसी मोड में इमेज मॉडल नहीं",
+  },
+  exclReply: {
+    en: "excl. your reply",
+    te: "మీ సమాధాన సమయం మినహా",
+    hi: "आपके जवाब का समय छोड़कर",
+  },
+  sandboxBadgeShort: {
+    en: "Demo · mock billers · no real money",
+    te: "డెమో · నమూనా బిల్లర్లు · నిజమైన డబ్బు కాదు",
+    hi: "डेमो बिलर · असली पैसा नहीं",
+  },
+  replayWhy: {
+    en: "The message says 'tonight', but the check the agent cited recorded only a power-cut threat, not when. Every claim needs evidence, so the second AI refused it.",
+    te: "సందేశంలో 'ఈ రాత్రి' అని ఉంది, కానీ ఏజెంట్ చూపిన తనిఖీలో కరెంట్ కట్ బెదిరింపు మాత్రమే నమోదైంది, ఎప్పుడో కాదు. ప్రతి వాదనకు ఆధారం ఉండాలి, అందుకే రెండో AI తిరస్కరించింది.",
+    hi: "संदेश में 'आज रात' लिखा है, पर एजेंट की बताई जाँच में सिर्फ़ बिजली कटने की धमकी दर्ज थी, समय नहीं। हर दावे का सबूत ज़रूरी है, इसलिए दूसरी AI ने उसे ठुकरा दिया।",
+  },
+  noRealMoney: {
+    en: "No real money will move",
+    te: "నిజమైన డబ్బు కదలదు",
+    hi: "कोई असली पैसा नहीं जाएगा",
+  },
+  cautionLine: {
+    en: "Confirm with the biller's official app, or a bill you already trust.",
+    te: "బిల్లర్ అధికారిక యాప్‌లో లేదా మీరు నమ్మే బిల్లుతో సరిచూసుకోండి.",
+    hi: "बिलर के आधिकारिक ऐप या अपने भरोसेमंद बिल से पुष्टि करें।",
   },
 } satisfies Record<string, Text>;
 
