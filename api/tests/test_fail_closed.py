@@ -20,7 +20,9 @@ from app.explain import problem
 from app.schemas import BillerCategory, BillFields, EvidenceCode, PaymentDestination, Verdict
 
 BY_ID = {lbl.id: lbl for lbl in LABELS}
-GENUINE = BY_ID["reminder_en_demo"]  # every check passes: SAFE is reachable, so a block means something
+GENUINE = BY_ID[
+    "reminder_en_demo"
+]  # every check passes: SAFE is reachable, so a block means something
 KNOWN_SCAM_UPI = "electricityofficer@okdemo"
 
 
@@ -299,7 +301,9 @@ def test_contact_the_reading_step_missed_blocks_safe(name):
     assert EvidenceCode.MISSED_BY_EXTRACTION in {e.code for r in session.record.tool_results for e in r.evidence}  # fmt: skip
 
 
-@pytest.mark.parametrize("spelled", ["1800-000-1001", "1800 000 1001", "18000001001", "१८००-०००-१००१"])
+@pytest.mark.parametrize(
+    "spelled", ["1800-000-1001", "1800 000 1001", "18000001001", "१८००-०००-१००१"]
+)
 def test_the_billers_own_helpline_does_not_block_safe(spelled):
     text = f"{GENUINE.input.text} Helpline {spelled}."
     session, _ = run_cheater(AgentInput.from_fields(fields(), raw_text=text))

@@ -10,7 +10,9 @@ _DOTS = dict.fromkeys(map(ord, "。．｡"), ".")
 def ascii_digits(text: str) -> str:
     """Any decimal digit (Devanagari, Telugu, other Indic, full-width...) as 0-9."""
     return "".join(
-        str(unicodedata.decimal(ch)) if not ch.isascii() and unicodedata.category(ch) == "Nd" else ch
+        str(unicodedata.decimal(ch))
+        if not ch.isascii() and unicodedata.category(ch) == "Nd"
+        else ch
         for ch in text
     )
 
@@ -27,6 +29,8 @@ def canonical_phone(value: str) -> str:
         len(digits) == 12 or (len(digits) == 13 and digits[2:4] == "18")
     ):
         return digits[2:]
-    if digits.startswith("0") and (len(digits) == 11 or (len(digits) == 12 and digits[1:3] == "18")):
+    if digits.startswith("0") and (
+        len(digits) == 11 or (len(digits) == 12 and digits[1:3] == "18")
+    ):
         return digits[1:]
     return digits
