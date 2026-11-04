@@ -39,6 +39,8 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* Steps grow while a check runs; the browser must not chase them and scroll the status away. */
+  overflow-anchor: none;
 }
 
 body {
