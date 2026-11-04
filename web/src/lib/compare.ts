@@ -22,6 +22,21 @@ function official(record: BillerRecord | null, kind: string): string | null {
   return list?.[0] ?? null;
 }
 
+/** The row that decides the verdict: it gets the big type and the tint. */
+export function isDecisive(row: CompareRow): boolean {
+  return row.status === "mismatch" || (!!row.flag && row.status !== "match") || (row.key === "consumer" && row.status === "notFound");
+}
+
+/** Display order only: what is wrong first, then what could not be verified, then what matches. */
+export function orderRows(rows: CompareRow[]): CompareRow[] {
+  const rank = (row: CompareRow) => (isDecisive(row) ? 0 : row.status === "match" ? 2 : 1);
+  const within = (row: CompareRow) => (row.key === "amount" ? 0 : 1);
+  return rows
+    .map((row, i) => ({ row, i }))
+    .sort((a, b) => rank(a.row) - rank(b.row) || within(a.row) - within(b.row) || a.i - b.i)
+    .map(({ row }) => row);
+}
+
 export function compareRows(tl: Timeline): CompareRow[] {
   const f = tl.extracted;
   if (!f) return [];

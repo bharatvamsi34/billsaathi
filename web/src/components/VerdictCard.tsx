@@ -7,7 +7,7 @@ import { reasonLines } from "@/lib/reasons";
 import type { Timeline, Verdict } from "@/lib/timeline";
 import Comparison from "./Comparison";
 import Explanation, { ListenButton } from "./Explanation";
-import { CautionIcon, PhoneIcon, SafeIcon, ScamIcon } from "./icons";
+import { CautionIcon, ListCheckIcon, PhoneIcon, SafeIcon, ScamIcon } from "./icons";
 import SandboxPay from "./SandboxPay";
 import { Badge, Button, buttonClass, Card, Soft } from "./ui";
 import WarnFamily from "./WarnFamily";
@@ -27,12 +27,14 @@ export default function VerdictCard({
   lang,
   onShowEvidence,
   onReset,
+  onCardPicture,
 }: {
   checkId: string | null;
   tl: Timeline;
   lang: Lang;
   onShowEvidence: (seq: number) => void;
   onReset: () => void;
+  onCardPicture: (loaded: boolean) => void;
 }) {
   const v = tl.verdict!;
   const { band, icon: Icon } = LOOK[v.verdict];
@@ -41,48 +43,58 @@ export default function VerdictCard({
   const lines = reasonLines(tl, lang);
   const shown = allOpen ? lines : lines.slice(0, 2);
   const headline = t(lang, `headline_${v.verdict}`);
-  const explanation = tl.explanation?.text ?? (tl.done ? headline : null);
-  const judged = !v.forced && tl.judge.length > 0 && tl.judge[tl.judge.length - 1].accepted;
+  const fallback = v.verdict === "CAUTION" ? `${headline} ${t(lang, "cautionLine")}` : headline;
+  const explanation = tl.explanation?.text ?? (tl.done ? fallback : null);
+  const last = tl.judge[tl.judge.length - 1];
+  const judged = !v.forced && !!last?.accepted;
 
   return (
-    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.25, ease: "easeOut" }} aria-live="polite">
+    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.25, ease: "easeOut" }} aria-live="polite" id="verdict-top" className="scroll-mt-[calc(var(--topbar-h)+0.5rem)]">
       <Card className={`overflow-hidden ${judged ? "gradient-ring" : ""}`} data-testid="verdict" data-verdict={v.verdict}>
-        <div className={`flex items-center gap-3 px-4 py-3.5 ${band}`}>
+        <div className={`flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3.5 ${band}`}>
           <Icon className="h-10 w-10 shrink-0" />
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1 basis-56">
             <div className="text-[1.625rem] font-bold leading-tight tracking-tight">{t(lang, `verdict_${v.verdict}`)}</div>
-            <div className="wrap-words text-[15px] font-medium leading-snug">{headline}</div>
+            <div className="wrap-words text-[15px] font-semibold leading-snug" data-testid="instruction">
+              {headline}
+            </div>
+            {v.verdict === "CAUTION" && <div className="wrap-words mt-0.5 text-[14px] leading-snug text-white/90">{t(lang, "cautionLine")}</div>}
           </div>
+          {judged && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[13px] font-semibold leading-tight" data-testid="second-check">
+              <span aria-hidden="true">✓</span>
+              {t(lang, "traceJudge", { a: last.reasons.filter((r) => r.supported).length, b: last.reasons.length })}
+            </span>
+          )}
         </div>
 
         <div className="space-y-4 p-4">
           {v.forced && <p className="t-caption rounded-xl bg-caution-bg p-2.5 font-semibold text-caution">{t(lang, "forced")}</p>}
 
-          {/* Actions first. */}
+          <Comparison tl={tl} lang={lang} verdict={v.verdict} />
+
           <div className="grid gap-2" data-testid="actions">
             {v.verdict === "SAFE" ? (
-              checkId && <SandboxPay checkId={checkId} tl={tl} lang={lang} />
+              <>
+                {checkId && <SandboxPay checkId={checkId} tl={tl} lang={lang} />}
+                <ListenButton text={explanation} headline={headline} lang={lang} />
+              </>
             ) : (
-              <div className="grid items-stretch gap-2 sm:grid-cols-2">
-                <div className="grid content-start gap-2">
-                  <div className={`flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-[15px] font-bold ${v.verdict === "SCAM" ? "bg-scam-bg text-scam" : "bg-caution-bg text-caution"}`}>
-                    <span aria-hidden="true">⛔</span> {t(lang, v.verdict === "SCAM" ? "doNotPay" : "doNotPayYet")}
-                  </div>
-                  {helpline && (
-                    <a href={`tel:${helpline}`} className={buttonClass("danger")}>
-                      <PhoneIcon className="h-5 w-5" />
-                      {t(lang, "report", { value: helpline })}
-                    </a>
-                  )}
+              <>
+                {helpline && (
+                  <a href={`tel:${helpline}`} className={buttonClass("danger", "md", "w-full")}>
+                    <PhoneIcon className="h-5 w-5 shrink-0" />
+                    {t(lang, "report", { value: helpline })}
+                  </a>
+                )}
+                <div className="grid items-center gap-2 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
                   <ListenButton text={explanation} headline={headline} lang={lang} />
+                  <WarnFamily verdict={v.verdict} lang={lang} helpline={helpline} privacy={tl.privacy} onPicture={onCardPicture} />
                 </div>
-                <WarnFamily verdict={v.verdict} lang={lang} helpline={helpline} privacy={tl.privacy} />
-              </div>
+              </>
             )}
-            {v.verdict === "SAFE" && <ListenButton text={explanation} headline={headline} lang={lang} />}
           </div>
 
-          <Comparison tl={tl} lang={lang} />
           <Explanation text={explanation} lang={lang} />
 
           {lines.length > 0 && (
@@ -111,6 +123,10 @@ export default function VerdictCard({
               )}
               {allOpen && lang === "en" && v.reasons.length > 0 && (
                 <div className="rise mt-2 space-y-1">
+                  <p className="t-caption mb-1.5 flex items-center gap-1.5 font-semibold text-ink-soft">
+                    <ListCheckIcon className="h-4 w-4 shrink-0 text-navy" />
+                    The agent&apos;s findings, each checked by the second AI
+                  </p>
                   {v.reasons.map((r, i) => (
                     <Badge key={i} tone="neutral" className="block! rounded-xl! px-2.5! py-1.5! font-normal!">
                       {r.text}

@@ -1,3 +1,4 @@
+import { isDecisive, orderRows, type CompareRow } from "./compare";
 import { describe, expect, it } from "vitest";
 import { compareRows } from "./compare";
 import { highlight } from "./highlight";
@@ -96,6 +97,33 @@ describe("step times", () => {
       { seq: 1, type: "agent_turn", turn: 1, tool_calls: [], at: "2026-11-04T00:00:06.500Z", receivedAt: 5000 },
     ]);
     expect(tl.times.agent_turn! - tl.times.early!).toBe(5500);
+  });
+});
+
+describe("comparison order", () => {
+  it("shows what is wrong first and never drops a row", () => {
+    const rows: CompareRow[] = [
+      { key: "biller", says: "A", record: "A", status: "match" },
+      { key: "amount", says: "₹2", record: "₹1", status: "mismatch" },
+      { key: "destination", kind: "upi", says: "x@y", record: "x@y", status: "match" },
+      { key: "consumer", says: "1", record: null, status: "notChecked" },
+    ];
+    expect(orderRows(rows).map((r) => r.key)).toEqual(["amount", "consumer", "biller", "destination"]);
+    expect(orderRows(rows)).toHaveLength(rows.length);
+  });
+
+  it("puts the amount first when everything matches", () => {
+    const rows: CompareRow[] = [
+      { key: "biller", says: "A", record: "A", status: "match" },
+      { key: "amount", says: "₹1", record: "₹1", status: "match" },
+    ];
+    expect(orderRows(rows)[0].key).toBe("amount");
+  });
+
+  it("treats a flagged destination and a missing account as decisive", () => {
+    expect(isDecisive({ key: "destination", says: "x@y", record: null, status: "noRecord", flag: "KNOWN_SCAM_DESTINATION" })).toBe(true);
+    expect(isDecisive({ key: "consumer", says: "1", record: null, status: "notFound" })).toBe(true);
+    expect(isDecisive({ key: "biller", says: "A", record: null, status: "noRecord" })).toBe(false);
   });
 });
 

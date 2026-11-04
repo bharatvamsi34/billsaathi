@@ -97,6 +97,13 @@ export const Dot = ({ className }: P) => (
   </svg>
 );
 
+export const ListCheckIcon = ({ className }: P) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...base}>
+    <path d="m3.5 6 1.8 1.8L8.5 4.5M3.5 13l1.8 1.8 3.2-3.3M3.5 20l1.8 1.8" />
+    <path d="M12.5 6.5H21M12.5 13.5H21M12.5 20H21" />
+  </svg>
+);
+
 export const Check = ({ className }: P) => (
   <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...base}>
     <circle cx="12" cy="12" r="9" />

@@ -14,10 +14,11 @@ const ACCENT = { SCAM: "#e5484d", CAUTION: "#f2a33a" };
  * "Warn my family": a picture card with our vetted warning, ready to forward. In Privacy Mode no
  * picture is requested (it comes from Muse Image on Meta's API), so the card is a plain gradient.
  */
-export default function WarnFamily({ verdict, lang, helpline, privacy }: { verdict: "SCAM" | "CAUTION"; lang: Lang; helpline?: string; privacy: boolean }) {
+export default function WarnFamily({ verdict, lang, helpline, privacy, onPicture }: { verdict: "SCAM" | "CAUTION"; lang: Lang; helpline?: string; privacy: boolean; onPicture: (loaded: boolean) => void }) {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const [picture, setPicture] = useState(false);
   const message = warningText(verdict, lang, helpline) ?? "";
 
   // The card is made before the tap: browsers only allow sharing right after a tap, and the first
@@ -34,12 +35,15 @@ export default function WarnFamily({ verdict, lang, helpline, privacy }: { verdi
       if (!alive) return;
       url = URL.createObjectURL(made);
       setFile(made);
+      setPicture(!!bitmap);
+      onPicture(!!bitmap); // Muse Image gets credit only when its picture is really on the card
       setPreview(url);
     })();
     return () => {
       alive = false;
       if (url) URL.revokeObjectURL(url);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- onPicture is a setter from the page
   }, [verdict, lang, message, privacy]);
 
   useEffect(() => {
@@ -57,8 +61,8 @@ export default function WarnFamily({ verdict, lang, helpline, privacy }: { verdi
   };
 
   return (
-    <div className="flex h-full items-center gap-3 rounded-2xl border border-line p-2.5">
-      <div className="h-[120px] w-[120px] shrink-0 overflow-hidden rounded-xl border border-line">
+    <div className="flex h-full flex-wrap items-center gap-2.5 rounded-2xl border border-line p-2.5">
+      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-line">
         {preview ? (
           // eslint-disable-next-line @next/next/no-img-element -- a local blob made in this browser
           <img src={preview} alt={message} className="rise block h-full w-full object-cover" />
@@ -66,12 +70,17 @@ export default function WarnFamily({ verdict, lang, helpline, privacy }: { verdi
           <div className="skeleton h-full w-full" aria-hidden="true" />
         )}
       </div>
-      <div className="min-w-0 flex-1 space-y-2">
-        <Button variant="primary" disabled={!file} onClick={share} className="w-full px-3!">
+      <div className="min-w-fit flex-1 space-y-1.5">
+        <Button variant="primary" disabled={!file} onClick={share} className="w-full whitespace-nowrap px-4!">
           {file ? <ShareIcon className="h-5 w-5" /> : <Spinner className="h-5 w-5" />}
           {t(lang, file ? "warnFamily" : "cardMaking")}
         </Button>
-        {!privacy && <ModelBadge model="image" lang={lang} />}
+        {picture && (
+          <div className="whitespace-nowrap">
+            <ModelBadge model="image" lang={lang} />
+          </div>
+        )}
+        {privacy && file && <p className="t-caption text-muted">{t(lang, "plainCard")}</p>}
       </div>
       <Toast message={note} />
     </div>

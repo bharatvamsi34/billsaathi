@@ -35,6 +35,10 @@ const ERRORS: Record<string, Key> = {
   image_too_large: "errImage",
 };
 
+function scrollToVerdict() {
+  requestAnimationFrame(() => (document.querySelector('[data-testid="privacy-bar"]') ?? document.getElementById("verdict-top"))?.scrollIntoView({ behavior: scrollBehavior(), block: "start" }));
+}
+
 function scrollToResults() {
   requestAnimationFrame(() => document.getElementById("results-top")?.scrollIntoView({ behavior: scrollBehavior(), block: "start" }));
 }
@@ -52,6 +56,7 @@ export default function Home() {
   const [privacy, setPrivacy] = useState(false);
   const [replaying, setReplaying] = useState(false);
   const [traceOpen, setTraceOpen] = useState(false);
+  const [cardPicture, setCardPicture] = useState(false);
   const [lastInput, setLastInput] = useState<CaptureInput | null>(null);
   const stop = useRef<(() => void) | null>(null);
   const lastSeq = useRef(-1);
@@ -68,7 +73,7 @@ export default function Home() {
   // The verdict is the moment to read: bring it into view, under the sticky bar.
   const hasVerdict = !!tl.verdict;
   useEffect(() => {
-    if (hasVerdict) scrollToResults();
+    if (hasVerdict) scrollToVerdict();
   }, [hasVerdict]);
 
   // A slow or lost connection must not leave a spinner forever: after this long with no event,
@@ -120,6 +125,7 @@ export default function Home() {
     setBusy(true);
     setReplaying(false);
     setTraceOpen(false);
+    setCardPicture(false);
     setHighlight(null);
     setTl(emptyTimeline);
     setCheckId(null);
@@ -212,7 +218,7 @@ export default function Home() {
       {/* Phone: while a check runs the hero steps aside, so the result fits the first screen. */}
       <div className={showResults ? "hidden lg:block" : undefined}>
         <Hero lang={lang} busy={busy} onQuick={quick} />
-        {!demo && <Guide lang={lang} step={tl.verdict ? 3 : checking ? 2 : 1} />}
+        {!demo && <Guide lang={lang} step={tl.verdict || replaying ? 3 : checking ? 2 : 1} />}
       </div>
 
       <main id="workspace" className={`flex flex-col gap-4 px-4 py-4 lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start lg:gap-8 lg:py-6 ${GUTTER}`}>
@@ -231,7 +237,7 @@ export default function Home() {
 
           {replaying && <Replay lang={lang} onClose={reset} />}
 
-          {checking && <InputReview input={review} tl={tl} lang={lang} />}
+          {checking && !tl.verdict && <InputReview input={review} tl={tl} lang={lang} />}
 
           {error && (
             <div role="alert" id={checking ? undefined : "results-top"} className="rise scroll-mt-[calc(var(--topbar-h)+0.75rem)] rounded-2xl border border-scam/30 bg-scam-bg p-4">
@@ -246,7 +252,7 @@ export default function Home() {
 
           {/* From the first moment, so it does not push the steps down when the first event arrives. */}
           {checking && (tl.privacy || (busy && privacy)) && (
-            <div className="t-caption rise space-y-0.5 rounded-2xl bg-navy px-3.5 py-2.5 font-semibold text-white" data-testid="privacy-bar">
+            <div className="t-caption rise scroll-mt-[calc(var(--topbar-h)+0.5rem)] space-y-0.5 rounded-2xl bg-navy px-3.5 py-2.5 font-semibold text-white" data-testid="privacy-bar">
               <p>{t(lang, "privacyActive")}</p>
               {review?.kind === "image" && <p className="font-normal text-white/80">{t(lang, "photoCropSkipped")}</p>}
             </div>
@@ -254,7 +260,8 @@ export default function Home() {
 
           {checking && !error && (
             <>
-              {tl.verdict && <VerdictCard key={checkId ?? "verdict"} checkId={checkId} tl={tl} lang={lang} onShowEvidence={showEvidence} onReset={reset} />}
+              {tl.verdict && <VerdictCard key={checkId ?? "verdict"} checkId={checkId} tl={tl} lang={lang} onShowEvidence={showEvidence} onReset={reset} onCardPicture={setCardPicture} />}
+              {tl.verdict && <InputReview input={review} tl={tl} lang={lang} />}
               {tl.question && !tl.verdict && <QuestionBox question={tl.question.question} field={tl.question.field} biller={tl.extracted?.biller_name.value} lang={lang} onAnswer={answer} />}
               {!tl.verdict && !tl.question && (
                 <div
@@ -278,7 +285,7 @@ export default function Home() {
                 </div>
               )}
               {tl.verdict ? (
-                <Trace tl={tl} lang={lang} open={traceOpen} onToggle={() => setTraceOpen(!traceOpen)} highlightSeq={highlight} imageUrl={imageUrl} />
+                <Trace tl={tl} lang={lang} open={traceOpen} onToggle={() => setTraceOpen(!traceOpen)} highlightSeq={highlight} imageUrl={imageUrl} cardPicture={cardPicture} />
               ) : (
                 <Card className="p-2">
                   <Timeline tl={tl} lang={lang} highlightSeq={highlight} imageUrl={imageUrl} />
